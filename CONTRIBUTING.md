@@ -52,7 +52,7 @@ Team members should follow this general set of steps when working:
 1. Move the ticket into "In Progress".
 1. Perform your work, which should include the writing of test cases and ensuring they are referenced in the Maven POM file. Where appropriate, write integration tests in addition to unit tests.
 1. Run unit tests locally and perform debugging.
-1. Check in with a pull request. This will trigger the CI/CD pipeline, automating the linting, building, and testing of your code.
+1. Check in (final) with a pull request. This will trigger the CI/CD pipeline, automating the linting, building, and testing of your code.
 1. Check the Actions report ensuring that all your tests ran and passed.
 1. If you see any issues with the build and test, investigate further and open any additional tickets needed.
 1. Move the ticket on the project board to "Done".
