@@ -157,6 +157,17 @@ public class Alloy {
     return ignoredFuncs;
   }
 
+  public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
+      Expr to) {
+    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    Expr inverseFunctionFilteredExpr =
+        inverseFunctionFiltered.call(happensBefore.call(), s.join(from), s.join(to));
+
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(inverseFunctionFilteredExpr.forAll(decl));
+  }
+
   public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());

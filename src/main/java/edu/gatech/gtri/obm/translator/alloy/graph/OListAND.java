@@ -1,10 +1,9 @@
 package edu.gatech.gtri.obm.translator.alloy.graph;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class OListAND extends ArrayList implements IObject {
+public class OListAND<E> extends ArrayList<E> implements IObject {
 
   public OListAND() {
     super();
@@ -12,41 +11,18 @@ public class OListAND extends ArrayList implements IObject {
 
   public OListAND(IObject o) {
     super();
-    this.add(o);
+    this.add((E) o);
   }
 
-  // public String toString() {
-  // String s = "(";
-  //
-  // for (Iterator<IObject> iter = this.iterator(); iter.hasNext();) {
-  // s += iter.next().toString() + "+ ";
-  // }
-  // return s.substring(0, s.lastIndexOf("+")).trim() + ")";
-  // }
-  // public List<String> toStringAlloy() {
-  // System.out.println("OListAND" + this.size());
-  // List<String> ls = new ArrayList<>();
-  // for (Iterator<IObject> iter = this.iterator(); iter.hasNext();) {
-  // IObject o = iter.next();
-  //
-  // List<String> ls2 = o.toStringAlloy();
-  // for (Iterator<String> iters = ls2.iterator(); iters.hasNext();)
-  // ls.add(iters.next());
-  // }
-  // return ls;
-  // }
-  public List<String> toStringAlloy() {
-    System.out.println("OListAND" + this.size());
-    List<String> ls = new ArrayList<>();
-    for (Iterator<IObject> iter = this.iterator(); iter.hasNext();) {
-      IObject o = iter.next();
 
-      List<String> ls2 = o.toStringAlloy();
-      for (Iterator<String> iters = ls2.iterator(); iters.hasNext();)
-        ls.add(iters.next());
+
+  public List<String> toStringAlloy() {
+    List<String> ls = new ArrayList<>();
+    for (E io : this) {
+      List<String> ls2 = ((IObject) io).toStringAlloy();
+      for (String s : ls2)
+        ls.add(s);
     }
     return ls;
   }
-
-
 }

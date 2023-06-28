@@ -1,35 +1,47 @@
 package edu.gatech.gtri.obm.translator.alloy.graph;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class OListOR extends ArrayList implements IObject {
+public class OListOR implements IObject {
+
+  List<IObject> list;
 
   public OListOR() {
-    super();
+    list = new ArrayList<>();
   }
 
   public OListOR(IObject o) {
-    super();
-    this.add(o);
+    this();
+    this.list.add(o);
+  }
+
+  public int size() {
+    return list.size();
+  }
+
+  public void add(IObject _o) {
+    this.list.add(_o);
+  }
+
+  public IObject get(int _index) {
+    return list.get(_index);
   }
 
   public String toString() {
     String s = "(";
 
-    for (Iterator<IObject> iter = this.iterator(); iter.hasNext();) {
-      s += iter.next().toString() + "+ ";
+    for (IObject io : list) {
+      s += io.toString() + "+ ";
     }
     return s.substring(0, s.lastIndexOf("+")).trim() + ")";
   }
 
   public List<String> toStringAlloy() {
-    System.out.println("OListOR:" + this.size());
     List<String> ls = new ArrayList<>();
     String s = "";
-    for (Iterator<IObject> iter = this.iterator(); iter.hasNext();) {
-      s += "+" + iter.next();
+    for (IObject io : list) {
+      s += "+" + io;
     }
     if (s.startsWith("+"))
       s = s.substring(s.indexOf("+") + 1);

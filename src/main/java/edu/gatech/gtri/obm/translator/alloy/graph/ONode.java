@@ -56,7 +56,6 @@ public class ONode implements IObject {
 
   @Override
   public List<String> toStringAlloy() {
-    System.out.println("ONode");
     List<String> l = new ArrayList<>();
     l.add(this.getName());
     return l;

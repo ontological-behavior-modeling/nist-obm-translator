@@ -30,10 +30,6 @@ public class ToAlloy {
   }
 
   public Sig addAlloySig(String name, String not_used_parentName, boolean isMainSig) {
-    System.out.println("========");
-    System.out.println("sig " + name + " extends " + not_used_parentName);
-    System.out.println("========");
-
     Sig s = null;
     if (!sigByName.containsKey(name)) {
       s = alloy.createSigAsChildOfOccSigAndAddToAllSigs(name);
@@ -69,6 +65,11 @@ public class ToAlloy {
   public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
     alloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, from, to);
+  }
+
+  public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
+      Expr to) {
+    alloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, from, to);
   }
 
   public void addOneConstraintToField(Sig.Field field, String ownerSigName) {

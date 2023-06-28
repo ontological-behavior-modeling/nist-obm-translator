@@ -18,6 +18,8 @@ import org.graphstream.graph.implementations.SingleGraph;
 
 public class Graph2AlloyExpr {
 
+  Graph graph;
+
   public static Graph createGraph() {
     System.setProperty("org.graphstream.ui", "swing");
 
@@ -30,128 +32,189 @@ public class Graph2AlloyExpr {
 
   public static void main(String[] args) {
 
-    Graph graph = createGraph();
+    Graph2AlloyExpr ga = new Graph2AlloyExpr();
+    try {
+      Graph graph = ga.getGraph();
+      GraphUtil.loop(ga.getGraph());
+      // GraphUtil.simplesequence(ga.getGraph());
+      // GraphUtil.decision(ga.getGraph());
+      // GraphUtil.forkjoin(ga.getGraph());
+      // GraphUtil.allcontrol(graph);
+      // GraphUtil.ex1(graph);
+      display(graph);
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
-    Node p0Node = GraphUtil.ex1(graph);
-    // Node p0Node = Examples.simplesequence(graph);// OPathList[0] = ONode(p1)
-    // Node p0Node = Examples.fork(graph); // [OPathList[0] = OListAND[ONode(p1), ONode(p2)]
-    // Node p1Node = Examples.decision(graph);// [OPathList[0] = OListOR[ONode(p1), ONode(p2)]
-    // Node p0Node = Examples.forkjoin(graph);
-    // Node p0Node = Examples.decisionmerge(graph);
-    // Node p0Node = Examples.allcontrol(graph);
-    // Node p0Node = Examples.loop(graph);
+    Map<IObject, IObject> hb = ga.getHappensBeforeFunction();
+    System.out.println(hb);
+    print(hb);
+    Map<IObject, IObject> hbinv = ga.getHappensBeforeInvFunction();
+    System.out.println(hbinv);
+    print(hbinv);
 
-    display(graph);
+
+  }
+
+  public Graph2AlloyExpr() {
+    this.graph = createGraph();
+  }
+
+
+  public Graph getGraph() {
+    if (this.graph == null)
+      this.graph = createGraph();
+    return this.graph;
+  }
+
+  public void addNode(String _name) {
+    GraphUtil.createNode(graph, _name);
+  }
+
+  public void addEdge(String _name, String _sourceName, String _targetName) {
+    graph.addEdge(_name, Graph2AlloyExpr.getNodeByName(graph, _sourceName),
+        Graph2AlloyExpr.getNodeByName(graph, _targetName), true);
+  }
+
+  public Map<IObject, IObject> getHappensBeforeFunction() {
+
+    // display(graph);
     Set<Node> visited = new HashSet<>();
     Map<IObject, IObject> fn = new HashMap<>();
-    start(new ONode(p0Node), fn, visited);
-    print(fn);
-
-
-    // Optional<Edge> oneofEdges = p0Node.leavingEdges().filter(e -> isOneOf(e)).findAny();
-    // ONode o = new ONode(p0Node, oneofEdges.isPresent());
-    // Map<IObject, IObject> map = happensBefore(o, oneofEdges.isPresent());
-    // print(map);
-
-    // exploreBreathFirst(p0Node);
-    // exoloreDepthFirst(p0Node);
+    Optional<Node> op = graph.nodes().filter(n -> !visited.contains(n)).findFirst();
+    while (op.isPresent()) {
+      functionHBFn(fn, new ONode(op.get()), visited);
+      op = graph.nodes().filter(n -> !visited.contains(n)).findFirst();
+    }
+    return fn;
   }
 
-  public static void start(IObject osource, Map<IObject, IObject> hb, Set<Node> _visited) {
+  public Map<IObject, IObject> getHappensBeforeInvFunction() {
 
-    // for loop p1 source return OListOR with p2 because a edge is oneof...
-    IObject fn = function(osource, _visited);
-    if (fn == null)
-      return;
-    hb.put(osource, fn);
+    // display(graph);
+    Set<Node> visited = new HashSet<>();
+    Map<IObject, IObject> fn = new HashMap<>();
+    Optional<Node> op = graph.nodes().filter(n -> !visited.contains(n)).findFirst();
+    while (op.isPresent()) {
+      functionHBInvFn(fn, new ONode(op.get()), visited);
+      op = graph.nodes().filter(n -> !visited.contains(n)).findFirst();
+    }
+    return fn;
+  }
 
-    if (fn instanceof OListOR) {
-      // Node n = findCommonChildNode((OListOR) fn);// find all OListOR node are connecting to
-      for (int i = 0; i < ((OListOR) fn).size(); i++) {
-        IObject io = (IObject) ((OListOR) fn).get(i);
-        if (io instanceof ONode) {
-          // TODO this between shared node will be ignored for now
-          // Node sharedNode = findCommonChildNode(((OListOR) fn));
-          // System.out.println("sharedNode by " + fn + " is " + sharedNode); // for loop p2
-          // sharedNode
-          // returns p2 but below
-          // next returns (p2+p3)
-          // if (sharedNode != null) {
-          // hb.put(fn, new ONode(sharedNode));
-          // }
-          ONode next_source = (ONode) ((OListOR) fn).get(i);
-          IObject next = function(next_source, _visited);
-          if (next != null) {
-            hb.put(fn, next);
-            start(next, hb, _visited);
-            break; // TODO assume all nodes in OListOR are entering to next node for now
-          }
-        } else
-          System.out.println(io);
-      }
 
-    } else if (fn instanceof OListAND) {
-      for (int i = 0; i < ((OListAND) fn).size(); i++) {
-        ONode next_source = (ONode) ((OListAND) fn).get(i);
-        IObject next = function(next_source, _visited);
-        if (next != null) {
-          hb.put(next_source, next);
-          start(next, hb, _visited);
+
+  public void functionHBFn(Map<IObject, IObject> hb, IObject source, Set<Node> _visited) {
+
+    if (source instanceof ONode) {
+      Node sourceNode = ((ONode) source).getNode();
+      _visited.add(sourceNode);
+
+      Optional<Edge> oneofEdges = sourceNode.leavingEdges().filter(e -> isOneOf(e)).findAny();
+      if (oneofEdges.isPresent()) {
+
+        // merging = source -> target, another source -> the same target
+        if (sourceNode.leavingEdges().count() == 1) {
+          OListOR sourceOR = new OListOR();
+
+          Node targetNode = sourceNode.getLeavingEdge(0).getTargetNode();
+          targetNode.enteringEdges().forEach(edge -> {
+            // TODO validate: all edges should be one of and all sourceNodes should have one leaving
+            // edge.
+            Node sourceNodeOrOtherSourceNode = edge.getSourceNode();
+            _visited.add(sourceNodeOrOtherSourceNode); // sourceNode is added twice but ok
+            sourceOR.add(new ONode(sourceNodeOrOtherSourceNode));
+          });
+          hb.put(sourceOR, new ONode(targetNode));
+        } else { // decision- sourceNode.leavingEdges().count() > 1 source -> target1 and source ->
+                 // target2
+          OListOR targetOR = new OListOR();
+          sourceNode.leavingEdges().forEach(edge -> {
+            Node targetNode = edge.getTargetNode();
+            // if (targetNode.getOutDegree() <= 1 || getOutDegreeMinusSelfLoop(targetNode) <= 1)
+            targetOR.add(new ONode(targetNode));
+            // else {
+            // continue expanding sourceNode -> target and target -> anotherNode means target ->
+            // decision or fork
+            // functionHBFn(hb, new ONode(targetNode), _visited);
+            // }
+          });
+          hb.put(source, targetOR);
+        }
+
+      } else {
+        // join or simplesequence
+        if (sourceNode.leavingEdges().count() == 1) {
+          hb.put(source, new ONode(sourceNode.getLeavingEdge(0).getTargetNode()));
+        } // merge
+        else if (sourceNode.leavingEdges().count() > 1) {
+          OListAND targetAND = new OListAND();
+          sourceNode.leavingEdges().forEach(edge -> {
+            Node targetNode = edge.getTargetNode();
+            // all targetNode should be not one-of
+            targetAND.add(new ONode(targetNode));
+          });
+          hb.put(source, targetAND);
         }
       }
-    } else { // ONode
-      ONode next_source = (ONode) fn;
-      IObject next = function(next_source, _visited);
-      if (next != null) {
-        hb.put(next_source, next);
-        start(next, hb, _visited);
+    } // not ONode
+
+  }
+
+  public static void functionHBInvFn(Map<IObject, IObject> hb, IObject inode, Set<Node> _visited) {
+
+    if (inode instanceof ONode) {
+      Node targetNode = ((ONode) inode).getNode();
+      _visited.add(targetNode);
+
+
+      Optional<Edge> oneofEdges = targetNode.enteringEdges().filter(e -> isOneOf(e)).findAny();
+      if (oneofEdges.isPresent()) {
+        // decision = sourceNode -> target && sourceNode -> different targetNodes
+        if (targetNode.enteringEdges().count() == 1) {
+          OListOR targetOR = new OListOR();
+          Node sourceNode = targetNode.getEnteringEdge(0).getSourceNode();
+          // add targetNodes from sourceNode(targetNode's sourceNode) to targetOR
+          // the target and other targets connected from the target's source
+          // TODO: validate other edges from the sourceNode should be one-of and the other
+          // targetNods should have one one-of entering edges
+          sourceNode.leavingEdges().forEach(edge -> {
+            Node otherTargetNodesFromTheSource = edge.getTargetNode(); // this include the
+                                                                       // targetNode
+            _visited.add(otherTargetNodesFromTheSource); // the targetNode in argument is added
+                                                         // twice but ok
+            targetOR.add(new ONode(otherTargetNodesFromTheSource));
+          });
+          hb.put(new ONode(sourceNode), targetOR);
+        } else { // must be > 1 since at least one found as one-of
+          OListOR sourceOR = new OListOR();
+          // merge =
+          targetNode.enteringEdges().forEach(edge -> {
+            Node sourceNode = edge.getSourceNode();
+            sourceOR.add(new ONode(sourceNode));
+          });
+          hb.put(sourceOR, new ONode(targetNode));
+        }
+      } else { // not one of
+        long targetNodeEnteringCount = targetNode.enteringEdges().count();
+        // fork or ss
+        if (targetNodeEnteringCount == 1)
+          hb.put(new ONode(targetNode.getEnteringEdge(0).getSourceNode()), new ONode(targetNode));
+        // join
+        else if (targetNodeEnteringCount > 1) {
+          OListAND andSource = new OListAND();
+          targetNode.enteringEdges().forEach(edge -> {
+            andSource.add(new ONode(edge.getSourceNode()));
+          });
+          hb.put(andSource, new ONode(targetNode));
+        }
+
       }
     }
-
   }
 
-  // wip
-  public static Node findCommonChildNode(OListOR or) {
-    Map<Integer, Node> map = new HashMap<>();
 
-    for (int i = 0; i < or.size(); i++) {
-      Node sharedNode = findMultipleIncomingEdges(((ONode) or.get(i)).getNode());
-      // List<Node> zz = findAllMultipleIncomingEdges(((ONode) or.get(i)).getNode()); //loop p2
-      // return p2 only
-      System.out.println("sharedNode" + sharedNode);
-      map.put(i, sharedNode);
-    }
-    Node n = map.get(0);
-    int counter = 1;
-    while (n == map.get(counter++)) {
-    }
-    if (counter == map.size() + 1)
-      return n;
-    else
-      return null;
-
-  }
-
-  public static List<Node> findAllMultipleIncomingEdges(Node source) {
-    List<Node> nodes = new ArrayList<>();
-    Iterator<? extends Node> k = source.getBreadthFirstIterator();
-    while (k.hasNext()) {
-      Node next = k.next();
-      if (next.getInDegree() > 1)
-        nodes.add(next);
-    }
-    return nodes;
-  }
-
-  public static Node findMultipleIncomingEdges(Node source) {
-    Iterator<? extends Node> k = source.getBreadthFirstIterator();
-    while (k.hasNext()) {
-      Node next = k.next();
-      if (next.getInDegree() > 1)
-        return next;
-    }
-    return null;
-  }
 
   public static int getOutDegreeMinusSelfLoop(Node node) {
     int numOfSelfLoop = 0;
@@ -163,77 +226,30 @@ public class Graph2AlloyExpr {
     return node.getOutDegree() - numOfSelfLoop;
   }
 
-  public static IObject function(IObject source, Set<Node> _visited) {
 
-
-    if (source instanceof ONode) {
-
-      Node sourceNode = ((ONode) source).getNode();
-
-      System.out.println(((ONode) source).getName() + " visiting....");
-
-      if (_visited.contains(sourceNode)) {
-        System.out.println(sourceNode.getAttribute(ONode.node_attribute_name) + " already visited");
-        return null;
-      } else
-        _visited.add(sourceNode);
-      Optional<Edge> oneofEdges = sourceNode.leavingEdges().filter(e -> isOneOf(e)).findAny();
-      if (oneofEdges.isPresent()) {
-        OListOR or = new OListOR();
-        sourceNode.leavingEdges().forEach(e -> {
-          Node targetNode = e.getTargetNode();
-          if (targetNode.getOutDegree() <= 1 || getOutDegreeMinusSelfLoop(targetNode) <= 1)
-            or.add(new ONode(targetNode));
-          else {
-            System.out.println(targetNode); // p1start
-            IObject zz = function(new ONode(targetNode), _visited);
-            // System.out.println(zz); //OListAND
-            if (zz != null)
-              or.add(zz);
-          }
-        });
-        return or;
-      } else if (sourceNode.leavingEdges().count() == 1) {
-        return new ONode(sourceNode.leavingEdges().iterator().next().getTargetNode());
-      } else if (sourceNode.leavingEdges().count() > 0) {
-        OListAND and = new OListAND();
-        sourceNode.leavingEdges().forEach(e -> {
-          Node targetNode = e.getTargetNode();
-          if (targetNode.getOutDegree() <= 1 || getOutDegreeMinusSelfLoop(targetNode) <= 1)
-            and.add(new ONode(targetNode));
-          else {
-            // System.out.println(targetNode); // p3start
-            IObject zz = function(new ONode(targetNode), _visited);
-            // System.out.println(zz); // OListOR
-            if (zz != null)
-              and.add(zz);
-          }
-        });
-        return and;
-      } else
-        return null;
-    }
-    return null;
-  }
-
-
-
+  /**
+   * {p1=p3, p0=[p1, p2], p2=p3}
+   * 
+   * @param _map
+   * @return 0: p1, p3 1: p0, p1 2: p0, p2 3: p2, p3
+   * 
+   */
   public static List<String> getFnString(Map<IObject, IObject> _map) {
+
     List<String> hbFunctionFilter = new ArrayList<>();
-    for (Iterator<IObject> iter = _map.keySet().iterator(); iter.hasNext();) {
-      IObject key = iter.next();
-      // System.out.println(
-      // "FunctionFiltered: " + key.toStringAlloy() + " -> " + _map.get(key).toStringAlloy());
-      for (Iterator<String> iter1 = key.toStringAlloy().iterator(); iter1.hasNext();) {
-        String keyString = iter1.next();
-        for (Iterator<String> iter2 = _map.get(key).toStringAlloy().iterator(); iter2.hasNext();)
-          hbFunctionFilter.add(keyString + ", " + iter2.next());
+    for (IObject key : _map.keySet()) {
+      for (String keyString : key.toStringAlloy()) {// p1, p0, p2
+        for (String value : _map.get(key).toStringAlloy()) { // p1, (p1, p2), p3
+          hbFunctionFilter.add(keyString + ", " + value);
+        }
       }
     }
     return hbFunctionFilter;
+
   }
 
   public static void print(Map<IObject, IObject> _map) {
+    System.out.println(_map);
     List<String> hbFunctionFilter = getFnString(_map);
     for (int i = 0; i < hbFunctionFilter.size(); i++) {
       System.out.println(i + ": " + hbFunctionFilter.get(i));
