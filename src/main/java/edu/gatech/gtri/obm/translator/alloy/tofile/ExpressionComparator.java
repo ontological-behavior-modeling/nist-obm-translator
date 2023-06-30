@@ -259,7 +259,9 @@ public class ExpressionComparator {
 		}
 		
 		if(!compareFunctions(fileExpr.fun, apiExpr.fun)) {
-			System.err.println("ExprCall: different functions");
+			System.err.println("ExprCall: !compareFunctions(fileExpr.fun, apiExpr.fun)");
+			System.err.println("fileExpr.fun: " + fileExpr.fun);
+			System.err.println("apiExpr.fun: " + apiExpr.fun);
 			return false;
 		}
 		
@@ -469,12 +471,14 @@ public class ExpressionComparator {
 			System.err.println("compareFunctions isPrivate: fileFunc not null, apiFunc null");
 			return false;
 		}		
-		if(!fileFunc.label.equals(apiFunc.label)) {
-			System.out.println("compareFunctions: Different labels.");
+		if(!MyAlloyLibrary.removeSlash(fileFunc.label).equals(MyAlloyLibrary.removeSlash(apiFunc.label))) {
+			System.err.println("compareFunctions: !fileFunc.label.equals(apiFunc.label)");
+			System.err.println("fileFunc.label: " + fileFunc.label);
+			System.err.println("apiFunc.label: " + apiFunc.label);
 			return false;
 		}		
 		if(!compareExpr(fileFunc.returnDecl, fileFunc.returnDecl)) {
-			System.out.println("compareFunctions: Different returnDecl.");
+			System.err.println("compareFunctions: Different returnDecl.");
 			return false;
 		}
 		
