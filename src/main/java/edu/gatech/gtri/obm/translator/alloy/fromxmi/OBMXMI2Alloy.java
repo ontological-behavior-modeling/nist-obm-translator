@@ -45,6 +45,14 @@ public class OBMXMI2Alloy {
     // String className = "Model::Basic::BehaviorDecision";
     test.createAlloyFile(xmiFile, className);
   }
+  
+  public Expr getOverallFacts() {
+	  return toAlloy.getOverallFacts();
+  }
+  
+  public Map<String, Sig> getSigMap() {
+	  return toAlloy.getSigMap();
+  }
 
   public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy();
