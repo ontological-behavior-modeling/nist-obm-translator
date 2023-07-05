@@ -1,6 +1,9 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.Set;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import edu.mit.csail.sdg.ast.Decl;
@@ -24,6 +27,12 @@ public class ExpressionComparator {
 	
 	public ExpressionComparator() {
 		visitedExpressions = new HashSet<>();
+		
+		try {
+			System.setErr(new PrintStream(new FileOutputStream("error.log")));
+		} catch(FileNotFoundException e) {
+			System.err.println(e.getMessage());
+		}
 	}
 	
 	public boolean compareTwoExpressions(Expr e1, Expr e2) {
@@ -36,56 +45,84 @@ public class ExpressionComparator {
 	
 	private boolean compareDecl(Decl d1, Decl d2) {
 		
-		System.out.println("Decl d1: " + d1);
-		System.out.println("Decl d2: " + d2);
-		
 		if(d1 == null && d2 == null) {
 			return true;
 		}
 		
-		if(d1 == null || d2 == null) {
+		if(d1 == null && d2 != null) {
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("d1 == null && d2 != null");
+			return false;
+		}
+		if(d1 != null && d2 == null) {
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("d1 != null && d2 == null");
 			return false;
 		}
 		
 		if(d1.disjoint == null && d2.disjoint != null) {
-			System.err.println("compareDecls: d1.disjoint null, d2.disjoint not null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.disjoint == null && d2.disjoint != null");
 			return false;
 		}
 		if(d1.disjoint != null && d2.disjoint == null) {
-			System.err.println("compareDecls: d1.disjoint not null, d2.disjoint null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.disjoint != null && d2.disjoint == null");
 			return false;
 		}
 		
 		if(d1.disjoint2 == null && d2.disjoint2 != null) {
-			System.err.println("compareDecls: d1.disjoint2 null, d2.disjoint2 not null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.disjoint2 == null && d2.disjoint2 != null");
 			return false;
 		}
 		if(d1.disjoint2 != null && d2.disjoint2 == null) {
-			System.err.println("compareDecls: d1.disjoint2 not null, d2.disjoint2 null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.disjoint2 != null && d2.disjoint2 == null");
 			return false;
 		}
 		
 		if(!compareExpr(d1.expr, d2.expr)) {
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
 			System.err.println("compareDecl: !compareExpr(d1.expr, d2.expr)");
+			System.err.println("d1.expr = " + d1.expr);
+			System.err.println("d2.expr = " + d2.expr);
 			return false;
 		}
 		
 		if(d1.isPrivate == null && d2.isPrivate != null) {
-			System.err.println("compareDecls: d1.isPrivate is null, d2.isPrivate not null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.isPrivate == null && d2.isPrivate != null");
 			return false;
 		}
 		if(d1.isPrivate != null && d2.isPrivate == null) {
-			System.err.println("compareDecls: d1.isPrivate not null, d2isPrivate is null");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.isPrivate != null && d2.isPrivate == null");
 			return false;
 		}
 				
 		if(d1.names.size() != d2.names.size()) {
-			System.err.println("compareDecls: names has different size.");
+			System.err.println("Decl d1 = " + d1);
+			System.err.println("Decl d2 = " + d2);
+			System.err.println("compareDecls: d1.names.size() != d2.names.size()");
+			System.err.println("d1.names.size() = " + d1.names.size());
+			System.err.println("d2.names.size() = " + d2.names.size());
 			return false;
 		}
 		
 		for(int i = 0; i < d1.names.size(); i++) {
 			if(!compareExpr(d1.names.get(i), d2.names.get(i))) {
+				System.err.println("Decl d1 = " + d1);
+				System.err.println("Decl d2 = " + d2);
 				System.err.println("compareDecls: name " + i + " are different");
 				return false;
 			}
@@ -94,153 +131,153 @@ public class ExpressionComparator {
 		return true;
 	}
 	
-	private boolean compareExpr(Expr fileExpr, Expr apiExpr) {
+	private boolean compareExpr(Expr expr1, Expr expr2) {
 		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null || expr2 == null) {
 			return false;
 		}
 		
-		fileExpr = fileExpr.deNOP();
-		apiExpr = apiExpr.deNOP();
+		expr1 = expr1.deNOP();
+		expr2 = expr2.deNOP();
 		
-		if(visitedExpressions.contains(fileExpr) && visitedExpressions.contains(apiExpr)) {
+		if(visitedExpressions.contains(expr1) && visitedExpressions.contains(expr2)) {
 			return true;
 		}
 		
-		visitedExpressions.add(fileExpr);
-		visitedExpressions.add(apiExpr);
+		visitedExpressions.add(expr1);
+		visitedExpressions.add(expr2);
 		
-		if(!fileExpr.getClass().equals(apiExpr.getClass())) {
-			System.err.println("compareExpr: !fileExpr.getClass().equals(apiExpr.getClass())");
-			System.err.println("fileExpr.getClass(): " + fileExpr.getClass());
-			System.err.println("apiExpr.getClass(): " + apiExpr.getClass());
+		if(!expr1.getClass().equals(expr2.getClass())) {
+			System.err.println("compareExpr: !expr1.getClass().equals(expr2.getClass())");
+			System.err.println("expr1.getClass(): " + expr1.getClass());
+			System.err.println("expr2.getClass(): " + expr2.getClass());
 			return false;
 		}
 		
-		if(fileExpr.getClass().equals(Expr.class)) {
+		if(expr1.getClass().equals(Expr.class)) {
 			System.err.println("Expr: not implemented");
 		}
-		else if(fileExpr.getClass().equals(ExprBinary.class)) {
-			if(!compareExprBinary((ExprBinary) fileExpr, (ExprBinary) apiExpr)) {
+		else if(expr1.getClass().equals(ExprBinary.class)) {
+			if(!compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprCall.class)) {
-			if(!compareExprCall((ExprCall) fileExpr, (ExprCall) apiExpr)) {
+		else if(expr1.getClass().equals(ExprCall.class)) {
+			if(!compareExprCall((ExprCall) expr1, (ExprCall) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprConstant.class)) {
-			if(!compareExprConstant((ExprConstant) fileExpr, (ExprConstant) apiExpr)) {
+		else if(expr1.getClass().equals(ExprConstant.class)) {
+			if(!compareExprConstant((ExprConstant) expr1, (ExprConstant) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprITE.class)) {
+		else if(expr1.getClass().equals(ExprITE.class)) {
 			System.err.println("ExprITE: not implemented");
 		}
-		else if(fileExpr.getClass().equals(ExprLet.class)) {
+		else if(expr1.getClass().equals(ExprLet.class)) {
 			System.err.println("ExprLet: not implemented");
 		}
-		else if(fileExpr.getClass().equals(ExprList.class)) {
-			if(!compareExprList((ExprList) fileExpr, (ExprList) apiExpr)) {
+		else if(expr1.getClass().equals(ExprList.class)) {
+			if(!compareExprList((ExprList) expr1, (ExprList) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprQt.class)) {
-			if(!compareExprQt((ExprQt) fileExpr, (ExprQt) apiExpr)) {
+		else if(expr1.getClass().equals(ExprQt.class)) {
+			if(!compareExprQt((ExprQt) expr1, (ExprQt) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprUnary.class)) {
-			if(!compareExprUnary((ExprUnary) fileExpr, (ExprUnary) apiExpr)) {
+		else if(expr1.getClass().equals(ExprUnary.class)) {
+			if(!compareExprUnary((ExprUnary) expr1, (ExprUnary) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(ExprVar.class)) {
-			if(!compareExprVar((ExprVar) fileExpr, (ExprVar) apiExpr)) {
+		else if(expr1.getClass().equals(ExprVar.class)) {
+			if(!compareExprVar((ExprVar) expr1, (ExprVar) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(Sig.Field.class)) {
-			if(!compareSigField((Sig.Field) fileExpr, (Sig.Field) apiExpr)) {
+		else if(expr1.getClass().equals(Sig.Field.class)) {
+			if(!compareSigField((Sig.Field) expr1, (Sig.Field) expr2)) {
 				return false;
 			}
 		}
-		else if(fileExpr.getClass().equals(Sig.class) || fileExpr.getClass().equals(Sig.PrimSig.class)) {
-			if(!compareSig((Sig) fileExpr, (Sig) apiExpr)) {
+		else if(expr1.getClass().equals(Sig.class) || expr1.getClass().equals(Sig.PrimSig.class)) {
+			if(!compareSig((Sig) expr1, (Sig) expr2)) {
 				return false;
 			}
 		}
 		else {
-			System.err.println("Unexpected class: " + fileExpr.getClass());
+			System.err.println("Unexpected class: " + expr1.getClass());
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean compareExprBinary(ExprBinary fileExpr, ExprBinary apiExpr) {
+	private boolean compareExprBinary(ExprBinary expr1, ExprBinary expr2) {
 		
-		System.out.println("fileExpr: " + fileExpr);
-		System.out.println("apiExpr: " + apiExpr);
+		System.err.println("expr1: " + expr1);
+		System.err.println("expr2: " + expr2);
 		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null || expr2 == null) {
 			return false;
 		}
 				
 		
-		if(!compareExpr(fileExpr.left, apiExpr.left)) {
-			System.err.println("ExprBinary: !compareExpr(fileExpr.left, apiExpr.left)");
-			System.err.println("fileExpr.left: " + fileExpr.left);
-			System.err.println("apiExpr.left: " + apiExpr.left);
+		if(!compareExpr(expr1.left, expr2.left)) {
+			System.err.println("ExprBinary: !compareExpr(expr1.left, expr2.left)");
+			System.err.println("expr1.left: " + expr1.left);
+			System.err.println("expr2.left: " + expr2.left);
 			return false;
 		}
 		
-		if(fileExpr.op != apiExpr.op) {
-			System.err.println("ExprBinary: fileExpr.op != apiExpr.op");
-			System.err.println("fileExpr.op: " + fileExpr.op);
-			System.err.println("apiExpr.op: " + apiExpr.op);
+		if(expr1.op != expr2.op) {
+			System.err.println("ExprBinary: expr1.op != expr2.op");
+			System.err.println("expr1.op: " + expr1.op);
+			System.err.println("expr2.op: " + expr2.op);
 			return false;
 		}
 		
-		if(!compareExpr(fileExpr.right, apiExpr.right)) {
-			System.err.println("ExprBinary: !compareExpr(fileExpr.right, apiExpr.right)");
-			System.err.println("fileExpr.right: " + fileExpr.right);
-			System.err.println("apiExpr.right: " + apiExpr.right);
+		if(!compareExpr(expr1.right, expr2.right)) {
+			System.err.println("ExprBinary: !compareExpr(expr1.right, expr2.right)");
+			System.err.println("expr1.right: " + expr1.right);
+			System.err.println("expr2.right: " + expr2.right);
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean compareExprCall(ExprCall fileExpr, ExprCall apiExpr) {
+	private boolean compareExprCall(ExprCall expr1, ExprCall expr2) {
 		
-		System.out.println("ExprCall1: " + fileExpr);
-		System.out.println("ExprCall2: " + apiExpr);
+		System.err.println("ExprCall1: " + expr1);
+		System.err.println("ExprCall2: " + expr2);
 		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null || expr2 == null) {
 			return false;
 		}
 		
-		if(fileExpr.args.size() != apiExpr.args.size()) {
-			System.err.println("ExprCall: fileExpr.args.size() != apiExpr.args.size()");
+		if(expr1.args.size() != expr2.args.size()) {
+			System.err.println("ExprCall: expr1.args.size() != expr2.args.size()");
 			return false;
 		}
 		
-		Iterator<Expr> iter1 = fileExpr.args.iterator();
-		Iterator<Expr> iter2 = apiExpr.args.iterator();
+		Iterator<Expr> iter1 = expr1.args.iterator();
+		Iterator<Expr> iter2 = expr2.args.iterator();
 		
 		while(iter1.hasNext() && iter2.hasNext()) {
 			
@@ -253,15 +290,15 @@ public class ExpressionComparator {
 			}
 		}
 		
-		if(fileExpr.weight != apiExpr.weight) {
+		if(expr1.weight != expr2.weight) {
 			System.err.println("ExprCall: different weight");
 			return false;
 		}
 		
-		if(!compareFunctions(fileExpr.fun, apiExpr.fun)) {
-			System.err.println("ExprCall: !compareFunctions(fileExpr.fun, apiExpr.fun)");
-			System.err.println("fileExpr.fun: " + fileExpr.fun);
-			System.err.println("apiExpr.fun: " + apiExpr.fun);
+		if(!compareFunctions(expr1.fun, expr2.fun)) {
+			System.err.println("ExprCall: !compareFunctions(expr1.fun, expr2.fun)");
+			System.err.println("expr1.fun: " + expr1.fun);
+			System.err.println("expr2.fun: " + expr2.fun);
 			return false;
 		}
 		
@@ -269,65 +306,79 @@ public class ExpressionComparator {
 		return true;
 	}
 	
-	private boolean compareExprConstant(ExprConstant fileExpr, ExprConstant apiExpr) {
+	private boolean compareExprConstant(ExprConstant expr1, ExprConstant expr2) {
 		
-		System.out.println("ExprConstant1: " + fileExpr);
-		System.out.println("ExprConstant2: " + apiExpr);
+		System.err.println("ExprConstant1: " + expr1);
+		System.err.println("ExprConstant2: " + expr2);
 		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null || expr2 == null) {
 			return false;
 		}
 		
-		if(fileExpr.op != apiExpr.op) {
-			System.err.println("ExprConstant: fileExpr.op != apiExpr.op");
+		if(expr1.op != expr2.op) {
+			System.err.println("ExprConstant: expr1.op != expr2.op");
 			return false;
 		}
 		
-		if(fileExpr.num != apiExpr.num) {
-			System.err.println("ExprConstant: fileExpr.num != apiExpr.num");
+		if(expr1.num != expr2.num) {
+			System.err.println("ExprConstant: expr1.num != expr2.num");
 			return false;
 		}
 		
-		if(!fileExpr.string.equals(apiExpr.string)) {
-			System.err.println("ExprConstant: fileExpr.string != apiExpr.string");
+		if(!expr1.string.equals(expr2.string)) {
+			System.err.println("ExprConstant: expr1.string != expr2.string");
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean compareExprList(ExprList fileExpr, ExprList apiExpr) {
+	private boolean compareExprList(ExprList expr1, ExprList expr2) {
 		
-		System.out.println("ExprList1: " + fileExpr);
-		System.out.println("ExprList2: " + apiExpr);
-		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 != null && expr2 == null) {
+			System.err.println("ExprList1: " + expr1);
+			System.err.println("ExprList2: " + expr2);
+			System.err.println("expr1 != null && expr2 == null");
+			return false;
+		}
+		if(expr1 == null && expr2 != null) {
+			System.err.println("ExprList1: " + expr1);
+			System.err.println("ExprList2: " + expr2);
+			System.err.println("expr1 == null && expr2 != null");
 			return false;
 		}
 		
-		if(fileExpr.op != apiExpr.op) {
-			System.err.println("ExprList: fileExpr.op != apiExpr.op");
+		if(expr1.op != expr2.op) {
+			System.err.println("ExprList1: " + expr1);
+			System.err.println("ExprList2: " + expr2);
+			System.err.println("ExprList: expr1.op != expr2.op");
+			System.err.println("expr1.op = " + expr1.op);
+			System.err.println("expr2.op = " + expr2.op);
 			return false;
 		}
 		
-		if(fileExpr.args.size() != apiExpr.args.size()) {
-			System.err.println("ExprList: fileExpr.args.size() != apiExpr.args.size()");
+		if(expr1.args.size() != expr2.args.size()) {
+			System.err.println("ExprList1: " + expr1);
+			System.err.println("ExprList2: " + expr2);
+			System.err.println("ExprList: expr1.args.size() != expr2.args.size()");
+			System.err.println("expr1.args.size() = " + expr1.args.size());
+			System.err.println("expr2.args.size() = " + expr2.args.size());
 			return false;
 		}
 		
-		for(int i = 0; i < fileExpr.args.size(); i++) {
-			if(!compareExpr(fileExpr.args.get(i), apiExpr.args.get(i))) {
-				System.err.println("ExprList: fileExpr.args != apiExpr.args");
-				System.err.println("fileExpr.args: " + fileExpr.args);
-				System.err.println("apiExpr.args: " + apiExpr.args);
-				System.out.println();
+		for(int i = 0; i < expr1.args.size(); i++) {
+			if(!compareExpr(expr1.args.get(i), expr2.args.get(i))) {
+				System.err.println("ExprList: expr1.args != expr2.args for i = " + i);
+				System.err.println("expr1.args: " + expr1.args);
+				System.err.println("expr2.args: " + expr2.args);
+				System.err.println();
 				return false;
 			}
 		}
@@ -335,149 +386,181 @@ public class ExpressionComparator {
 		return true;
 	}
 	
-	private boolean compareExprQt(ExprQt fileExpr, ExprQt apiExpr) {
+	private boolean compareExprQt(ExprQt expr1, ExprQt expr2) {
 		
-		System.out.println("ExprQt1: " + fileExpr);
-		System.out.println("ExprQt2: " + apiExpr);
-		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null && expr2 != null) {
+			System.err.println("ExprQt1: " + expr1);
+			System.err.println("ExprQt2: " + expr2);
+			System.err.println("compareExprQt: expr1 == null && expr2 != null");
+			return false;
+		}
+		if(expr1 != null && expr2 == null) {
+			System.err.println("ExprQt1: " + expr1);
+			System.err.println("ExprQt2: " + expr2);
+			System.err.println("compareExprQt: expr1 != null && expr2 == null");
 			return false;
 		}
 		
-		if(fileExpr.op != apiExpr.op) {
-			System.err.println("ExprtQt: fileExpr.op != apiExpr.op");
+		if(expr1.op != expr2.op) {
+			System.err.println("ExprQt1: " + expr1);
+			System.err.println("ExprQt2: " + expr2);
+			System.err.println("compareExprQt: expr1.op != expr2.op");
+			System.err.println("expr1.op = " + expr1.op);
+			System.err.println("expr2.op = " + expr2.op);
 			return false;
 		}
 		
-		if(fileExpr.decls.size() != apiExpr.decls.size()) {
-			System.err.println("fileExpr.decls.size() != apiExpr.decls.size()");
+		if(expr1.decls.size() != expr2.decls.size()) {
+			System.err.println("ExprQt1: " + expr1);
+			System.err.println("ExprQt2: " + expr2);
+			System.err.println("compareExprQt: expr1.decls.size() != expr2.decls.size()");
+			System.err.println("expr1.decls.size() = " + expr1.decls.size());
+			System.err.println("expr2.decls.size() = " + expr2.decls.size());
 			return false;
 		}
 		
-		Iterator<Decl> iterator1 = fileExpr.decls.iterator();
-		Iterator<Decl> iterator2 = apiExpr.decls.iterator();
+		Iterator<Decl> iterator1 = expr1.decls.iterator();
+		Iterator<Decl> iterator2 = expr2.decls.iterator();
 		
 		while(iterator1.hasNext() && iterator2.hasNext()) {
-			if(!compareDecl(iterator1.next(), iterator2.next())) {
-				System.err.println("ExprQt: different decls.");
+			Decl d1 = iterator1.next();
+			Decl d2 = iterator2.next();
+			if(!compareDecl(d1, d2)) {
+				System.err.println("ExprQt1: " + expr1);
+				System.err.println("ExprQt2: " + expr2);
+				System.err.println("compareExprQt: !compareDecl(d1, d2)");
 				return false;
 			}
 		}
 		
 
-		if(!compareExpr(fileExpr.sub, apiExpr.sub)) {
-			System.err.println("ExprQt: different sub");
-			System.err.println("fileExpr.sub: " + fileExpr.sub);
-			System.err.println("apiExpr.sub: " + apiExpr.sub);
-			System.out.println();
+		if(!compareExpr(expr1.sub, expr2.sub)) {
+			System.err.println("ExprQt1: " + expr1);
+			System.err.println("ExprQt2: " + expr2);
+			System.err.println("compareExprQt: !compareExpr(expr1.sub, expr2.sub)");
+			System.err.println("expr1.sub: " + expr1.sub);
+			System.err.println("expr2.sub: " + expr2.sub);
 			return false;
 		}
 				
 		return true;
 	}
 	
-	private boolean compareExprUnary(ExprUnary fileExpr, ExprUnary apiExpr) {
+	private boolean compareExprUnary(ExprUnary expr1, ExprUnary expr2) {
+	
 		
-		System.out.println("ExprUnary1: " + fileExpr);
-		System.out.println("ExprUnary2: " + apiExpr);
-		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
 		
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 != null && expr2 == null) {
+			System.err.println("ExprUnary1: " + expr1);
+			System.err.println("ExprUnary2: " + expr2);
+			System.err.println("compareExprUnary: expr1 != null && expr2 == null");
+			return false;
+		}
+		if(expr1 == null && expr2 != null) {
+			System.err.println("ExprUnary1: " + expr1);
+			System.err.println("ExprUnary2: " + expr2);
+			System.err.println("compareExprUnary: expr1 == null && expr2 != null");
 			return false;
 		}
 		
-		if(fileExpr.op != apiExpr.op) {
-			System.err.println("compareExprUnary: fileExpr.op != apiExpr.op");
+		if(expr1.op != expr2.op) {
+			System.err.println("ExprUnary1: " + expr1);
+			System.err.println("ExprUnary2: " + expr2);
+			System.err.println("compareExprUnary: expr1.op != expr2.op");
+			System.err.println("expr1.op = " + expr1.op);
+			System.err.println("expr1.op = " + expr2.op);
 			return false;
 		}
-		if(!compareExpr(fileExpr.sub, apiExpr.sub)) {
-			System.err.println("compareExprUnary: !compareExpr(fileExpr.sub, apiExpr.sub)");
-			System.err.println("fileExpr.sub: " + fileExpr.sub);
-			System.err.println("apiExpr.sub: " + apiExpr.sub);
+		if(!compareExpr(expr1.sub, expr2.sub)) {
+			System.err.println("ExprUnary1: " + expr1);
+			System.err.println("ExprUnary2: " + expr2);
+			System.err.println("compareExprUnary: !compareExpr(expr1.sub, expr2.sub)");
+			System.err.println("expr1.sub = " + expr1.sub);
+			System.err.println("expr2.sub = " + expr2.sub);
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean compareExprVar(ExprVar fileExpr, ExprVar apiExpr) {
+	private boolean compareExprVar(ExprVar expr1, ExprVar expr2) {
 		
-		System.out.println("ExprVar1: " + fileExpr);
-		System.out.println("ExprVar2: " + apiExpr);
+		System.err.println("ExprVar1: " + expr1);
+		System.err.println("ExprVar2: " + expr2);
 		
-		if(fileExpr == null && apiExpr == null) {
+		if(expr1 == null && expr2 == null) {
 			return true;
 		}
-		if(fileExpr == null || apiExpr == null) {
+		if(expr1 == null || expr2 == null) {
 			return false;
 		}
 		
-		if(!fileExpr.label.equals(apiExpr.label)) {
-			System.err.println("ExprVar: fileExpr.label != apiExpr.label");
+		if(!expr1.label.equals(expr2.label)) {
+			System.err.println("ExprVar: expr1.label != expr2.label");
 			return false;
 		}
 		
-		if(!compareType(fileExpr.type(), apiExpr.type())) {
-			System.err.println("ExprVar: fileExpr.type() != apiExpr.type()");
+		if(!compareType(expr1.type(), expr2.type())) {
+			System.err.println("ExprVar: expr1.type() != expr2.type()");
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean compareFunctions(Func fileFunc, Func apiFunc) {
+	private boolean compareFunctions(Func func1, Func func2) {
  		
- 		System.out.println("Func fileFunc: " + fileFunc);
-		System.out.println("Func apiFunc: " + apiFunc);
+ 		System.err.println("Func func1: " + func1);
+		System.err.println("Func func2: " + func2);
 		
-		if(fileFunc == null && apiFunc != null) {
-			System.out.println("compareFunction: fileFunc null, apiFunc not null");
+		if(func1 == null && func2 != null) {
+			System.err.println("compareFunction: func1 null, func2 not null");
 			return false;
 		}
 		
-		if(fileFunc != null && apiFunc == null) {
-			System.out.println("compareFunction: fileFunc not null, apiFunc null");
+		if(func1 != null && func2 == null) {
+			System.err.println("compareFunction: func1 not null, func2 null");
 			return false;
 		}
 				
-		if(fileFunc.decls.size() != apiFunc.decls.size()) {
+		if(func1.decls.size() != func2.decls.size()) {
 			System.err.println("compareFunction: Decls size different.");
 			return false;
 		}
 		
-		for(int i = 0; i < fileFunc.decls.size(); i++) {
-			if(!compareDecl(fileFunc.decls.get(i), apiFunc.decls.get(i))) {
+		for(int i = 0; i < func1.decls.size(); i++) {
+			if(!compareDecl(func1.decls.get(i), func2.decls.get(i))) {
 				System.err.println("compareFunction: Different decls.");
 				return false;
 			}
 		}
 		
-		if(fileFunc.isPred != apiFunc.isPred) {
+		if(func1.isPred != func2.isPred) {
 			System.err.println("compareFunction: isPred different.");
 			return false;
 		}		
-		if(fileFunc.isPrivate == null && apiFunc.isPrivate != null) {
-			System.err.println("compareFunctions: isPrivate: fileFunc null, apiFunc not null");
+		if(func1.isPrivate == null && func2.isPrivate != null) {
+			System.err.println("compareFunctions: isPrivate: func1 null, func2 not null");
 			return false;
 		}
-		if(fileFunc.isPrivate != null && apiFunc.isPrivate == null) {
-			System.err.println("compareFunctions isPrivate: fileFunc not null, apiFunc null");
+		if(func1.isPrivate != null && func2.isPrivate == null) {
+			System.err.println("compareFunctions isPrivate: func1 not null, func2 null");
 			return false;
 		}		
-		if(!MyAlloyLibrary.removeSlash(fileFunc.label).equals(MyAlloyLibrary.removeSlash(apiFunc.label))) {
-			System.err.println("compareFunctions: !fileFunc.label.equals(apiFunc.label)");
-			System.err.println("fileFunc.label: " + fileFunc.label);
-			System.err.println("apiFunc.label: " + apiFunc.label);
+		if(!MyAlloyLibrary.removeSlash(func1.label).equals(MyAlloyLibrary.removeSlash(func2.label))) {
+			System.err.println("compareFunctions: !func1.label.equals(func2.label)");
+			System.err.println("func1.label: " + func1.label);
+			System.err.println("func2.label: " + func2.label);
 			return false;
 		}		
-		if(!compareExpr(fileFunc.returnDecl, fileFunc.returnDecl)) {
+		if(!compareExpr(func1.returnDecl, func1.returnDecl)) {
 			System.err.println("compareFunctions: Different returnDecl.");
 			return false;
 		}
@@ -485,160 +568,225 @@ public class ExpressionComparator {
 		return true;
 	}
 	
-	private boolean compareSig(Sig fileSig, Sig apiSig) {
+	private boolean compareSig(Sig sig1, Sig sig2) {
 		
-		if(fileSig == null && apiSig == null) {
+		if(sig1 == null && sig2 == null) {
 			return true;
 		}
-		if(fileSig == null || apiSig == null) {
-			System.err.println("compareSig: fileSig == null || apiSig == null");
+		if(sig1 == null && sig2 != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1 == null && sig2 != null");
 			return false;
 		}
-		
-		System.out.println("fileSig: " + fileSig);
-		System.out.println("apiSig: " + apiSig);
+		if(sig1 != null && sig2 == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1 != null && sig2 == null");
+			return false;
+		}
 		
 		// ConstList<Attr> comparison not implemented.
 
-		if(fileSig.builtin != apiSig.builtin) {
-			System.err.println("compareSig: fileSig.builtin != apiSig.builtin");
+		if(sig1.builtin != sig2.builtin) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.builtin != sig2.builtin");
+			System.err.println("sig1.builtin = " + sig1.builtin);
+			System.err.println("sig2.builtin = " + sig2.builtin);
 			return false;
 		}		
-		if(!compareDecl(fileSig.decl, apiSig.decl)) {
-			System.err.println("compareSig: !compareDecl(fileSig.decl, apiSig.decl)");
+		if(!compareDecl(sig1.decl, sig2.decl)) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig:!compareDecl(sig1.decl, sig2.decl)");
 			return false;
 		}
 		
-		if(fileSig.isAbstract == null && apiSig.isAbstract != null) {
-			System.err.println("compareSig: fileSig.isAbstract == null && apiSig.isAbstract != null");
+		if(sig1.isAbstract == null && sig2.isAbstract != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isAbstract == null && sig2.isAbstract != null");
 			return false;
 		}
-		if(fileSig.isAbstract != null && apiSig.isAbstract == null) {
-			System.err.println("compareSig: fileSig.isAbstract != null && apiSig.isAbstract == null");
+		if(sig1.isAbstract != null && sig2.isAbstract == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isAbstract != null && sig2.isAbstract == null");
 			return false;
 		}
-		if(fileSig.isEnum == null && apiSig.isEnum != null) {
-			System.err.println("compareSig: fileSig.isEnum == null && apiSig.isEnum != null");
+		if(sig1.isEnum == null && sig2.isEnum != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isEnum == null && sig2.isEnum != null");
 			return false;
 		}
-		if(fileSig.isEnum != null && apiSig.isEnum == null) {
-			System.err.println("compareSig: fileSig.isEnum != null && apiSig.isEnum == null");
+		if(sig1.isEnum != null && sig2.isEnum == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isEnum != null && sig2.isEnum == null");
 			return false;
 		}
-		if(fileSig.isLone == null && apiSig.isLone != null) {
-			System.err.println("compareSig: fileSig.isLone == null && apiSig.isLone != null");
+		if(sig1.isLone == null && sig2.isLone != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isLone == null && sig2.isLone != null");
 			return false;
 		}
-		if(fileSig.isLone != null && apiSig.isLone == null) {
-			System.err.println("compareSig: fileSig.isLone != null && apiSig.isLone == null");
+		if(sig1.isLone != null && sig2.isLone == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isLone != null && sig2.isLone == null");
 			return false;
 		}
-		if(fileSig.isMeta == null && apiSig.isMeta != null) {
-			System.err.println("compareSig: fileSig.isMeta == null && apiSig.isMeta != null");
+		if(sig1.isMeta == null && sig2.isMeta != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isMeta == null && sig2.isMeta != null");
 			return false;
 		}
-		if(fileSig.isMeta != null && apiSig.isMeta == null) {
-			System.err.println("compareSig: fileSig.isMeta != null && apiSig.isMeta == null");
+		if(sig1.isMeta != null && sig2.isMeta == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isMeta != null && sig2.isMeta == null");
 			return false;
 		}
-		if(fileSig.isOne == null && apiSig.isOne != null) {
-			System.err.println("compareSig: fileSig.isOne == null && apiSig.isOne != null");
+		if(sig1.isOne == null && sig2.isOne != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isOne == null && sig2.isOne != null");
 			return false;
 		}
-		if(fileSig.isOne != null && apiSig.isOne == null) {
-			System.err.println("compareSig: fileSig.isOne != null && apiSig.isOne == null");
+		if(sig1.isOne != null && sig2.isOne == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isOne != null && sig2.isOne == null");
 			return false;
 		}
-		if(fileSig.isPrivate == null && apiSig.isPrivate != null) {
-			System.err.println("compareSig: fileSig.isPrivate == null && apiSig.isPrivate != null");
+		if(sig1.isPrivate == null && sig2.isPrivate != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isPrivate == null && sig2.isPrivate != null");
 			return false;
 		}
-		if(fileSig.isPrivate != null && apiSig.isPrivate == null) {
-			System.err.println("compareSig: fileSig.isPrivate != null && apiSig.isPrivate == null");
+		if(sig1.isPrivate != null && sig2.isPrivate == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isPrivate != null && sig2.isPrivate == null");
 			return false;
 		}
-		if(fileSig.isSome == null && apiSig.isSome != null) {
-			System.err.println("compareSig: fileSig.isSome == null && apiSig.isSome != null");
+		if(sig1.isSome == null && sig2.isSome != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSome == null && sig2.isSome != null");
 			return false;
 		}
-		if(fileSig.isSome != null && apiSig.isSome == null) {
-			System.err.println("compareSig: fileSig.isSome != null && apiSig.isSome == null");
+		if(sig1.isSome != null && sig2.isSome == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSome != null && sig2.isSome == null");
 			return false;
 		}
-		if(fileSig.isSubset == null && apiSig.isSubset != null) {
-			System.err.println("compareSig: fileSig.isSubset == null && apiSig.isSubset != null");
+		if(sig1.isSubset == null && sig2.isSubset != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSubset == null && sig2.isSubset != null");
 			return false;
 		}
-		if(fileSig.isSubset != null && apiSig.isSubset == null) {
-			System.err.println("compareSig: fileSig.isSubset != null && apiSig.isSubset == null");
+		if(sig1.isSubset != null && sig2.isSubset == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSubset != null && sig2.isSubset == null");
 			return false;
 		}
-		if(fileSig.isSubsig == null && apiSig.isSubsig != null) {
-			System.err.println("compareSig: fileSig.isSubsig == null && apiSig.isSubsig != null");
+		if(sig1.isSubsig == null && sig2.isSubsig != null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSubsig == null && sig2.isSubsig != null");
 			return false;
 		}
-		if(fileSig.isSubsig != null && apiSig.isSubsig == null) {
-			System.err.println("compareSig: fileSig.isSubsig != null && apiSig.isSubsig == null");
+		if(sig1.isSubsig != null && sig2.isSubsig == null) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isSubsig != null && sig2.isSubsig == null");
 			return false;
 		}
-		if(!MyAlloyLibrary.removeSlash(fileSig.label).equals(MyAlloyLibrary.removeSlash(apiSig.label))) {
-			System.err.println("compareSig: !fileSig.label.equals(apiSig.label)");
-			System.err.println("fileSig.label: " + MyAlloyLibrary.removeSlash(fileSig.label));
-			System.err.println("apiSig.label: " + MyAlloyLibrary.removeSlash(apiSig.label));
+		if(!MyAlloyLibrary.removeSlash(sig1.label).equals(MyAlloyLibrary.removeSlash(sig2.label))) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: !sig1.label.equals(sig2.label)");
+			System.err.println("sig1.label: " + MyAlloyLibrary.removeSlash(sig1.label));
+			System.err.println("sig2.label: " + MyAlloyLibrary.removeSlash(sig2.label));
 			return false;
 		}	
-		if(fileSig.getDepth() != apiSig.getDepth()) {
-			System.err.println("compareSig: fileSig.getDepth() != apiSig.getDepth()");
+		if(sig1.getDepth() != sig2.getDepth()) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.getDepth() != sig2.getDepth()");
+			System.err.println("sig1.getDepth() = " + sig1.getDepth());
+			System.err.println("sig2.getDepth() = " + sig2.getDepth());
 			return false;
 		}
 				
-		if(fileSig.getFacts().size() != apiSig.getFacts().size()) {
-			System.err.println("compareSig: fileSig.getFacts().size() != apiSig.getFacts().size()");
-			System.err.println("fileSig.getFacts().size(): " + fileSig.getFacts().size());
-			System.err.println("apiSig.getFacts().size(): " + apiSig.getFacts().size());
+		if(sig1.getFacts().size() != sig2.getFacts().size()) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.getFacts().size() != sig2.getFacts().size()");
+			System.err.println("sig1.getFacts().size(): " + sig1.getFacts().size());
+			System.err.println("sig2.getFacts().size(): " + sig2.getFacts().size());
 			return false;
 		}
 		
-		Iterator<Expr> fileSigFacts = fileSig.getFacts().iterator();
-		Iterator<Expr> apiSigFacts = apiSig.getFacts().iterator();
+		Iterator<Expr> sig1Facts = sig1.getFacts().iterator();
+		Iterator<Expr> sig2Facts = sig2.getFacts().iterator();
 		
-		while(fileSigFacts.hasNext() && apiSigFacts.hasNext()) {
+		while(sig1Facts.hasNext() && sig2Facts.hasNext()) {
 			
-			Expr next1 = fileSigFacts.next();
-			Expr next2 = apiSigFacts.next();
+			Expr next1 = sig1Facts.next();
+			Expr next2 = sig2Facts.next();
 			
 			if(!compareExpr(next1, next2)) {
-				System.err.println("compareSig: !compareExpr(fileSigFacts.next(), apiSigFacts.next())");
+				System.err.println("sig1: " + sig1);
+				System.err.println("sig2: " + sig2);
+				System.err.println("compareSig: !compareExpr(sig1Facts.next(), sig2Facts.next())");
 				return false;
 			}
 		}
 		
-		if(fileSig.getFieldDecls().size() != apiSig.getFieldDecls().size()) {
-			System.err.println("compareSig: fileSig.getFieldDecls().size() != apiSig.getFieldDecls().size()");
+		if(sig1.getFieldDecls().size() != sig2.getFieldDecls().size()) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.getFieldDecls().size() != sig2.getFieldDecls().size()");
 			return false;
 		}
 		
-		Iterator<Decl> fileSigFieldDecls = fileSig.getFieldDecls().iterator();
-		Iterator<Decl> apiSigFieldDecls = apiSig.getFieldDecls().iterator();
+		Iterator<Decl> sig1FieldDecls = sig1.getFieldDecls().iterator();
+		Iterator<Decl> sig2FieldDecls = sig2.getFieldDecls().iterator();
 		
-		while(fileSigFieldDecls.hasNext() && apiSigFieldDecls.hasNext()) {
-			if(!compareDecl(fileSigFieldDecls.next(), apiSigFieldDecls.next())) {
-				System.err.println("compareSig: !compareDecl(fileSigFieldDecls.next(), apiSigFieldDecls.next())");
+		while(sig1FieldDecls.hasNext() && sig2FieldDecls.hasNext()) {
+			if(!compareDecl(sig1FieldDecls.next(), sig2FieldDecls.next())) {
+				System.err.println("sig1: " + sig1);
+				System.err.println("sig2: " + sig2);
+				System.err.println("compareSig: !compareDecl(sig1FieldDecls.next(), sig2FieldDecls.next())");
 				return false;
 			}
 		}
 				
-		if(fileSig.getFields().size() != apiSig.getFields().size()) {
-			System.err.println("compareSig: fileSig.getFields().size() != apiSig.getFields().size()");
+		if(sig1.getFields().size() != sig2.getFields().size()) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.getFields().size() != sig2.getFields().size()");
 			return false;
 		}
 		
-		Iterator<Sig.Field> fileSigFields = fileSig.getFields().iterator();
-		Iterator<Sig.Field> apiSigFields = apiSig.getFields().iterator(); 
+		Iterator<Sig.Field> sig1Fields = sig1.getFields().iterator();
+		Iterator<Sig.Field> sig2Fields = sig2.getFields().iterator(); 
 		
-		while(fileSigFields.hasNext() && apiSigFields.hasNext()) {
-			if(!compareSigField(fileSigFields.next(), apiSigFields.next())) {
-				System.err.println("compareSig: !compareSigField(fileSigFields.next(), apiSigFields.next())");
+		while(sig1Fields.hasNext() && sig2Fields.hasNext()) {
+			if(!compareSigField(sig1Fields.next(), sig2Fields.next())) {
+				System.err.println("sig1: " + sig1);
+				System.err.println("sig2: " + sig2);
+				System.err.println("compareSig: !compareSigField(sig1Fields.next(), sig2Fields.next())");
 				return false;
 			}
 		}
@@ -647,42 +795,46 @@ public class ExpressionComparator {
 		// getHTML() not implemented
 		// getSubnodes() not implemented
 		
-		if(fileSig.isTopLevel() != apiSig.isTopLevel()) {
-			System.err.println("compareSig: fileSig.isTopLevel() != apiSig.isTopLevel()");
+		if(sig1.isTopLevel() != sig2.isTopLevel()) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: sig1.isTopLevel() != sig2.isTopLevel()");
 			return false;
 		}
-		if(!MyAlloyLibrary.removeSlash(fileSig.toString()).equals(MyAlloyLibrary.removeSlash(apiSig.toString()))) {
-			System.err.println("compareSig: !fileSig.toString().equals(apiSig.toString())");
+		if(!MyAlloyLibrary.removeSlash(sig1.toString()).equals(MyAlloyLibrary.removeSlash(sig2.toString()))) {
+			System.err.println("sig1: " + sig1);
+			System.err.println("sig2: " + sig2);
+			System.err.println("compareSig: !sig1.toString().equals(sig2.toString())");
 			return false;
 		}
 		
 		return true;
 	}
 
-	private boolean compareSigField(Sig.Field fileSigField, Sig.Field apiSigField) {
+	private boolean compareSigField(Sig.Field sig1Field, Sig.Field sig2Field) {
 	
-		System.out.println("Sig.Field1: " + fileSigField);
-		System.out.println("Sig.Field2: " + apiSigField);
+		System.err.println("Sig.Field1: " + sig1Field);
+		System.err.println("Sig.Field2: " + sig2Field);
 		
-		if(fileSigField == null && apiSigField == null) {
+		if(sig1Field == null && sig2Field == null) {
 			return true;
 		}
 		
-		if(fileSigField == null || apiSigField == null) {
+		if(sig1Field == null || sig2Field == null) {
 			return false;
 		}
 		
-		if(fileSigField.defined != apiSigField.defined) {
-			System.err.println("Sig.Field: fileSig.defined != apiSig.defined");
+		if(sig1Field.defined != sig2Field.defined) {
+			System.err.println("Sig.Field: sig1.defined != sig2.defined");
 			return false;
 		}
 		
-		if((fileSigField.isMeta == null && apiSigField.isMeta != null) || fileSigField.isMeta != null && apiSigField.isMeta == null) {
+		if((sig1Field.isMeta == null && sig2Field.isMeta != null) || sig1Field.isMeta != null && sig2Field.isMeta == null) {
 			System.err.println("Sig.Field: isMeta different");
 			return false;
 		}
 		
-		if((fileSigField.isPrivate == null && apiSigField.isPrivate != null) || fileSigField.isPrivate != null && apiSigField.isPrivate == null) {
+		if((sig1Field.isPrivate == null && sig2Field.isPrivate != null) || sig1Field.isPrivate != null && sig2Field.isPrivate == null) {
 			System.err.println("Sig.Field: isPrivate different");
 			return false;
 		}
