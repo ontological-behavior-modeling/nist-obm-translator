@@ -166,11 +166,11 @@ public class Create_SimpleSequence_ExplicitFact {
 
     // ========== Define command ==========
 
-    Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq,
-        _expects, _scope, _additionalExactSig, _formula, _parent);
+    Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq, _expects, _scope, _additionalExactSig, _formula, _parent);
+    Command[] commands = {command};
 
     AlloyModule alloyModule =
-        new AlloyModule(moduleName, sst.getAllSigs(), sst.getOverAllFact(), command);
+        new AlloyModule(moduleName, sst.getAllSigs(), sst.getOverAllFact(), commands);
 
     Translator translator = new Translator(ignoredExprs, ignoredFuncs, ignoredSigs);
     String outFileName = "generated-" + alloyModule.getModuleName() + ".als";

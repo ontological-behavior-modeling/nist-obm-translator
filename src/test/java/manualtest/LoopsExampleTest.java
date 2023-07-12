@@ -1,3 +1,4 @@
+package manualtest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
@@ -5,6 +6,8 @@ import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
 import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
+import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
+import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.ExprVar;
@@ -16,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
 
 
@@ -46,9 +51,9 @@ class LoopsExampleTest {
 		ExprVar loopThis = ExprVar.make(null, "this", loopSig.type());
 		
 		Func functionFilteredFunction = Helper.getFunction(alloy.transferModule, "o/functionFiltered");
-		Func happensBefore = Helper.getFunction(alloy.transferModule, "o/happensBefore");
+		Func happensBefore = Helper.getFunction(Alloy.transferModule, "o/happensBefore");
 		Func inverseFunctionFilteredFunction = Helper.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
-		Func stepsFunction = Helper.getFunction(alloy.transferModule, "o/steps");
+		Func stepsFunction = Helper.getFunction(Alloy.transferModule, "o/steps");
 		
 		loopSig.addFact(
 			functionFilteredFunction.call(happensBefore.call(), loopThis.join(loop_p1), loopThis.join(loop_p2))
@@ -111,9 +116,19 @@ class LoopsExampleTest {
 	    Func nonZeroDurationOnlyFunction = Helper.getFunction(alloy.transferModule, "o/nonZeroDurationOnly");
 	    Expr nonZeroDurationOnlyExpression = nonZeroDurationOnlyFunction.call();
 	    
+	    // ========== Define command(s) ==========
+	    
+	    Expr loopExpr = alloy.getCommonCmdExprs()
+		.and(instancesDuringExampleExpression).and(onlyLoopExpression);
+	    Command loopCmd = new Command(null, loopExpr, "loop", false, 12, -1, 
+		-1, -1, new ArrayList<>(), new ArrayList<>(), 
+		loopExpr.and(alloy.getOverAllFact()), null);
+	    
+	    Command[] commands = {loopCmd};
+	    
 	    // ========== Import real AST from file ==========
 	    
-	    String filename = "4.1.2 LoopsExamples.als";
+	    String filename = "src/test/resources/4.1.2 LoopsExamples.als";
 	    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 	    
 	    // ========== Test if they are equal ==========
@@ -142,6 +157,19 @@ class LoopsExampleTest {
 	    	assertTrue(apiMap.containsKey(sigName));
 	    	assertTrue(ec.compareTwoExpressions(fileMap.get(sigName), apiMap.get(sigName)));
 	    }
+	    
+	    // ========== Write file ==========
+	    
+	    AlloyModule alloyModule = new AlloyModule("LoopsExample",
+		alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+	    
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), 
+		alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    
+	    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() 
+	    + ".als";
+	    
+	    translator.generateAlsFileContents(alloyModule, outFileName);
 	}
 
 }

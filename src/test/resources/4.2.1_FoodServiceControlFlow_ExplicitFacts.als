@@ -73,10 +73,10 @@ sig RestaurantService extends SingleFoodService{}{
 	// bijectionFiltered[happensBefore, eat, pay]
 }
 //*****************************************************************
-/** 				Usatisfiable Food Service */
+/** 				Unsatisfiable Food Service */
 //*****************************************************************
 /**	Definition */
-sig UsatisfiableFoodService extends SingleFoodService{}{
+sig UnsatisfiableFoodService extends SingleFoodService{}{
 	// bijectionFiltered[happensBefore, eat, pay]
 	// bijectionFiltered[happensBefore, pay, prepare]
 	// r/asymmetric[^happensBefore]	// Comment this line to produce instance
@@ -131,11 +131,11 @@ fact f16 { all ffs: FastFoodService | bijectionFiltered[happensBefore, ffs.pay, 
 // bijectionFiltered[happensBefore, eat, pay]
 fact f17 { all rs: RestaurantService | bijectionFiltered[happensBefore, rs.eat, rs.pay] }
 
-// UsatisfiableFoodService explicit facts:
+// UnsatisfiableFoodService explicit facts:
 // bijectionFiltered[happensBefore, eat, pay]
 // bijectionFiltered[happensBefore, pay, prepare]
-fact f18 { all ufs: UsatisfiableFoodService | bijectionFiltered[happensBefore, ufs.eat, ufs.pay] }
-fact f19 { all ufs: UsatisfiableFoodService | bijectionFiltered[happensBefore, ufs.pay, ufs.prepare] }
+fact f18 { all ufs: UnsatisfiableFoodService | bijectionFiltered[happensBefore, ufs.eat, ufs.pay] }
+fact f19 { all ufs: UnsatisfiableFoodService | bijectionFiltered[happensBefore, ufs.pay, ufs.prepare] }
 
 //******************************************************************************************************
 /** 			General Functions and Predicates */
@@ -149,8 +149,8 @@ pred onlyBuffetService {#BuffetService = 1 and all g: FoodService | g in BuffetS
 pred onlyChurchSupperService {#ChurchSupperService = 1 and all g: FoodService | g in ChurchSupperService}
 pred onlyFastFoodService {#FastFoodService =1 and all g: FoodService | g in FastFoodService}
 pred onlyRestaurantService {#RestaurantService = 1 and all g: FoodService | g in RestaurantService}
-pred onlyUsatisfiableFoodService {#UsatisfiableFoodService = 1 and all g: FoodService | g in UsatisfiableFoodService}
-pred noChildFoodService {no BuffetService && no ChurchSupperService && no FastFoodService && no RestaurantService && no UsatisfiableFoodService}
+pred onlyUnsatisfiableFoodService {#UnsatisfiableFoodService = 1 and all g: FoodService | g in UnsatisfiableFoodService}
+pred noChildFoodService {no BuffetService && no ChurchSupperService && no FastFoodService && no RestaurantService && no UnsatisfiableFoodService}
 //******************************************************************************************************
 /** 				Checks and Runs */
 //	Note: Use the "Test Case Generator - Food Service.xlsx" file to generate cases for each FoodService subtype. Otherwise, the list of 
@@ -162,4 +162,4 @@ run showBuffetService{nonZeroDurationOnly && instancesDuringExample && onlyBuffe
 run showChurchSupperService{nonZeroDurationOnly && instancesDuringExample && onlyChurchSupperService and suppressTransfers and suppressIO} for 10
 run showFastFoodService{nonZeroDurationOnly && instancesDuringExample && onlyFastFoodService and suppressTransfers and suppressIO} for 10
 run showRestaurantService{nonZeroDurationOnly && instancesDuringExample && onlyRestaurantService and suppressTransfers and suppressIO} for 10
-run showUsatisfiableFoodService{instancesDuringExample && onlyUsatisfiableFoodService and suppressTransfers and suppressIO} for 15
+run showUnsatisfiableFoodService{instancesDuringExample && onlyUnsatisfiableFoodService and suppressTransfers and suppressIO} for 15

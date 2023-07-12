@@ -1,4 +1,7 @@
+package manualtest;
 import static org.junit.jupiter.api.Assertions.*;
+
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
 import java.util.List;
 
@@ -8,13 +11,17 @@ import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
 import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
+import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
+import edu.mit.csail.sdg.ast.Command;
+import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Expr;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -59,8 +66,7 @@ class CallingBehaviorsTest {
 			bijectionFilteredFunction.call(happensBeforeFunction.call(), this_nestedBehavior.join(nestedBehavior_p4), this_nestedBehavior.join(nestedBehavior_p5))
 			.and(this_nestedBehavior.join(nestedBehavior_p4).cardinality().equal(ExprConstant.makeNUMBER(1)))
 			.and(this_nestedBehavior.join(nestedBehavior_p4).plus(this_nestedBehavior.join(nestedBehavior_p5)).in(this_nestedBehavior.join(stepsFunction.call())))
-			.and(this_nestedBehavior.join(stepsFunction.call()).in(this_nestedBehavior.join(nestedBehavior_p4).plus(this_nestedBehavior.join(nestedBehavior_p5))))
-		);
+			.and(this_nestedBehavior.join(stepsFunction.call()).in(this_nestedBehavior.join(nestedBehavior_p4).plus(this_nestedBehavior.join(nestedBehavior_p5)))));
 		
 		// ComposedBehavior
 		
@@ -71,8 +77,7 @@ class CallingBehaviorsTest {
 			.and(bijectionFilteredFunction.call(happensBeforeFunction.call(), this_composedBehavior.join(composedBehavior_p2), this_composedBehavior.join(composedBehavior_p3)))
 			.and(this_composedBehavior.join(composedBehavior_p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
 			.and(this_composedBehavior.join(composedBehavior_p1).plus(this_composedBehavior.join(composedBehavior_p2)).plus(this_composedBehavior.join(composedBehavior_p3)).in(this_composedBehavior.join(stepsFunction.call())))
-			.and(this_composedBehavior.join(stepsFunction.call()).in(this_composedBehavior.join(composedBehavior_p1).plus(this_composedBehavior.join(composedBehavior_p2)).plus(this_composedBehavior.join(composedBehavior_p3))))
-		);
+			.and(this_composedBehavior.join(stepsFunction.call()).in(this_composedBehavior.join(composedBehavior_p1).plus(this_composedBehavior.join(composedBehavior_p2)).plus(this_composedBehavior.join(composedBehavior_p3)))));
 		
 		// ========== Define functions and predicates ==========
 		
@@ -90,7 +95,7 @@ class CallingBehaviorsTest {
 	    Expr suppressIOExpression = suppressIOFunction.call();
 	    
 	    // p1DuringExample
-	    Expr p1DuringExampleBody = p1Sig.in(composedBehaviorSig.join(p1Sig));
+	    Expr p1DuringExampleBody = p1Sig.in(composedBehaviorSig.join(composedBehavior_p1));
 	    Func p1DuringExamplePredicate = new Func(null, "p1DuringExample", new ArrayList<>(), null, p1DuringExampleBody);
 	    Expr p1DuringExampleExpression = p1DuringExamplePredicate.call();
 	    
@@ -130,7 +135,7 @@ class CallingBehaviorsTest {
 	    
 	    // ========== Create Alloy file version ==========
 	    
-	    String filename = "4.1.3 CallingBehaviors.als";
+	    String filename = "src/test/resources/4.1.3 CallingBehaviors.als";
 	    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 	    
 	    // ========== Test if they are equal ==========
@@ -160,6 +165,17 @@ class CallingBehaviorsTest {
 	    	assertTrue(apiMap.containsKey(sigName));
 	    	assertTrue(ec.compareTwoExpressions(fileMap.get(sigName), apiMap.get(sigName)));
 	    }
+	    
+	    // ========== Define command ==========
+	    Expr composedBehaviorCmdExpr = nonZeroDurationOnlyExpression.and(suppressTransfersExpression).and(suppressIOExpression).and(instancesDuringExampleExpression).and(onlyComposedBehaviorExpression);
+	    Command composedBehaviorCmd = new Command(null, composedBehaviorCmdExpr, "composedBehavior", false, 6, -1, -1, -1, Arrays.asList(new CommandScope[] {}), Arrays.asList(new Sig[] {}), composedBehaviorCmdExpr.and(alloy.getOverAllFact()), null);
+	    
+	    // ========== Write file ==========
+	    AlloyModule alloyModule = new AlloyModule("CallingBehaviors", alloy.getAllSigs(), alloy.getOverAllFact(), new Command[] {composedBehaviorCmd});
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
+	    translator.generateAlsFileContents(alloyModule, outFileName);
+	    
 	}
 
 }

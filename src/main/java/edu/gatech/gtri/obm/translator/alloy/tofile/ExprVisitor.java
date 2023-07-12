@@ -1,8 +1,12 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -21,9 +25,11 @@ import edu.mit.csail.sdg.ast.Sig.Field;
 public class ExprVisitor extends VisitQuery<String> {
 	
 	private final Set<Expr> ignoredExprs;
-	private boolean isRoot = true;
+	public boolean isRootSig = false;
+	private boolean isRootExprList = true;
 	private boolean fieldAfterSig = false;
 	private boolean isImplicitFact = false;
+	private boolean isSigFact = false;
 	private int factNumber = 1;
 	
 	public ExprVisitor(Set<Expr> ignoredExprs) {
@@ -36,6 +42,8 @@ public class ExprVisitor extends VisitQuery<String> {
 		if(ignoredExprs.contains(x)) {
     		return "";
     	}
+		
+		isRootSig = false;
 		
 		StringBuilder sb = new StringBuilder();
     	
@@ -67,6 +75,8 @@ public class ExprVisitor extends VisitQuery<String> {
     		return "";
     	}
 		
+		isRootSig = false;
+		
 		String funcName = MyAlloyLibrary.removeSlash(x.fun.label);
 		String[] args = new String[x.args.size()];
 		
@@ -91,6 +101,8 @@ public class ExprVisitor extends VisitQuery<String> {
     		return "";
     	}
 		
+		isRootSig = false;
+		
         return x.toString();
     }
 	
@@ -100,9 +112,12 @@ public class ExprVisitor extends VisitQuery<String> {
 		if(ignoredExprs.contains(x)) {
     		return "";
     	}
+		
+		isRootSig = false;
 				
-		if(isRoot) {
-			isRoot = false;
+		if(isRootExprList || isSigFact) {
+			
+			isRootExprList = false;
 			StringBuilder sb = new StringBuilder();
 	        for (Expr y : x.args) {
 	        	
@@ -110,24 +125,18 @@ public class ExprVisitor extends VisitQuery<String> {
 	        		continue;
 	        	}
 	        	
-	        	String out = y.accept(this);
-	        	if(out != null) {
-	        		
-	        		if(!isImplicitFact) {
-	        			sb.append("fact f").append(factNumber).append(" { ");
-	        		}
-	        		
-	        		sb.append(out);
-	        		
-	        		if(!isImplicitFact) {
-	        			sb.append(" }");
-	        		}
-	        		
-	        		sb.append('\n');
-	        		factNumber++;
+	        	String fact = y.accept(this);
+	        	
+	        	if(!isImplicitFact) {
+        			sb.append("fact f").append(factNumber++).append(" {")
+        			  .append(fact).append('}').append('\n');	        		
+	        	}
+	        	else if(isImplicitFact) {
+	        		sb.append('\t').append(fact).append('\n');
 	        	}
 	        	
-	        }        
+	        }  
+
 	        return sb.toString();
 		}
 		
@@ -139,6 +148,10 @@ public class ExprVisitor extends VisitQuery<String> {
 		StringBuilder op = new StringBuilder();
 		op.append(' ').append(x.op.toString().toLowerCase()).append(' ');
 		
+		// Remove empty strings from array
+		args = Arrays.stream(args).filter(Predicate.isEqual("").negate())
+				.toArray(String[]::new);
+		
 		return String.join(op, args);
     }
 	
@@ -148,6 +161,8 @@ public class ExprVisitor extends VisitQuery<String> {
 		if(ignoredExprs.contains(x)) {
     		return "";
     	}
+		
+		isRootSig = false;
 		
 		String op = x.op.toString();
 		String names = "";
@@ -171,6 +186,8 @@ public class ExprVisitor extends VisitQuery<String> {
 		if(ignoredExprs.contains(x)) {
     		return "";
     	}
+		
+		isRootSig = false;
 		
     	if(x.op == ExprUnary.Op.NOOP) {
     		return visitThis(x.deNOP());
@@ -210,12 +227,8 @@ public class ExprVisitor extends VisitQuery<String> {
 	
 	 @Override
     public String visit(ExprVar x) throws Err {
-		 
-	 	if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		 
-        return x.label;
+		 isRootSig = false;
+		 return ignoredExprs.contains(x) ? "" : x.label;
     }
 	 
 	@Override
@@ -224,12 +237,11 @@ public class ExprVisitor extends VisitQuery<String> {
 		if(ignoredExprs.contains(x)) {
     		return "";
     	}
-		
-		// Sig declaration.
-		if(isRoot) {
+				
+		if(isRootSig) {
 			
 			StringBuilder sb = new StringBuilder();
-			isRoot = false;
+			isRootSig = false;
 			
 			if(x.isOne != null) {
 				sb.append("one ");
@@ -255,46 +267,56 @@ public class ExprVisitor extends VisitQuery<String> {
 				}
 			}
 			
+			// ========== Start: fields inside signature ==========
+			
 			sb.append(" {");
 			
-			List<String> fieldStrings = new ArrayList<>();
+			int numberOfFields = x.getFields().size();
 			
-			fieldAfterSig = true;
-			
-			for(Field f : x.getFields()) {
-				fieldStrings.add(f.accept(this));
-			}
-			if(!fieldStrings.isEmpty()) {
-				sb.append(String.join(",", fieldStrings)).append(' ');
+			if(numberOfFields > 0) {
+				
+				String[] fields = new String[numberOfFields];
+				fieldAfterSig = true;
+				
+				// Produce strings for each field
+				for(int i = 0; i < numberOfFields; i++) {
+					Sig.Field field = x.getFields().get(i);
+					fields[i] = field.accept(this);
+				}
+								
+				sb.append(String.join(",", fields)).append(' ');
 			}
 			
 			sb.append("}\n");
-			
 			fieldAfterSig = false;
-			isRoot = true;
 			
-			if(! x.getFacts().isEmpty()) {
-				
-				sb.append("{\n");
-				
-				int size = x.getFacts().size();
-				String[] facts = new String[size];
+			// ========== End: signature fields ==========
+			
+			// ========== Start: implicit facts ==========
+			
+			int numberOfImplicitFacts = x.getFacts().size();
+			
+			if(numberOfImplicitFacts > 0) {
+								
+				String[] facts = new String[numberOfImplicitFacts];
 				
 				isImplicitFact = true;
+				isSigFact = true;
 				
-				for(int i = 0; i < size; i++) {
+				for(int i = 0; i < numberOfImplicitFacts; i++) {
 					Expr fact = x.getFacts().get(i);
-					facts[i] = fact.accept(this);
+					facts[i] = fact.accept(this); 
 				}
 				
 				isImplicitFact = false;
-				
-				sb.append(String.join(" ", facts));
-				
-				sb.append("}\n");
+				isSigFact = false;
+								
+				sb.append("{\n").append(String.join(" ", facts))
+				.append('}').append('\n');
 			}
 			
-			
+			// ========== End: implicit facts ==========
+						
 			return sb.toString();
 		}
 		
@@ -308,6 +330,8 @@ public class ExprVisitor extends VisitQuery<String> {
     		return "";
     	}
 		
+		isRootSig = false;
+		
 		if(fieldAfterSig) {
 			StringBuilder sb = new StringBuilder();
 			String output = sb.append(' ').append(MyAlloyLibrary.removeSlash(x.label))
@@ -319,6 +343,9 @@ public class ExprVisitor extends VisitQuery<String> {
     }
 	 
 	 private String getNamesFromDecl(Decl decl) {
+		 
+		 isRootSig = false;
+		 
 		 List<String> names = new ArrayList<>();
 		 for(ExprHasName name : decl.names) {
 			 names.add(name.accept(this));

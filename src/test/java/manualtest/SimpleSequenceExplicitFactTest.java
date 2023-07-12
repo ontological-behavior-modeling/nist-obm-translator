@@ -1,3 +1,4 @@
+package manualtest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -15,7 +16,8 @@ import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
 import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-
+import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
 
 import edu.mit.csail.sdg.alloy4.Pos;
@@ -37,13 +39,13 @@ class SimpleSequenceExplicitFactTest {
 	@Test
 	void test() {
 	    
-		Alloy activity = new Alloy();
+		Alloy alloy = new Alloy();
 		
 		// ========== Define list of signatures unique to the file ========== 
 
-		Sig p1Sig = activity.createSigAsChildOfOccSigAndAddToAllSigs("P1");
-	    Sig p2Sig = activity.createSigAsChildOfOccSigAndAddToAllSigs("P2");
-	    Sig mainSig = activity.createSigAsChildOfOccSigAndAddToAllSigs("SimpleSequence");
+		Sig p1Sig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("P1");
+	    Sig p2Sig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("P2");
+	    Sig mainSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("SimpleSequence");
 
 	    // ========== Define list of relations unique to the file ==========
 	    
@@ -80,13 +82,12 @@ class SimpleSequenceExplicitFactTest {
 	    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), s4.join(mainSig.domain(p1)), s4.join(mainSig.domain(p2)));
 	    Expr inverseFuncFilteredExpr = inverseFuncFiltered.call(happensBefore.call(), s5.join(mainSig.domain(p1)), s5.join(mainSig.domain(p2)));
 
-	    activity.addToOverallFact(	
+	    alloy.addToOverallFact(	
     		s1.join(mainSig.domain(p1)).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl1)
     		.and(s2.join(mainSig.domain(p1)).plus(s2.join(mainSig.domain(p2))).in(s2.join(ostepsExpr1)).forAll(decl2))
     		.and(s3.join(ostepsExpr2).in(s3.join(mainSig.domain(p1)).plus(s3.join(mainSig.domain(p2)))).forAll(decl3))
     		.and(funcFilteredExpr.forAll(decl4))
-    		.and(inverseFuncFilteredExpr.forAll(decl5))
-		);
+    		.and(inverseFuncFilteredExpr.forAll(decl5)));
 	    
 	    Func nonZeroDurationOnlyFunction = Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
 	    Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
@@ -120,9 +121,18 @@ class SimpleSequenceExplicitFactTest {
 	    Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
 	    Expr _nameExpr = nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression).and(suppressIOExpression).and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
 	    
+	    // ========== Define command ==========
+	    
+	    Expr simpleSequenceExplicitFactExpr = nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression).and(suppressIOExpression).and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
+	    Command simpleSequenceExplicitFactCmd = new Command(
+	    		null, simpleSequenceExplicitFactExpr, "SimpleSequence", false, 
+	    		6, -1, -1, -1, Arrays.asList(new CommandScope[] {}), 
+	    		Arrays.asList(new Sig[] {}), 
+	    		simpleSequenceExplicitFactExpr.and(alloy.getOverAllFact()), null);
+	    
 	    // ========== Create Alloy file version ==========
 	    
-	    String filename = "SimpleSequence_ExplicitFact.als";
+	    String filename = "src/test/resources/SimpleSequence_ExplicitFact.als";
 	    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 	    
 	    // ========== Test if they are equal ==========
@@ -130,9 +140,9 @@ class SimpleSequenceExplicitFactTest {
 	    ExpressionComparator ec = new ExpressionComparator();
 	    
 	    Expr fileFacts = importedModule.getAllReachableFacts();
-	    Expr apiFacts = activity.getOverAllFact();
+	    Expr apiFacts = alloy.getOverAllFact();
 	    List<Sig> fileSigs = importedModule.getAllReachableUserDefinedSigs();
-	    List<Sig> apiSigs = activity.getAllSigs();
+	    List<Sig> apiSigs = alloy.getAllSigs();
 	    
 	    Map<String, Sig> fileMap = new HashMap<>();
 	    Map<String, Sig> apiMap = new HashMap<>();
@@ -150,7 +160,22 @@ class SimpleSequenceExplicitFactTest {
 	    for(String sigName : fileMap.keySet()) {
 	    	assertTrue(apiMap.containsKey(sigName));
 	    	assertTrue(ec.compareTwoExpressions(fileMap.get(sigName), apiMap.get(sigName)));
-	    }
+	    }  
+	    
+	    // ========== Write file ==========
+	    
+	    Command[] commands = new Command[] {simpleSequenceExplicitFactCmd};
+	    
+	    AlloyModule alloyModule = 
+		new AlloyModule("SimpleSequence_ExplicitFact", alloy.getAllSigs(), 
+		alloy.getOverAllFact(), commands);
+	    
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), 
+		alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    
+	    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() 
+	    + ".als";
+	    
+	    translator.generateAlsFileContents(alloyModule, outFileName);
 	}
-
 }

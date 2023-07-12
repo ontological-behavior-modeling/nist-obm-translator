@@ -1,6 +1,7 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Expr;
@@ -11,13 +12,13 @@ public class AlloyModule {
   private final String moduleName;
   private final Expr facts;
   private final List<Sig> signatures;
-  private final Command command;
+  private final Command[] commands;
 
-  public AlloyModule(String moduleName, List<Sig> signatures, Expr facts, Command command) {
+  public AlloyModule(String moduleName, List<Sig> signatures, Expr facts, Command[] commands) {
     this.moduleName = moduleName;
     this.facts = facts;
     this.signatures = signatures;
-    this.command = command;
+    this.commands = commands;
   }
 
   public String getModuleName() {
@@ -32,7 +33,7 @@ public class AlloyModule {
     return new ArrayList<>(signatures);
   }
 
-  public Command getCommand() {
-    return command;
+  public Command[] getCommands() {
+    return Arrays.copyOf(commands, commands.length);
   }
 }

@@ -1,18 +1,23 @@
+package manualtest;
 import static org.junit.jupiter.api.Assertions.*;
 
 import edu.gatech.gtri.obm.translator.alloy.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-
+import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
+import edu.mit.csail.sdg.ast.Command;
+import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.ExprVar;
@@ -97,7 +102,7 @@ class SimpleSequenceImplicitFactTest {
 	    
 	    // ========== Import real AST from file ==========
 	    
-	    String filename = "SimpleSequence_ImplicitFact.als";
+	    String filename = "src/test/resources/SimpleSequence_ImplicitFact.als";
 	    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 	    
 	    // ========== Test if they are equal ==========
@@ -124,8 +129,41 @@ class SimpleSequenceImplicitFactTest {
 	    
 	    for(String sigName : fileMap.keySet()) {
 	    	assertTrue(apiMap.containsKey(sigName));
-	    	assertTrue(ec.compareTwoExpressions(fileMap.get(sigName), apiMap.get(sigName)));
+	    	assertTrue(
+    			ec.compareTwoExpressions(
+					fileMap.get(sigName), apiMap.get(sigName)
+				)
+			);
 	    }
+	    
+	    // ========== Define command ==========
+	    
+	    Expr simpleSequencImplicitFactExpr = 
+		nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression)
+		.and(suppressIOExpression).and(instancesDuringExampleExpression)
+		.and(onlySimpleSequenceExpression);
+	    
+	    Command simpleSequenceImplicitFactCmd = new Command(
+	    		null, simpleSequencImplicitFactExpr, "SimpleSequence", false, 
+	    		6, -1, -1, -1, Arrays.asList(new CommandScope[] {}), 
+	    		Arrays.asList(new Sig[] {}), 
+	    		simpleSequencImplicitFactExpr.and(alloy.getOverAllFact()), null);
+	    
+	    // ========== Write file ==========
+	    
+	    Command[] commands = new Command[] {simpleSequenceImplicitFactCmd};
+	    
+	    AlloyModule alloyModule = 
+		new AlloyModule("SimpleSequence_ImplicitFact", alloy.getAllSigs(), 
+		alloy.getOverAllFact(), commands);
+	    
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), 
+		alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    
+	    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() 
+	    + ".als";
+	    
+	    translator.generateAlsFileContents(alloyModule, outFileName);
 	}
 
 }
