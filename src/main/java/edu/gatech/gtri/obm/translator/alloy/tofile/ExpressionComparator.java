@@ -6,6 +6,9 @@ import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
+
+import edu.mit.csail.sdg.ast.Command;
+import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprBinary;
@@ -41,6 +44,199 @@ public class ExpressionComparator {
 		visitedExpressions.clear();
 		return same;
 		
+	}
+	
+	public boolean compareCommand(Command c1, Command c2) {
+		
+		if(c1 == null && c2 == null) {
+			return true;
+		}
+		if(c1 == null || c2 == null) {
+			System.err.println("c1=" + c1);
+			System.err.println("c2=" + c2);
+			System.err.println("compareCommand: c1 != null || c2 != null");
+			System.err.println();
+			return false;
+		}
+		
+		// ConstList<Sig> additionalExactScopes
+		if(c1.additionalExactScopes.size() != c2.additionalExactScopes.size()) {
+			System.err.println("compareCommand: "
+				+ "c1.additionalExactScopes.size() != "
+				+ "c2.additionalExactScopes.size()");
+			System.err.println("c1.additionalExactScopes.size()=" 
+				+ c1.additionalExactScopes.size());
+			System.err.println("c2.additionalExactScopes.size()=" 
+				+ c2.additionalExactScopes.size());
+			return false;
+		}
+		
+		for(int i = 0; i < c1.additionalExactScopes.size(); i++) {
+			Sig s1 = c1.additionalExactScopes.get(i);
+			Sig s2 = c2.additionalExactScopes.get(i);
+			if(!compareSig(s1, s2)) {
+				System.err.println("compareCommand: !compareSig(s1, s2) "
+					+ "for i=" + i);
+				System.err.println("sig1=" + s1);
+				System.err.println("sig2=" + s2);
+				return false;
+			}
+		}
+		
+		// int bitwidth
+		if(c1.bitwidth != c2.bitwidth) {
+			System.err.println("compareCommand: c1.bitwidth != c2.bitwidth");
+			System.err.println("c1.bitwidth=" + c1.bitwidth);
+			System.err.println("c2.bitwidth=" + c2.bitwidth);
+			return false;
+		}
+		
+		// boolean check
+		if(c1.check != c2.check) {
+			System.err.println("compareCommand: c1.check != c2.check");
+			System.err.println("c1.check=" + c1.check);
+			System.err.println("c2.check=" + c2.check);
+			return false;
+		}
+		
+		// int expects
+		if(c1.expects != c2.expects) {
+			System.err.println("compareCommand: c1.check != c2.check");
+			System.err.println("c1.expects=" + c1.expects);
+			System.err.println("c2.expects=" + c2.expects);
+			return false;
+		}
+		
+		// Expr formula
+		if(!compareExpr(c1.formula, c2.formula)) {
+			System.err.println("compareCommand: "
+				+ "!compareExpr(c1.formula, c2.formula)");
+			System.err.println("c1.formula=" + c1.formula);
+			System.err.println("c2.formula=" + c2.formula);
+			return false;
+		}
+		
+		// String label
+		if(!c1.label.equals(c2.label)) {
+			System.err.println("compareCommand: !c1.label.equals(c2.label)");
+			System.err.println("c1.label=" + c1.label);
+			System.err.println("c2.label=" + c2.label);
+			return false;
+		}
+		
+		// int maxseq
+		if(c1.maxseq != c2.maxseq) {
+			System.err.println("compareCommand: c1.maxseq != c2.maxseq");
+			System.err.println("c1.maxseq=" + c1.maxseq);
+			System.err.println("c2.maxseq=" + c2.maxseq);
+			return false;
+		}
+		// int maxstring
+		if(c1.maxstring != c2.maxstring) {
+			System.err.println("compareCommand: c1.maxstring != c2.maxstring");
+			System.err.println("c1.maxstring=" + c1.maxstring);
+			System.err.println("c2.maxstring=" + c2.maxstring);
+			return false;
+		}
+		// int overall
+		if(c1.overall != c2.overall) {
+			System.err.println("compareCommand: c1.overall != c2.overall");
+			System.err.println("c1.overall=" + c1.overall);
+			System.err.println("c2.overall=" + c2.overall);
+			return false;
+		}
+		// Command parent
+		if(!compareCommand(c1.parent, c2.parent)) {
+			System.err.println("compareCommand: "
+				+ "!compareCommand(c1.parent, c2.parent)");
+			System.err.println("c1.parent=" + c1.parent);
+			System.err.println("c2.parent=" + c2.parent);
+			return false;
+		}
+		// Pos pos (ignore)
+		
+		// ConstList<CommandScope> scope
+		if(c1.scope.size() != c2.scope.size()) {
+			System.err.println("compareCommand: "
+				+ "c1.scope.size() != c2.scope.size()");
+			System.err.println("c1.scope.size()=" + c1.scope.size());
+			System.err.println("c2.scope.size()=" + c2.scope.size());
+			return false;
+		}
+		
+		for(int i = 0; i < c1.scope.size(); i++) {
+			CommandScope cs1 = c1.scope.get(i);
+			CommandScope cs2 = c2.scope.get(i);
+			
+			if(!compareCommandScope(cs1, cs2)) {
+				System.err.println("compareCommand: "
+					+ "!compareCommandScope(cs1, cs2) for i=" + i);
+			}
+		}
+		
+		return true;
+	}
+	
+	public boolean compareCommandScope(CommandScope cs1, CommandScope cs2) {
+		
+		if(cs1 == null && cs2 == null) {
+			return true;
+		}
+		
+		if(cs1 == null || cs2 == null) {
+			System.err.println(
+				"compareCommand: cs1 == null || cs2 == null");
+			System.err.println("cs1=" + cs1);
+			System.err.println("cs2=" + cs2);
+			return false;
+		}
+		
+		// int endingScope
+		if(cs1.endingScope != cs2.endingScope) {
+			System.err.println("compareCommandScope: "
+				+ "cs1.endingScope != cs2.endingScope");
+			System.err.println("cs1.endingScope=" + cs1.endingScope);
+			System.err.println("cs2.endingScope=" + cs2.endingScope);
+			return false;
+		}
+		// int increment
+		if(cs1.endingScope != cs2.endingScope) {
+			System.err.println("compareCommandScope: "
+				+ "cs1.increment != cs2.increment");
+			System.err.println("cs1.increment=" + cs1.increment);
+			System.err.println("cs2.increment=" + cs2.increment);
+			return false;
+		}
+		
+		// boolean isExact
+		if(cs1.isExact != cs2.isExact) {
+			System.err.println("compareCommandScope: "
+				+ "cs1.isExact != cs2.isExact");
+			System.err.println("cs1.isExact=" + cs1.isExact);
+			System.err.println("cs2.isExact=" + cs2.isExact);
+			return false;
+		}
+		// Pos pos (ignored)
+		
+		// Sig sig
+		if(!compareSig(cs1.sig, cs2.sig)) {
+			System.err.println("compareCommandScope: "
+				+ "!compareSig(cs1.sig, cs2.sig)");
+			System.err.println("cs1.sig=" + cs1.sig);
+			System.err.println("cs2.sig=" + cs2.sig);
+			return false;
+		}
+		
+		// int startingScope
+		if(cs1.startingScope != cs2.startingScope) {
+			System.err.println("compareCommandScope: "
+				+ "cs1.startingScope != cs2.startingScope");
+			System.err.println("cs1.startingScope=" + cs1.startingScope);
+			System.err.println("cs2.startingScope=" + cs2.startingScope);
+			return false;
+		}
+		
+		return true;
 	}
 	
 	private boolean compareDecl(Decl d1, Decl d2) {
@@ -707,6 +903,24 @@ public class ExpressionComparator {
 		return true;
 	}
 	
+	private boolean comparePrimSig(Sig.PrimSig primSig1, Sig.PrimSig primSig2) {
+		
+		if(primSig1.label.equals("univ") && primSig2.label.equals("univ")) {
+			return true;
+		}
+		
+		if(primSig1.children().size() != primSig2.children().size()) {
+			System.err.println(primSig1);
+			System.err.println(primSig2);
+			System.err.println("comparePrimSig: primSig1.children().size() != primSig2.children().size()");
+			System.err.println("primSig1.children().size() = " + primSig1.children().size());
+			System.err.println("primSig2.children().size() = " + primSig2.children().size());
+			System.err.println();
+			return false;
+		}
+		return true;
+	}
+	
 	private boolean compareSig(Sig sig1, Sig sig2) {
 		
 		if(sig1 == null && sig2 == null) {
@@ -725,6 +939,11 @@ public class ExpressionComparator {
 			return false;
 		}
 		
+		if(sig1 instanceof Sig.PrimSig && sig2 instanceof Sig.PrimSig
+		&& !comparePrimSig((Sig.PrimSig) sig1, (Sig.PrimSig) sig2)) {
+			return false;
+		}
+			
 		// ConstList<Attr> comparison not implemented.
 
 		if(sig1.builtin != sig2.builtin) {

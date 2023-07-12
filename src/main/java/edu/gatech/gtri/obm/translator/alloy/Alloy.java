@@ -269,6 +269,25 @@ public class Alloy {
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
   }
+  
+  /**
+   * Example: 
+   * all s: FoodService | bijectionFiltered[happensBefore, s.order, s.serve]
+   * 
+   * @param ownerSig = FoodService
+   * @param var = s
+   * @param from = order
+   * @param to = serve
+   */
+  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(
+	  ExprVar var, Sig ownerSig, Expr from, Expr to) {
+	  
+	  Expr bijectionFilteredExpr = bijectionFiltered.call(
+		  happensBefore.call(), var.join(from), var.join(to));
+
+	  Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	  this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+  }
 
   /** Returns nonZeroDurationOnly and suppressTransfers and suppressIO
    * 
@@ -313,6 +332,13 @@ public class Alloy {
     this.addToOverallFact(s.join(field).cardinality()
         .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
+  
+  public void addOneConstraintToField(ExprVar var, Sig ownerSig,
+      Sig.Field field) {
+	  Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	  this.addToOverallFact(var.join(field).cardinality()
+	      .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
+  }
 
   public void addSteps(Sig ownerSig, Map<String, Field> fieldByName) {
 
@@ -335,8 +361,23 @@ public class Alloy {
 
     Expr expr2 = createStepExpr(s2, ownerSig, fieldByName);
     this.addToOverallFact(s2.join(ostepsExpr2).in(expr2).forAll(decl2));
-
-
+  }
+  
+  public void addSteps(ExprVar var, Sig ownerSig, 
+	  Map<String, Field> fieldByName) {
+	// steps
+	Func osteps = Helper.getFunction(transferModule, "o/steps");
+	Expr ostepsExpr1 = osteps.call();
+	Expr ostepsExpr2 = osteps.call();
+	
+	Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	
+	Expr expr = createStepExpr(var, ownerSig, fieldByName);
+	addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
+	
+	Decl decl2 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	Expr expr2 = createStepExpr(var, ownerSig, fieldByName);
+	addToOverallFact(var.join(ostepsExpr2).in(expr2).forAll(decl2));
   }
 
   private Expr createStepExpr(ExprVar s, Sig ownerSig, Map<String, Field> fieldByName) {
