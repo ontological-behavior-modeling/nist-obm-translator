@@ -91,11 +91,11 @@ sig UnsatisfiableFoodService extends SingleFoodService{}{
 // bijectionFiltered[happensBefore, prepare, serve]
 // bijectionFiltered[happensBefore, serve, eat]
 // order + prepare + pay + eat + serve in this.steps and this.steps in order + prepare + pay + eat + serve
-fact f1 { all s: FoodService | bijectionFiltered[happensBefore, s.order, s.serve] }
-fact f2 { all s: FoodService | bijectionFiltered[happensBefore, s.prepare, s.serve] }
-fact f3 { all s: FoodService | bijectionFiltered[happensBefore, s.serve, s.eat] }
-fact f4 { all s: FoodService | s.order + s.prepare + s.pay + s.eat + s.serve in s.steps }
-fact f5 { all s: FoodService | s.steps in s.order + s.prepare + s.pay + s.eat + s.serve }
+fact f1 { all fs: FoodService | bijectionFiltered[happensBefore, fs.order, fs.serve] }
+fact f2 { all fs: FoodService | bijectionFiltered[happensBefore, fs.prepare, fs.serve] }
+fact f3 { all fs: FoodService | bijectionFiltered[happensBefore, fs.serve, fs.eat] }
+fact f4 { all fs: FoodService | fs.order + fs.prepare + fs.pay + fs.eat + fs.serve in fs.steps }
+fact f5 { all fs: FoodService | fs.steps in fs.order + fs.prepare + fs.pay + fs.eat + fs.serve }
 
 // SingleFoodService explicit facts:
 // #order = 1

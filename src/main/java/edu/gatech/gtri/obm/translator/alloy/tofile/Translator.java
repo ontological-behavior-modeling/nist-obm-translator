@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.Set;
 import edu.mit.csail.sdg.ast.Command;
+import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Func;
@@ -133,8 +134,19 @@ public class Translator {
     	}
     	
     	sb.append(command.label).append('{')
-    	.append(exprVisitor.visitThis(command.nameExpr)).append("} for ")
-    	.append(command.overall).append('\n');
+    		.append(exprVisitor.visitThis(command.nameExpr)).append("} for ")
+    		.append(command.overall);
+    	
+    	if(!command.scope.isEmpty()) {
+    		sb.append(" but ");
+    		
+    		for(CommandScope cs : command.scope) {
+    			sb.append("exactly ").append(cs.startingScope).append(' ')
+    				.append(cs.sig);
+    		}
+    	}
+    	
+    	sb.append('\n');
     }
 
     try {

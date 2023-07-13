@@ -42,21 +42,23 @@ fact f19 {all ufs: UnsatisfiableFoodService | bijectionFiltered[happensBefore, u
 
 // Functions and predicates:
 pred instancesDuringExample{Order in FoodService.order and Prepare in FoodService.prepare and Serve in FoodService.serve and Eat in FoodService.eat and Pay in FoodService.pay}
-pred onlyFoodService{#FoodService = 1 and no SingleFoodService and no BuffetService and no ChurchSupperService and no FastFoodService and no RestaurantService and no UnsatisfiableFoodService}
+pred onlyFoodService{#FoodService = 1 and no SingleFoodService and noChildFoodService}
 pred suppressTransfers{no Transfer}
 pred suppressIO{no inputs and no outputs}
-pred onlySingleFoodService{FoodService in SingleFoodService and no BuffetService and no ChurchSupperService and no FastFoodService and no RestaurantService and no UnsatisfiableFoodService}
-pred onlyChurchSupperService{#ChurchSupperService = 1 and FoodService or g in ChurchSupperService}
-pred onlyFastFoodService{#FoodService = 1 and FoodService or g in UnsatisfiableFoodService}
+pred noChildFoodService{no BuffetService and no ChurchSupperService and no FastFoodService and no RestaurantService and no UnsatisfiableFoodService}
+pred onlySingleFoodService{FoodService in SingleFoodService and noChildFoodService}
+pred onlyBuffetService{#BuffetService = 1 and all g: FoodService | g in BuffetService}
+pred onlyChurchSupperService{#ChurchSupperService = 1 and all g: ChurchSupperService | g in ChurchSupperService}
+pred onlyFastFoodService{#FoodService = 1 and all g: FastFoodService | g in FastFoodService}
 pred onlyRestaurantService{#RestaurantService = 1 and all g: RestaurantService | g in RestaurantService}
 pred onlyUnsatisfiableFoodService{#UnsatisfiableFoodService = 1 and all g: UnsatisfiableFoodService | g in UnsatisfiableFoodService}
 
 // Commands:
 run showFoodService{nonZeroDurationOnly and instancesDuringExample and onlyFoodService and suppressTransfers and suppressIO} for 10
-run showSingleFoodService{nonZeroDurationOnly and instancesDuringExample and onlySingleFoodService and suppressTransfers and suppressIO} for 10
-run showBuffetService{nonZeroDurationOnly and instancesDuringExample and onlySingleFoodService and suppressTransfers and suppressIO} for 10
-run showChurchSupperService{nonZeroDurationOnly and suppressTransfers and suppressIO and instancesDuringExample and onlyChurchSupperService} for 10
-run showFastFoodService{nonZeroDurationOnly and suppressTransfers and suppressIO and instancesDuringExample and onlyFastFoodService} for 10
-run showRestaurantService{nonZeroDurationOnly and suppressTransfers and suppressIO and instancesDuringExample and onlyRestaurantService} for 10
+run showSingleFoodService{nonZeroDurationOnly and instancesDuringExample and onlySingleFoodService and suppressTransfers and suppressIO} for 10 but exactly 1 SingleFoodService
+run showBuffetService{nonZeroDurationOnly and instancesDuringExample and onlyBuffetService and suppressTransfers and suppressIO} for 10
+run showChurchSupperService{nonZeroDurationOnly and instancesDuringExample and onlyChurchSupperService and suppressTransfers and suppressIO} for 10
+run showFastFoodService{nonZeroDurationOnly and instancesDuringExample and onlyFastFoodService and suppressTransfers and suppressIO} for 10
+run showRestaurantService{nonZeroDurationOnly and instancesDuringExample and onlyRestaurantService and suppressTransfers and suppressIO} for 10
 run showUnsatisfiableFoodService{instancesDuringExample and onlyUnsatisfiableFoodService and suppressTransfers and suppressIO} for 15
 

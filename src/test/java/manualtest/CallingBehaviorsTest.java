@@ -158,8 +158,7 @@ class CallingBehaviorsTest {
 	    }
 	    
 	    assertTrue(ec.compareTwoExpressions(fileFacts, apiFacts));
-	    assertTrue(fileSigs.size() == apiSigs.size());
-	    
+	    assertTrue(fileSigs.size() == apiSigs.size()); 
 	    
 	    for(String sigName : fileMap.keySet()) {
 	    	assertTrue(apiMap.containsKey(sigName));
