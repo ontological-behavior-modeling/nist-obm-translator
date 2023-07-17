@@ -30,6 +30,11 @@ public class FuncUtils {
   public static Sig.Field addField(String label, Sig sig, Sig sigType) {
     return sig.addField(label, sigType.setOf());
   }
+  
+  // orderedFoodItem: one FoodItem
+  public static Sig.Field addOneField(String label, Sig sig, Sig sigType) {
+	  return sig.addField(label,  sigType.oneOf());
+  }
 
   public static Expr createExprEqualToNumber(Expr expr, int num) {
     return expr.cardinality().equal(ExprConstant.makeNUMBER(num));
