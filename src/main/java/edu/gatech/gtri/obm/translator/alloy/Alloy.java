@@ -259,12 +259,10 @@ public class Alloy {
 	  Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
 	  addToOverallFact(funcFilteredExpr.forAll(decl));
   }
-
-  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
+  
+  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from, Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
     Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(), s.join(from), s.join(to));
-
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
