@@ -3,10 +3,12 @@ package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -15,7 +17,10 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
+import org.eclipse.uml2.uml.Constraint;
+import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.Property;
+import org.graphstream.graph.Edge;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.graph.Graph2AlloyExpr;
 import edu.gatech.gtri.obm.translator.alloy.graph.IObject;
@@ -30,33 +35,42 @@ import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 
+
 public class OBMXMI2Alloy {
 
   ToAlloy toAlloy;
 
-  public static void main(String[] args) throws FileNotFoundException, UMLModelErrorException {
+  public static void main(String[] args) throws Exception {
 
+    // using C:\Users\mw107\AppData\Local\Temp\Transfer.als
+    // System.setProperty(("java.io.tmpdir"), System.getProperty("user.dir"));
+    System.setProperty(("java.io.tmpdir"),
+        "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");
     OBMXMI2Alloy test = new OBMXMI2Alloy();
-    File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel.xmi").getFile());
+    File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
     // String className = "Model::Basic::BehaviorFork";
     // String className = "Model::Basic::BehaviorJoin";
-    // String className = "Model::Basic::ComplexBehavior";
-    String className = "Model::Basic::ControlFlowBehavior";
+    // String className = "Model::Basic::ControlFlowBehavior";
     // String className = "Model::Basic::BehaviorDecision";
+    // String className = "Model::Basic::Loop";
+    String className = "Model::Basic::ComplexBehavior";
+    // String className = "Model::Basic::ComplexBehavior_MW";
     test.createAlloyFile(xmiFile, className);
   }
 
   public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy();
+
+
   }
 
-  public void createAlloyFile(File xmiFile, String className)
-      throws FileNotFoundException, UMLModelErrorException {
+  public void createAlloyFile(File xmiFile, String className) throws Exception {
     if (!xmiFile.exists() || !xmiFile.canRead())
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
     else {
       this.loadOBMAndCreateAlloy(xmiFile, className);
-      toAlloy.createAlloyFile();
+      String outputFileName = toAlloy.createAlloyFile();
+      System.out.println(outputFileName + " is created");
     }
   }
 
@@ -65,16 +79,19 @@ public class OBMXMI2Alloy {
    * @xmiFile xmi file containing activity
    * @param _className QualifiedName of Class containing activities
    * @param startNodeName name of initial node.
-   * @throws FileNotFoundException
-   * @throws UMLModelErrorException
+   * @throws Exception
    */
-  public void loadOBMAndCreateAlloy(File xmiFile, String _className)
-      throws FileNotFoundException, UMLModelErrorException {
+  public void loadOBMAndCreateAlloy(File xmiFile, String _className) throws Exception {
 
     ResourceSet rs = EMFUtil.createResourceSet();
     Resource r = EMFUtil.loadResourceWithDependencies(rs,
         URI.createFileURI(xmiFile.getAbsolutePath()), null);
     SysMLUtil sysMLUtil = new SysMLUtil(rs);
+    // soneof =
+    // com.engisis.xmiutil.SysMLUtil.loadStereotype(OBMXMI2Alloy.class.getResource("/OBM.xmi"),
+    // URI.createURI("http://www.nist.gov/sid/obm"), "OneOf");
+
+
     SysMLAdapter sysmladapter = new SysMLAdapter(xmiFile, null);
     org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, _className);
     Graph2AlloyExpr ge = new Graph2AlloyExpr();
@@ -83,41 +100,64 @@ public class OBMXMI2Alloy {
       Class c = (org.eclipse.uml2.uml.Class) mainClass;
       mainSig = toAlloy.addAlloySig(mainClass.getName(), "parent not used for now", true);
       Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getAllCorrectedAttributes(c);
-      for (Property p : atts) {
-        // System.out.println("\t" + p.getName() + " " + p.getLower() + " " + p.getUpper());
-        ge.addNode(p.getName());
-        org.eclipse.uml2.uml.Type eType = p.getType();
-        edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(eType);
-        // System.out.println("type: " + omgE + " " + omgE.getClass());
-        // System.out.println("type's general....");
-        if (eType instanceof org.eclipse.uml2.uml.Class) {
-
-          // Set<org.eclipse.uml2.uml.Classifier> generals =
-          // sysMLUtil.getGenerals((org.eclipse.uml2.uml.Class) eType, false, false);
-          // System.out.println("#of general: " + generals.size());
-          // // for (Classifier general : generals) {
-          // System.out.println("General: " + general);
-          // System.out
-          // .println("================Alloy create Sig based for field's ================");
-          // addAlloySig(eType.getName(), general.getName());
-          toAlloy.addAlloySig(eType.getName(), "???");
-          // }
-          Sig.Field f = toAlloy.addAlloyField(p.getName(),
-              ((org.eclipse.uml2.uml.Class) eType).getName(), mainClass.getName());
-          if (p.getLower() == 1 && p.getUpper() == 1)
-            toAlloy.addOneConstraintToField(f, mainClass.getName());
-        }
-
-
-      }
-      // System.out.println("==============Alloy field for " + sa.getName() + "==================");
-      // for (Iterator<Entry<String, String>> iter = fieldNamefieldType.entrySet().iterator(); iter
-      // .hasNext();) {
-      // Entry<String, String> entry = iter.next();
-      // System.out.println(entry);
-      // addAlloyField(entry.getKey(), entry.getValue(), sa.getName());
+      // for (Property p : atts) {
+      // ge.addNode(p.getName());
+      // org.eclipse.uml2.uml.Type eType = p.getType();
+      // // edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(eType);
+      // // System.out.println("type: " + omgE + " " + omgE.getClass());
+      // // System.out.println("type's general....");
+      // if (eType instanceof org.eclipse.uml2.uml.Class) {
+      //
+      // // Set<org.eclipse.uml2.uml.Classifier> generals =
+      // // sysMLUtil.getGenerals((org.eclipse.uml2.uml.Class) eType, false, false);
+      // // System.out.println("#of general: " + generals.size());
+      // // // for (Classifier general : generals) {
+      // // System.out.println("General: " + general);
+      // // System.out
+      // // .println("================Alloy create Sig based for field's ================");
+      // // addAlloySig(eType.getName(), general.getName());
+      // toAlloy.addAlloySig(eType.getName(), "???");
+      // // }
+      // Sig.Field f = toAlloy.addAlloyField(p.getName(),
+      // ((org.eclipse.uml2.uml.Class) eType).getName(), mainClass.getName());
+      // if (p.getLower() == 1 && p.getUpper() == 1)
+      // toAlloy.addOneConstraintToField(f, mainClass.getName());
+      // }
       // }
 
+      Map<Sig, List<Property>> fieldNameByTypeSig = new HashMap<>();
+      for (Property p : atts) {
+        ge.addNode(p.getName());
+        org.eclipse.uml2.uml.Type eType = p.getType();
+        if (eType instanceof org.eclipse.uml2.uml.Class) {
+          Sig typeSig = toAlloy.addAlloySig(eType.getName(), "???");
+          List<Property> fieldNames = fieldNameByTypeSig.get(typeSig);
+          if (fieldNames == null) {
+            fieldNames = new ArrayList<>();
+            fieldNames.add(p);
+            fieldNameByTypeSig.put(typeSig, fieldNames);
+          } else {
+            fieldNames.add(p);
+            // fieldNameByTypeSig.put(typeSig, fieldNames);
+          }
+        }
+      }
+
+      for (Sig keysig : fieldNameByTypeSig.keySet()) {
+        List<Property> fs = fieldNameByTypeSig.get(keysig);
+        String[] fsa = new String[fs.size()];
+        for (int i = 0; i < fs.size(); i++)
+          fsa[i] = fs.get(i).getName();
+        Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, keysig, mainClass.getName());
+        for (int i = 0; i < fs.size(); i++) {
+          if (fs.get(i).getLower() == 1 && fs.get(i).getUpper() == 1)
+            toAlloy.addOneConstraintToField(fields[i], mainClass.getName());
+        }
+      }
+
+
+
+      Set<Constraint> constraints = sysMLUtil.getAllRules(c);
       Set<org.eclipse.uml2.uml.Connector> connectors = sysMLUtil.getAllConnectors(c);
 
       for (org.eclipse.uml2.uml.Connector cn : connectors) {
@@ -126,9 +166,19 @@ public class OBMXMI2Alloy {
         if (omgE instanceof edu.umd.omgutil.uml.Connector) {
           edu.umd.omgutil.uml.Connector omgConnector = (edu.umd.omgutil.uml.Connector) omgE;
 
+          // sysMLUtil.getAllRules(c).stream()
+          // .forEach(rule -> System.out.println(rule.getSpecification()));
+          // Constraint oneof = sysMLUtil.getAllRules(c).stream()
+          // .filter(c -> c.isStereotypeApplied(obmutil.getOneOf())).findAny().orElse(null);
+          // if (oneof != null) {
+          //
+          // }
+
           edu.umd.omgutil.uml.Type owner = omgConnector.getFeaturingType();
           String source = null;
           String target = null;
+          ConnectorEnd sourceCN = null;
+          ConnectorEnd targetCN = null;
           for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
             if (ce.getDefiningEnd() != null) {
               // System.out.println(ce.getDefiningEnd().getName());
@@ -140,19 +190,28 @@ public class OBMXMI2Alloy {
 
               if (definingEndName.equals("happensBefore-1")) {
                 source = endsFeatureNames.get(0);
+                sourceCN = ce;
               } else if (definingEndName.equals("happensBefore")) {
                 target = endsFeatureNames.get(0);
+                targetCN = ce;
               }
 
             }
             // System.out.println("=================Graph creating Edge ========" + source + "->"
             // + target + "=======================");
             if (source != null && target != null) {
-              ge.addEdge(source + target, source, target);
+              System.out.println("Adding edge: " + source + target);
+              Edge edge = ge.addEdge(source + target, source, target);
+              if (isOneof(constraints, sourceCN, targetCN)) {
+                edge.setAttribute("oneof", true);
+                System.out.println("Yes one of");
+              }
             }
           } // end of connectorEnd
         } // end of Connector
       } // org.eclipse.uml2.uml.Connector
+
+
 
       System.out.println("HB Function: ");
       Map<IObject, IObject> happensBeforeFnInfo = ge.getHappensBeforeFunction(); // before, after
@@ -194,6 +253,47 @@ public class OBMXMI2Alloy {
 
     } // end of class
     toAlloy.addRemainingFactAndPredicate();
+    ge.display();
+
+  }
+
+  // if any of connector end is startCN or endCN then specify connector is one of
+  private boolean isOneof(Set<Constraint> constraints, ConnectorEnd startCN, ConnectorEnd endCN) {
+    for (Constraint ct : constraints) {
+      EList<Element> constraintedElements = ct.getConstrainedElements();
+      if (constraintedElements.size() == 2) {
+        if (constraintedElements.get(0) == startCN || constraintedElements.get(0) == endCN
+            || constraintedElements.get(1) == startCN || constraintedElements.get(1) == endCN)
+          return true;
+      }
+    }
+    return false;
+
+
+    // for (Element ce : ct.getConstrainedElements()) {
+    // if (ce instanceof ConnectorEnd) {
+    // ConnectorEnd cend = (ConnectorEnd) ce;
+    //
+    // // ConnectorEnd defining End
+    // // Property cendProperty = cend.getDefiningEnd();
+    // // System.out.println(cendProperty.getQualifiedName());
+    // // // rule
+    // // ConnectableElement rule = cend.getRole();
+    // // System.out.println(rule);
+    // // if (rule instanceof Property) {
+    // // System.out.println("Rule... Property is");
+    // // if (start == null)
+    // // start = (Property) rule;
+    // // else
+    // // end = (Property) rule;
+    // // System.out.println(rule.getQualifiedName());
+    // // }
+    // // if (start != null && end != null)
+    // // ge.addOneOf(start.getName(), end.getName());
+    // //
+    // }
+    // }
+    // }
   }
 
   public List<Expr> toExprs(IObject _o, Sig _mainSig) {
@@ -219,6 +319,7 @@ public class OBMXMI2Alloy {
     }
     return exprs;
   }
+
 
 
   public static Object getObjectByName(Resource r, String lookingForName) {

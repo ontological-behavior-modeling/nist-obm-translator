@@ -37,8 +37,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/mw107/Documents/Projects/NISTOBM/workspace/omgutil3-1.0.1-jar-just-dependencies.jar"/>
-	<classpathentry kind="lib" path="C:/Users/mw107/Documents/Projects/NIST OBM/workspace/Alloy5/lib/org.alloytools.alloy.dist.jar"/>
-	<classpathentry kind="lib" path="/Alloy5/lib/gs-core-2.0.jar"/>
-	<classpathentry kind="lib" path="/Alloy5/lib/gs-ui-swing-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/gs-core-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/gs-ui-swing-2.0.jar"/>
+	<classpathentry kind="lib" path="lib/org.alloytools.alloy.dist.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

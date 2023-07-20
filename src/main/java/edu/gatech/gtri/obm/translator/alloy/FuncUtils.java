@@ -3,6 +3,7 @@ package edu.gatech.gtri.obm.translator.alloy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import edu.mit.csail.sdg.alloy4.Pos;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.Func;
@@ -19,16 +20,21 @@ public class FuncUtils {
     return new Func(null, label, null, null, expr).call();
   }
 
- /**
+  /**
    * Adds a field to a Signature with the format: sig ${sig} { ${label}: set ${sigType} }
    *
    * @param label = the name of the field
    * @param sig = the Signature the field is being added to
    * @param sigType = the Signature being connected to sig, given a set multiplicity
    * @return Sig.Field = the newly created field
-   */	 
+   */
   public static Sig.Field addField(String label, Sig sig, Sig sigType) {
     return sig.addField(label, sigType.setOf());
+  }
+
+  public static Sig.Field[] addTrickyField(java.lang.String[] labels, Sig sig, Sig sigType) {
+    Pos isDisjoint = new Pos("", 0, 0);
+    return sig.addTrickyField(null, null, isDisjoint, null, null, labels, sigType.setOf());
   }
 
   public static Expr createExprEqualToNumber(Expr expr, int num) {
@@ -192,12 +198,13 @@ public class FuncUtils {
 
   public static Expr decisionHappensBefore(Module _transferModule, Sig _mainSig, Sig.Field _p1,
       Sig.Field _p2, Sig.Field... _p3s) {
-	  Expr plus = _mainSig.join(_p2);
-	  for (Sig.Field p3: _p3s) {
-	        plus = plus.plus(_mainSig.join(p3));
-	  }
-	  
-    Expr e1 = FuncUtils.addBijectionFilteredExprHappensBefore(_transferModule, _mainSig.join(_p1),plus);
+    Expr plus = _mainSig.join(_p2);
+    for (Sig.Field p3 : _p3s) {
+      plus = plus.plus(_mainSig.join(p3));
+    }
+
+    Expr e1 =
+        FuncUtils.addBijectionFilteredExprHappensBefore(_transferModule, _mainSig.join(_p1), plus);
     return e1;
   }
 

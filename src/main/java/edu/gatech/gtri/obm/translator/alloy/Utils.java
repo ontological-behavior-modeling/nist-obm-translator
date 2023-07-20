@@ -11,12 +11,6 @@ public class Utils {
 
 
   public static void run(Sig _mainSig, int _overallScope, List<Sig> _allSigs, Expr _overallFact) {
-    // run join{nonZeroDurationOnly and suppressTransfers and suppressIO and instancesDuringExample
-    // and onlyDecision} for 10
-    System.out.println(_allSigs);
-    System.out.println(_overallFact);
-
-
     // Sig sig, boolean isExact, int scope
     Iterable<CommandScope> scope = Arrays.asList(new CommandScope(_mainSig, false, 10));
 
@@ -41,16 +35,15 @@ public class Utils {
     viz.generateVisualizer(_allSigs, myCommand);
   }
 
+  public static void runX(Sig _mainSig, List<Sig> _allSigs, Expr _overallFact, Command command) {
+    VisualizerHelper viz = new VisualizerHelper();
+    viz.generateVisualizerX(_allSigs, command);
+
+  }
+
   public static void runX(Sig _mainSig, int _overallScope, List<Sig> _allSigs, Expr _overallFact) {
-    // run join{nonZeroDurationOnly and suppressTransfers and suppressIO and instancesDuringExample
-    // and onlyDecision} for 10
-    System.out.println(_allSigs);
-    System.out.println(_overallFact);
-
-
     // Sig sig, boolean isExact, int scope
-    Iterable<CommandScope> scope = Arrays.asList(new CommandScope(_mainSig, false, 10));
-
+    Iterable<CommandScope> scope = Arrays.asList(new CommandScope(_mainSig, false, _overallScope));
     Command myCommand =
         // overall, Bitwidth, maxseq, expects
         // having runConstraint argument does not change result
@@ -68,8 +61,7 @@ public class Utils {
             -1 /* expects - the expected value (0 or 1) (-1 if no expectation wasspecified) */,
             scope /* the formula that must be satisfied by this command */, null, _overallFact,
             null);
-    VisualizerHelper viz = new VisualizerHelper();
-    viz.generateVisualizerX(_allSigs, myCommand);
+    runX(_mainSig, _allSigs, _overallFact, myCommand);
   }
 
 }

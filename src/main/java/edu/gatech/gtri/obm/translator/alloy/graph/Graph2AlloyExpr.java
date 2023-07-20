@@ -72,9 +72,13 @@ public class Graph2AlloyExpr {
     GraphUtil.createNode(graph, _name);
   }
 
-  public void addEdge(String _name, String _sourceName, String _targetName) {
-    graph.addEdge(_name, Graph2AlloyExpr.getNodeByName(graph, _sourceName),
+  public Edge addEdge(String _name, String _sourceName, String _targetName) {
+    return graph.addEdge(_name, Graph2AlloyExpr.getNodeByName(graph, _sourceName),
         Graph2AlloyExpr.getNodeByName(graph, _targetName), true);
+  }
+
+  public void display() {
+    graph.display();
   }
 
   public Map<IObject, IObject> getHappensBeforeFunction() {
@@ -109,6 +113,8 @@ public class Graph2AlloyExpr {
 
     if (source instanceof ONode) {
       Node sourceNode = ((ONode) source).getNode();
+      System.out.println(source.toString());
+
       _visited.add(sourceNode);
 
       Optional<Edge> oneofEdges = sourceNode.leavingEdges().filter(e -> isOneOf(e)).findAny();
@@ -123,8 +129,11 @@ public class Graph2AlloyExpr {
             // TODO validate: all edges should be one of and all sourceNodes should have one leaving
             // edge.
             Node sourceNodeOrOtherSourceNode = edge.getSourceNode();
-            _visited.add(sourceNodeOrOtherSourceNode); // sourceNode is added twice but ok
-            sourceOR.add(new ONode(sourceNodeOrOtherSourceNode));
+            if (sourceNodeOrOtherSourceNode != targetNode) { // change p1-> p1+p2 to p1->p2 for
+                                                             // self-loop
+              _visited.add(sourceNodeOrOtherSourceNode); // sourceNode is added twice but ok
+              sourceOR.add(new ONode(sourceNodeOrOtherSourceNode));
+            }
           });
           hb.put(sourceOR, new ONode(targetNode));
         } else { // decision- sourceNode.leavingEdges().count() > 1 source -> target1 and source ->
@@ -132,13 +141,7 @@ public class Graph2AlloyExpr {
           OListOR targetOR = new OListOR();
           sourceNode.leavingEdges().forEach(edge -> {
             Node targetNode = edge.getTargetNode();
-            // if (targetNode.getOutDegree() <= 1 || getOutDegreeMinusSelfLoop(targetNode) <= 1)
             targetOR.add(new ONode(targetNode));
-            // else {
-            // continue expanding sourceNode -> target and target -> anotherNode means target ->
-            // decision or fork
-            // functionHBFn(hb, new ONode(targetNode), _visited);
-            // }
           });
           hb.put(source, targetOR);
         }
@@ -182,9 +185,12 @@ public class Graph2AlloyExpr {
           sourceNode.leavingEdges().forEach(edge -> {
             Node otherTargetNodesFromTheSource = edge.getTargetNode(); // this include the
                                                                        // targetNode
-            _visited.add(otherTargetNodesFromTheSource); // the targetNode in argument is added
-                                                         // twice but ok
-            targetOR.add(new ONode(otherTargetNodesFromTheSource));
+            if (otherTargetNodesFromTheSource != sourceNode) { // change p2 -> p2+p3 to p2-> p3 for
+                                                               // self-loop
+              _visited.add(otherTargetNodesFromTheSource); // the targetNode in argument is added
+                                                           // twice but ok
+              targetOR.add(new ONode(otherTargetNodesFromTheSource));
+            }
           });
           hb.put(new ONode(sourceNode), targetOR);
         } else { // must be > 1 since at least one found as one-of

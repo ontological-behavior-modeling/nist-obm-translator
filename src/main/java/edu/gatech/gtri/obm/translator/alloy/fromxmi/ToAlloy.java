@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
+import edu.gatech.gtri.obm.translator.alloy.Utils;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
@@ -19,6 +20,8 @@ public class ToAlloy {
   private Map<String, Field> fieldByName;
   private Map<String, Sig> fieldTypeByFieldName; // used for pred p1DuringExample { AtomicBehavior
                                                  // in BehaviorFork.p1 }
+  private Map<Field, Sig> filedTypeByField;
+
   private Sig mainSig;
 
   public ToAlloy() {
@@ -27,6 +30,7 @@ public class ToAlloy {
     fieldByName = new HashMap<>(); // assume field names are unique
                                    // among all sigs
     fieldTypeByFieldName = new HashMap<>(); // assume field names are unique for one file
+    filedTypeByField = new HashMap<>();
   }
 
   public Sig addAlloySig(String name, String not_used_parentName, boolean isMainSig) {
@@ -38,7 +42,7 @@ public class ToAlloy {
         mainSig = s;
       return s;
     } else
-      return null;
+      return sigByName.get(name);
   }
 
   public Sig addAlloySig(String name, String not_used_parentName) {
@@ -54,8 +58,21 @@ public class ToAlloy {
         FuncUtils.addField(fieldName, sigByName.get(ownerSigName), sigByName.get(fieldTypeName));
     fieldByName.put(fieldName, p1);
     fieldTypeByFieldName.put(fieldName, sigByName.get(fieldTypeName));
+    filedTypeByField.put(p1, sigByName.get(fieldTypeName));
     return p1;
   }
+
+  public Sig.Field[] addDisjAlloyFields(String[] fieldNames, Sig typeSig, String ownerSigName) {
+    Sig.Field[] ps = FuncUtils.addTrickyField(fieldNames, sigByName.get(ownerSigName), typeSig);
+    for (int i = 0; i < fieldNames.length; i++) {
+      fieldByName.put(fieldNames[i], ps[i]);
+      fieldTypeByFieldName.put(fieldNames[i], typeSig);
+      filedTypeByField.put(ps[i], typeSig);
+    }
+    return ps;
+
+  }
+
 
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
@@ -78,17 +95,19 @@ public class ToAlloy {
 
   public void addRemainingFactAndPredicate() {
     alloy.addSteps(mainSig, fieldByName);
-    alloy.addConstraint(mainSig, fieldByName, fieldTypeByFieldName);
+    alloy.addConstraint(mainSig, fieldByName, fieldTypeByFieldName, filedTypeByField);
   }
 
 
-  public void createAlloyFile() {
+  public String createAlloyFile() {
 
     String moduleName =
         mainSig.label.startsWith("this") ? mainSig.label.substring(5) : mainSig.label;
 
     // Run commands
-    Command command = alloy.createCommand(moduleName);
+    Command command = alloy.createCommand(moduleName, 7);
+
+    // solving to find unique solution - not requires to write file
 
     AlloyModule alloyModule =
         new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), command);
@@ -98,7 +117,13 @@ public class ToAlloy {
     String outputFileName =
         new File("generated-" + alloyModule.getModuleName() + ".als").getAbsolutePath();
     translator.generateAlsFileContents(alloyModule, outputFileName);
+
+    Utils.runX(mainSig, alloy.getAllSigs(), alloy.getOverAllFact(), command);
+
+
+    return outputFileName;
   }
+
 
   public Map<String, Field> getFieldByName() {
     return fieldByName;

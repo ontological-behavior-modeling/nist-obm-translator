@@ -2,6 +2,7 @@ package edu.gatech.gtri.obm.translator.alloy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +14,7 @@ import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.ExprBinary;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.ExprHasName;
 import edu.mit.csail.sdg.ast.ExprList;
@@ -157,22 +159,45 @@ public class Alloy {
     return ignoredFuncs;
   }
 
+
+  /**
+   * support when Expr original is ExprBinary(ie., p1 + p2) to add ExprVar s in both so returns s.p1
+   * and s.p2.
+   * 
+   * @param s
+   * @param original
+   * @return
+   */
+  private Expr addExprVarToExpr(ExprVar s, Expr original) {
+    if (original instanceof ExprBinary) {
+      Expr left = addExprVarToExpr(s, ((ExprBinary) original).left);
+      Expr right = addExprVarToExpr(s, ((ExprBinary) original).right);
+      if (((ExprBinary) original).op == ExprBinary.Op.PLUS)
+        return left.plus(right);
+      else
+        return null;// not supported yet
+    } else
+      return s.join(original);
+  }
+
   public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
-    Expr inverseFunctionFilteredExpr =
-        inverseFunctionFiltered.call(happensBefore.call(), s.join(from), s.join(to));
+    Expr inverseFunctionFilteredExpr = inverseFunctionFiltered.call(happensBefore.call(),
+        addExprVarToExpr(s, from), addExprVarToExpr(s, to));
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(inverseFunctionFilteredExpr.forAll(decl));
   }
 
+
   public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
-    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), s.join(from), s.join(to));
 
+    Expr funcFilteredExpr =
+        funcFiltered.call(happensBefore.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -181,8 +206,8 @@ public class Alloy {
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
-    Expr bijectionFilteredExpr =
-        bijectionFiltered.call(happensBefore.call(), s.join(from), s.join(to));
+    Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(),
+        addExprVarToExpr(s, from), addExprVarToExpr(s, to));
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
@@ -239,26 +264,46 @@ public class Alloy {
     return expr;
   }
 
-  public void addConstraint(Sig ownerSig, Map<String, Field> fieldByName,
-      Map<String, Sig> fieldTypeByFieldName) {
+  private Map<Sig, List<Field>> toFieldsByFieldType(Map<Field, Sig> fieldByFieldType) {
+    Map<Sig, List<Field>> fieldsByFieldType = new HashMap<>();
+    for (Sig.Field field : fieldByFieldType.keySet()) {
+      Sig type = fieldByFieldType.get(field);
+      List<Field> fields = null;
+      if (fieldsByFieldType.containsKey(type)) {
+        fields = fieldsByFieldType.get(type);
+      } else {
+        fields = new ArrayList<>();
+        fieldsByFieldType.put(type, fields);
+      }
+      fields.add(field);
+    }
+    return fieldsByFieldType;
+  }
 
-    // During
-    Pos pos = null;
+
+  public void addConstraint(Sig ownerSig, Map<String, Field> fieldByName,
+      Map<String, Sig> fieldTypeByFieldName, Map<Field, Sig> fieldByFieldType) {
+
+    Map<Sig, List<Field>> fieldsByFieldType = toFieldsByFieldType(fieldByFieldType);
     Expr duringExampleExpressions = null;
-    for (Iterator<String> iter = fieldByName.keySet().iterator(); iter.hasNext();) {
-      String fieldName = iter.next();
-      Sig.Field field = fieldByName.get(fieldName);
-      String label = fieldName + "DuringExample"; // p1DuringExample
+    for (Sig type : fieldsByFieldType.keySet()) {
+      String labelPrefix = "";
+      Expr body = null;
+      for (Field field : fieldsByFieldType.get(type)) {
+        body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
+        labelPrefix += field.label;
+      }
+      Expr pDuringExampleBody = type.in(body);
+      String label = labelPrefix + "DuringExample"; // p1DuringExample
+      Pos pos = null;
       List<Decl> decls = new ArrayList<>();
       Expr returnDecl = null;
-
-      Expr body = fieldTypeByFieldName.get(fieldName).in(ownerSig.join(field));
-      Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, body);
+      Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
       Expr duringExampleExpression = duringExamplePredicate.call();
       duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
           : duringExampleExpressions.and(duringExampleExpression);
-
     }
+
 
     Func instancesDuringExamplePredicate =
         new Func(null, "instancesDuringExample", new ArrayList<>(), null, duringExampleExpressions);
@@ -266,7 +311,43 @@ public class Alloy {
 
     Func onlySimpleSequencePredicate = new Func(null, "only" + ownerSig.label, new ArrayList<>(),
         null, ownerSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
+    Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
 
+    addToNameExpr(instancesDuringExampleExpression);
+    addToNameExpr(onlySimpleSequenceExpression);
+  }
+
+  public void addConstraintzz(Sig ownerSig, Map<String, Field> fieldByName,
+      Map<String, Sig> fieldTypeByFieldName) {
+
+    // During
+    Pos pos = null;
+    Expr duringExampleExpressions = null;
+    String label = "pDuringExample"; // p1DuringExample
+    Expr body = null;
+    String commonFieldName = "";
+    for (String fieldName : fieldByName.keySet()) {
+      commonFieldName = fieldName;
+      Sig.Field field = fieldByName.get(fieldName);
+      body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
+    }
+    // assuming all fieldTypeByFieldName.get(fieldName) are the same
+    Expr pDuringExampleBody = fieldTypeByFieldName.get(commonFieldName).in(body);
+    List<Decl> decls = new ArrayList<>();
+    Expr returnDecl = null;
+    Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
+    Expr duringExampleExpression = duringExamplePredicate.call();
+    duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
+        : duringExampleExpressions.and(duringExampleExpression);
+
+
+
+    Func instancesDuringExamplePredicate =
+        new Func(null, "instancesDuringExample", new ArrayList<>(), null, duringExampleExpressions);
+    Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
+
+    Func onlySimpleSequencePredicate = new Func(null, "only" + ownerSig.label, new ArrayList<>(),
+        null, ownerSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
     Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
 
     addToNameExpr(instancesDuringExampleExpression);
@@ -274,11 +355,11 @@ public class Alloy {
   }
 
 
-  public Command createCommand(String label) {
+  public Command createCommand(String label, int __overall) {
     Pos _pos = null;
     String _label = label;
     boolean _check = false;
-    int _overall = 6;
+    int _overall = __overall;
     int _bitwidth = -1;
     int _maxseq = -1;
     int _expects = -1;
