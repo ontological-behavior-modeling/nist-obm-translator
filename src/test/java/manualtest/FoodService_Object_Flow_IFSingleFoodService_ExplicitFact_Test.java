@@ -65,66 +65,66 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// ofEnd: none
 		
 		// ofOrder
-		Sig.Field orderedFoodItem = FuncUtils.addOneField("orderedFoodItem", ofOrder, foodItem);
+		Sig.Field orderedFoodItem_ofOrder = FuncUtils.addOneField("orderedFoodItem_ofOrder", ofOrder, foodItem);
 		
 		// OFCustomOrder
-		Sig.Field orderAmount = FuncUtils.addOneField("orderAmount", ofCustomOrder, real);
-		Sig.Field orderDestination = FuncUtils.addOneField("orderDestination", ofCustomOrder, location);
+		Sig.Field orderAmount_ofCustomOrder = FuncUtils.addOneField("orderAmount_ofCustomOrder", ofCustomOrder, real);
+		Sig.Field orderDestination_ofCustomOrder = FuncUtils.addOneField("orderDestination_ofCustomOrder", ofCustomOrder, location);
 		
 		// OFPrepare
-		Sig.Field preparedFoodItem = FuncUtils.addOneField("preparedFoodItem", ofPrepare, foodItem);
+		Sig.Field preparedFoodItem_ofPrepare = FuncUtils.addOneField("preparedFoodItem_ofPrepare", ofPrepare, foodItem);
 		
 		// OFCustomPrepare
-		Sig.Field prepareDestination = FuncUtils.addOneField("prepareDestination", ofCustomPrepare, location);
+		Sig.Field prepareDestination_ofCustomPrepare = FuncUtils.addOneField("prepareDestination_ofCustomPrepare", ofCustomPrepare, location);
 		
 		// OFServe
-		Sig.Field servedFoodItem = FuncUtils.addOneField("servedFoodItem", ofServe, foodItem);
+		Sig.Field servedFoodItem_ofServe = FuncUtils.addOneField("servedFoodItem_ofServe", ofServe, foodItem);
 		
 		// OFCustomServe
-		Sig.Field serviceDestination = FuncUtils.addOneField("serviceDestination", ofCustomServe, location);
+		Sig.Field serviceDestination_ofCustomServe = FuncUtils.addOneField("serviceDestination_ofCustomServe", ofCustomServe, location);
 		
 		// OFEat
-		Sig.Field eatenItem = FuncUtils.addOneField("eatenItem", ofEat, foodItem);
+		Sig.Field eatenItem_ofEat = FuncUtils.addOneField("eatenItem_ofEat", ofEat, foodItem);
 		
 		// OFPay
-		Sig.Field paidAmount = FuncUtils.addOneField("paidAmount", ofPay, real);
-		Sig.Field paidFoodItem = FuncUtils.addOneField("paidFoodItem", ofPay, foodItem);
+		Sig.Field paidAmount_ofPay = FuncUtils.addOneField("paidAmount_ofPay", ofPay, real);
+		Sig.Field paidFoodItem_ofPay = FuncUtils.addOneField("paidFoodItem_ofPay", ofPay, foodItem);
 		
 		// FoodService
-		Sig.Field foodService_order = FuncUtils.addField("order", foodService, order);
-		Sig.Field foodService_prepare = FuncUtils.addField("prepare", foodService, prepare);
-		Sig.Field foodService_pay = FuncUtils.addField("pay", foodService, pay);
-		Sig.Field foodService_eat = FuncUtils.addField("eat", foodService, eat);
-		Sig.Field foodService_serve = FuncUtils.addField("serve", foodService, serve);
+		Sig.Field order_foodService = FuncUtils.addField("order", foodService, order);
+		Sig.Field prepare_foodService = FuncUtils.addField("prepare", foodService, prepare);
+		Sig.Field pay_foodService = FuncUtils.addField("pay", foodService, pay);
+		Sig.Field eat_foodService = FuncUtils.addField("eat", foodService, eat);
+		Sig.Field serve_foodService = FuncUtils.addField("serve", foodService, serve);
 		
 		// OFFoodService
 		Sig.Field[] ofFoodService_fields = ofFoodService.addTrickyField(
 			null, null, Pos.UNKNOWN, null, null, 
 			new String[] {"transferPrepareServe", "transferOrderServe", "transferServeEat"}, 
 			transferBefore);
-		Sig.Field transferPrepareServe = ofFoodService_fields[0];
-		Sig.Field transferOrderServe = ofFoodService_fields[1];
-		Sig.Field transferServeEat = ofFoodService_fields[2];
+		Sig.Field transferPrepareServe_ofFoodService = ofFoodService_fields[0];
+		Sig.Field transferOrderServe_ofFoodService = ofFoodService_fields[1];
+		Sig.Field transferServeEat_ofFoodService = ofFoodService_fields[2];
 		
 		// OFSingleFoodService
 		Sig.Field[] ofSingleFoodService_fields = ofSingleFoodService.addTrickyField(
 			null, null, Pos.UNKNOWN, null, null, 
 			new String[] {"transferOrderPrepare", "transferOrderPay", "transferPayEat"}, 
 			transferBefore);
-		Sig.Field transferOrderPrepare = ofSingleFoodService_fields[0];
-		Sig.Field transferOrderPay = ofSingleFoodService_fields[1];
-		Sig.Field transferPayEat = ofSingleFoodService_fields[2];
+		Sig.Field transferOrderPrepare_ofSingleFoodService = ofSingleFoodService_fields[0];
+		Sig.Field transferOrderPay_ofSingleFoodService = ofSingleFoodService_fields[1];
+		Sig.Field transferPayEat_ofSingleFoodService = ofSingleFoodService_fields[2];
 		
 		// OFLoopFoodService
-		Sig.Field ofLoopFoodService_start = FuncUtils.addOneField("start", ofLoopFoodService, ofStart);
-		Sig.Field ofLoopFoodService_end = FuncUtils.addOneField("end", ofLoopFoodService, ofEnd);
+		Sig.Field start_ofLoopFoodService = FuncUtils.addOneField("start", ofLoopFoodService, ofStart);
+		Sig.Field end_ofLoopFoodService = FuncUtils.addOneField("end", ofLoopFoodService, ofEnd);
 		Sig.Field[] ofLoopFoodService_fields = ofLoopFoodService.addTrickyField(
 			null, null, Pos.UNKNOWN, null, null, 
 			new String[] {"transferOrderPrepare", "transferOrderPay", "transferPayEat"}, 
 			transferBefore);
-		Sig.Field ofLoopFoodService_transferOrderPrepare = ofLoopFoodService_fields[0];
-		Sig.Field ofLoopFoodService_transferOrderPay = ofLoopFoodService_fields[1];
-		Sig.Field ofLoopFoodService_transferPayEat = ofLoopFoodService_fields[2];
+		Sig.Field transferOrderPrepare_ofLoopFoodService = ofLoopFoodService_fields[0];
+		Sig.Field transferOrderPay_ofLoopFoodService = ofLoopFoodService_fields[1];
+		Sig.Field transferPayEat_ofLoopFoodService = ofLoopFoodService_fields[2];
 		
 		// OFParallelFoodService: none
 		
@@ -138,10 +138,12 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 	    Func items = Helper.getFunction(Alloy.transferModule, "o/items");
 	    Func sources = Helper.getFunction(Alloy.transferModule, "o/sources");
 	    Func targets = Helper.getFunction(Alloy.transferModule, "o/targets");
+	    Func functionFiltered = Helper.getFunction(Alloy.transferModule, "o/functionFiltered");
 	    Func bijectionFiltered = Helper.getFunction(Alloy.transferModule, "o/bijectionFiltered");
+	    Func inverseFunctionFiltered = Helper.getFunction(Alloy.transferModule, "o/inverseFunctionFiltered");
 	    Func subsettingItemRuleForSources = Helper.getFunction(Alloy.transferModule, "o/subsettingItemRuleForSources");
 	    Func subsettingItemRuleForTargets = Helper.getFunction(Alloy.transferModule, "o/subsettingItemRuleForTargets");
-		
+	    
 		// Order: none
 		// Prepare: none
 		// Serve: none
@@ -232,124 +234,124 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// ofOrder
 		// Implicit fact:
 		// "no this.inputs"
-		// "orderedFoodItem in this.outputs"
+		// "orderedFoodItem_ofOrder in this.outputs"
 		// Explicit fact:
 		// "all of_order: ofOrder | no of_order.inputs"
-		// "all of_order: ofOrder | of_order.orderedFoodItem in of_order.outputs"
+		// "all of_order: ofOrder | of_order.orderedFoodItem_ofOrder in of_order.outputs"
 		
 		ExprVar ofOrder_var = ExprVar.make(null, "of_order", ofOrder.type());
 		Decl ofOrder_decl = new Decl(null, null, null, List.of(ofOrder_var), ofOrder.oneOf());
 		
 		alloy.addToOverallFact(ofOrder_var.join(inputs.call()).no().forAll(ofOrder_decl));
-		alloy.addToOverallFact(ofOrder_var.join(orderedFoodItem).in(ofOrder_var.join(outputs.call())).forAll(ofOrder_decl));
+		alloy.addToOverallFact(ofOrder_var.join(orderedFoodItem_ofOrder).in(ofOrder_var.join(outputs.call())).forAll(ofOrder_decl));
 		
 		// OFCustomOrder
 		// Implicit fact:
-		// "orderAmount in this.outputs"
-		// "orderDestination in this.outputs"
+		// "orderAmount_ofCustomOrder in this.outputs"
+		// "orderDestination_ofCustomOrder in this.outputs"
 		// Explicit fact:
-		// "all of_custom_order: OFCustomOrder | of_custom_order.orderAmount in of_custom_order.outputs"
-		// "all of_custom_order: OFCustomOrder | of_custom_order.orderDestination in of_custom_order.outputs"
+		// "all of_custom_order: OFCustomOrder | of_custom_order.orderAmount_ofCustomOrder in of_custom_order.outputs"
+		// "all of_custom_order: OFCustomOrder | of_custom_order.orderDestination_ofCustomOrder in of_custom_order.outputs"
 		
 		ExprVar ofCustomOrder_var = ExprVar.make(null, "of_custom_order", ofCustomOrder.type());
 		Decl ofCustomOrder_decl = new Decl(null, null, null, List.of(ofCustomOrder_var), ofCustomOrder_var.oneOf());
 		
-		alloy.addToOverallFact(ofCustomOrder_var.join(orderAmount).in(ofCustomOrder_var.join(outputs.call())).forAll(ofCustomOrder_decl));
-		alloy.addToOverallFact(ofCustomOrder.join(orderDestination).in(ofCustomOrder.join(outputs.call())));
+		alloy.addToOverallFact(ofCustomOrder_var.join(orderAmount_ofCustomOrder).in(ofCustomOrder_var.join(outputs.call())).forAll(ofCustomOrder_decl));
+		alloy.addToOverallFact(ofCustomOrder.join(orderDestination_ofCustomOrder).in(ofCustomOrder.join(outputs.call())));
 		
 		// OFPrepare
 		// Implicit fact:
-		// "preparedFoodItem in this.inputs"
-		// "preparedFoodItem in this.outputs"
+		// "preparedFoodItem_ofPrepare in this.inputs"
+		// "preparedFoodItem_ofPrepare in this.outputs"
 		// Explicit fact:
-		// "all of_prepare: OFPrepare | of_prepare.preparedFoodItem in of_prepare.inputs"
-		// "all of_prepare: OFPrepare | of_prepare.preparedFoodItem in of_prepare.outputs"
+		// "all of_prepare: OFPrepare | of_prepare.preparedFoodItem_ofPrepare in of_prepare.inputs"
+		// "all of_prepare: OFPrepare | of_prepare.preparedFoodItem_ofPrepare in of_prepare.outputs"
 		
 		ExprVar ofPrepare_var = ExprVar.make(null, "of_prepare", ofPrepare.type());
 		Decl ofPrepareOrder_decl = new Decl(null, null, null, List.of(ofPrepare_var), ofPrepare_var.oneOf());
 		
-		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem).in(ofPrepare_var.join(inputs.call())).forAll(ofPrepareOrder_decl));
-		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem).in(ofPrepare_var.join(outputs.call())).forAll(ofPrepareOrder_decl));
+		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(inputs.call())).forAll(ofPrepareOrder_decl));
+		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(outputs.call())).forAll(ofPrepareOrder_decl));
 		
 		// OFCustomPrepare
 		// Implicit fact:
-		// "prepareDestination in this.inputs"
-		// "prepareDestination in this.outputs"
+		// "prepareDestination_ofCustomPrepare in this.inputs"
+		// "prepareDestination_ofCustomPrepare in this.outputs"
 		// Explicit fact:
-		// "all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination in of_custom_prepare.inputs"
-		// "all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination in of_custom_prepare.outputs"
+		// "all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination_ofCustomPrepare in of_custom_prepare.inputs"
+		// "all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination_ofCustomPrepare in of_custom_prepare.outputs"
 		
 		ExprVar ofCustomPrepare_var = ExprVar.make(null, "of_custom_prepare", ofCustomPrepare.type());
 		Decl ofCustomPrepare_decl = new Decl(null, null, null, List.of(ofCustomPrepare_var), ofCustomPrepare_var.oneOf());
 		
 		alloy.addToOverallFact(
-			ofCustomPrepare_var.join(prepareDestination)
+			ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare)
 			.in(ofCustomPrepare_var.join(inputs.call()))
 			.forAll(ofCustomPrepare_decl));
 		
 		alloy.addToOverallFact(
-			ofCustomPrepare_var.join(prepareDestination)
+			ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare)
 			.in(ofCustomPrepare_var.join(outputs.call()))
 			.forAll(ofCustomPrepare_decl));
 		
 		// OFServe
 		// Implicit fact:
-		// "servedFoodItem in this.inputs"
-		// "servedFoodItem in this.outputs"
+		// "servedFoodItem_ofServe in this.inputs"
+		// "servedFoodItem_ofServe in this.outputs"
 		// Explicit fact:
-		// "all of_serve: OFServe | of_serve.servedFoodItem in of_serve.inputs"
-		// "all of_serve: OFServe | of_serve.servedFoodItem in of_serve.outputs"
+		// "all of_serve: OFServe | of_serve.servedFoodItem_ofServe in of_serve.inputs"
+		// "all of_serve: OFServe | of_serve.servedFoodItem_ofServe in of_serve.outputs"
 		
 		ExprVar ofServe_var = ExprVar.make(null, "of_serve", ofServe.type());
 		Decl ofServe_decl = new Decl(null, null, null, List.of(ofServe_var), ofServe_var.oneOf());
 		
-		alloy.addToOverallFact(ofServe_var.join(servedFoodItem).in(ofServe_var).join(inputs.call()).forAll(ofServe_decl));
-		alloy.addToOverallFact(ofServe_var.join(servedFoodItem).in(ofServe_var).join(outputs.call()).forAll(ofServe_decl));
+		alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var).join(inputs.call()).forAll(ofServe_decl));
+		alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var).join(outputs.call()).forAll(ofServe_decl));
 		
 		// OFCustomServe
 		// Implicit fact:
-		// "serviceDestination in this.inputs"
+		// "serviceDestination_ofCustomServe in this.inputs"
 		// Explicit fact:
-		// "all of_custom_serve: OFCustomServe | of_custom_serve.serviceDestination in of_custom_serve.inputs"
+		// "all of_custom_serve: OFCustomServe | of_custom_serve.serviceDestination_ofCustomServe in of_custom_serve.inputs"
 		
 		ExprVar ofCustomServe_var = ExprVar.make(null, "of_custom_serve", ofCustomServe.type());
 		Decl ofCustomServe_decl = new Decl(null, null, null, List.of(ofCustomServe_var), ofCustomServe_var.oneOf());
 		
 		alloy.addToOverallFact(
-			ofCustomServe_var.join(serviceDestination)
+			ofCustomServe_var.join(serviceDestination_ofCustomServe)
 			.in(ofCustomServe_var.join(inputs.call()))
 			.forAll(ofCustomServe_decl));
 		
 		// OFEat
 		// Implicit fact:
-		// "eatenItem in this.inputs"
+		// "eatenItem_ofEat in this.inputs"
 		// "no this.outputs"
 		// Explicit fact:
-		// "all of_eat: OFEat | of_eat.eatenItem in of_eat.inputs"
+		// "all of_eat: OFEat | of_eat.eatenItem_ofEat in of_eat.inputs"
 		// "all of_eat: OFEat | no of_eat.outputs"
 		
 		ExprVar ofEat_var = ExprVar.make(null, "of_eat", ofEat.type());
 		Decl ofEat_decl = new Decl(null, null, null, List.of(ofEat_var), ofEat_var.oneOf());
 		
-		alloy.addToOverallFact(ofEat_var.join(eatenItem).in(ofEat_var.join(inputs.call())).forAll(ofEat_decl));
+		alloy.addToOverallFact(ofEat_var.join(eatenItem_ofEat).in(ofEat_var.join(inputs.call())).forAll(ofEat_decl));
 		alloy.addToOverallFact(ofEat_var.join(outputs.call()).no().forAll(ofEat_decl));
 		
 		// OFPay
 		// Implicit fact:
-		// paidAmount in this.inputs
-		// paidFoodItem in this.inputs
-		// paidFoodItem in this.outputs
+		// paidAmount_ofPay in this.inputs
+		// paidFoodItem_ofPay in this.inputs
+		// paidFoodItem_ofPay in this.outputs
 		// Explicit fact:
-		// all of_pay: OFPay | of_pay.paidAmount in of_pay.inputs
-		// all of_pay: OFPay | of_pay.paidFoodItem in of_pay.inputs
-		// all of_pay: OFPay | of_pay.paidFoodItem in of_pay.outputs
+		// all of_pay: OFPay | of_pay.paidAmount_ofPay in of_pay.inputs
+		// all of_pay: OFPay | of_pay.paidFoodItem_ofPay in of_pay.inputs
+		// all of_pay: OFPay | of_pay.paidFoodItem_ofPay in of_pay.outputs
 		
 		ExprVar ofPay_var = ExprVar.make(null, "of_pay", ofPay.type());
 		Decl ofPay_decl = new Decl(null, null, null, List.of(ofPay_var), ofPay_var.oneOf());
 		
-		alloy.addToOverallFact(ofPay_var.join(paidAmount).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
-		alloy.addToOverallFact(ofPay_var.join(paidFoodItem).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
-		alloy.addToOverallFact(ofPay_var.join(paidFoodItem).in(ofPay_var.join(outputs.call())).forAll(ofPay_decl));
+		alloy.addToOverallFact(ofPay_var.join(paidAmount_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
+		alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
+		alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(outputs.call())).forAll(ofPay_decl));
 		
 		// FoodService
 		// Implicit facts:
@@ -366,15 +368,15 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		ExprVar foodService_var = ExprVar.make(null, "food_service", foodService.type());
 		Decl foodService_decl = new Decl(null, null, null, List.of(foodService_var), foodService.oneOf());
 		
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, foodService_order, foodService_serve);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, foodService_prepare, foodService_serve);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, foodService_serve, foodService_eat);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, order_foodService, serve_foodService);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, prepare_foodService, serve_foodService);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, serve_foodService, eat_foodService);
 		
-		alloy.addToOverallFact(foodService_var.join(foodService_order)
-			.plus(foodService_var.join(foodService_prepare))
-			.plus(foodService_var.join(foodService_pay))
-			.plus(foodService_var.join(foodService_eat))
-			.plus(foodService_var.join(foodService_serve))
+		alloy.addToOverallFact(foodService_var.join(order_foodService)
+			.plus(foodService_var.join(prepare_foodService))
+			.plus(foodService_var.join(pay_foodService))
+			.plus(foodService_var.join(eat_foodService))
+			.plus(foodService_var.join(serve_foodService))
 			.in(foodService_var.join(steps.call())).forAll(foodService_decl));
 		
 		// OFFoodService
@@ -431,20 +433,20 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		/*30*/ alloy.addToOverallFact(ofFoodService_var.join(pay).in(ofPay).forAll(ofFoodService_decl));
 		/*31*/ alloy.addToOverallFact(ofFoodService_var.join(eat).in(ofEat).forAll(ofFoodService_decl));
 		/*32*/ alloy.addToOverallFact(ofFoodService_var.join(serve).in(ofServe).forAll(ofFoodService_decl));
-		/*33*/ alloy.addToOverallFact(ofFoodService_var.join(transferPrepareServe).plus(ofFoodService_var.join(transferOrderServe))
-			.plus(ofFoodService_var.join(transferServeEat)).in(ofFoodService_var.join(steps.call())).forAll(ofFoodService_decl));
-		/*34*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferPrepareServe), ofFoodService_var.join(prepare)).forAll(ofFoodService_decl));
-		/*35*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferPrepareServe), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
-		/*36*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferPrepareServe)).forAll(ofFoodService_decl));
-		/*37*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferPrepareServe)).forAll(ofFoodService_decl));
-		/*38*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferServeEat), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
-		/*39*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferServeEat), ofFoodService_var.join(eat)).forAll(ofFoodService_decl));
-		/*40*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferServeEat)).forAll(ofFoodService_decl));
-		/*41*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferServeEat)).forAll(ofFoodService_decl));
-		/*42*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferOrderServe), ofFoodService_var.join(order)).forAll(ofFoodService_decl));
-		/*43*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferOrderServe), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
-		/*44*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferOrderServe)).forAll(ofFoodService_decl));
-		/*45*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferOrderServe)).forAll(ofFoodService_decl));
+		/*33*/ alloy.addToOverallFact(ofFoodService_var.join(transferPrepareServe_ofFoodService).plus(ofFoodService_var.join(transferOrderServe_ofFoodService))
+			.plus(ofFoodService_var.join(transferServeEat_ofFoodService)).in(ofFoodService_var.join(steps.call())).forAll(ofFoodService_decl));
+		/*34*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferPrepareServe_ofFoodService), ofFoodService_var.join(prepare)).forAll(ofFoodService_decl));
+		/*35*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferPrepareServe_ofFoodService), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
+		/*36*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferPrepareServe_ofFoodService)).forAll(ofFoodService_decl));
+		/*37*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferPrepareServe_ofFoodService)).forAll(ofFoodService_decl));
+		/*38*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferServeEat_ofFoodService), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
+		/*39*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferServeEat_ofFoodService), ofFoodService_var.join(eat)).forAll(ofFoodService_decl));
+		/*40*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferServeEat_ofFoodService)).forAll(ofFoodService_decl));
+		/*41*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferServeEat_ofFoodService)).forAll(ofFoodService_decl));
+		/*42*/ alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofFoodService_var.join(transferOrderServe_ofFoodService), ofFoodService_var.join(order)).forAll(ofFoodService_decl));
+		/*43*/ alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofFoodService_var.join(transferOrderServe_ofFoodService), ofFoodService_var.join(serve)).forAll(ofFoodService_decl));
+		/*44*/ alloy.addToOverallFact(subsettingItemRuleForSources.call(ofFoodService_var.join(transferOrderServe_ofFoodService)).forAll(ofFoodService_decl));
+		/*45*/ alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofFoodService_var.join(transferOrderServe_ofFoodService)).forAll(ofFoodService_decl));
 		
 		// OFSingleFoodService
 		// Implicit Fact
@@ -454,50 +456,50 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// 49) transferOrderPrepare + transferOrderPay + transferPayEat in this.steps
 		// 50) this.steps in order + prepare + pay + serve + eat + transferPrepareServe + transferOrderServe + transferServeEat + transferOrderPrepare + transferOrderPay + transferPayEat
 		// 51) #order = 1
-		// 52) order.outputs in order.orderedFoodItem + order.orderAmount + order.orderDestination
-		// 53) pay.inputs in pay.paidAmount + pay.paidFoodItem
-		// 54) pay.outputs in pay.paidFoodItem
-		// 55) prepare.inputs in prepare.preparedFoodItem + prepare.prepareDestination
-		// 56) prepare.outputs in prepare.preparedFoodItem + prepare.prepareDestination
-		// 57) serve.inputs in serve.servedFoodItem + serve.serviceDestination
-		// 58) serve.outputs in serve.servedFoodItem + serve.serviceDestination
-		// 59) eat.inputs in eat.eatenItem
+		// 52) order.outputs in order.orderedFoodItem_ofOrder + order.orderAmount_ofCustomOrder + order.orderDestination_ofCustomOrder
+		// 53) pay.inputs in pay.paidAmount_ofPay + pay.paidFoodItem_ofPay
+		// 54) pay.outputs in pay.paidFoodItem_ofPay
+		// 55) prepare.inputs in prepare.preparedFoodItem_ofPrepare + prepare.prepareDestination_ofCustomPrepare
+		// 56) prepare.outputs in prepare.preparedFoodItem_ofPrepare + prepare.prepareDestination_ofCustomPrepare
+		// 57) serve.inputs in serve.servedFoodItem_ofServe + serve.serviceDestination_ofCustomServe
+		// 58) serve.outputs in serve.servedFoodItem_ofServe + serve.serviceDestination_ofCustomServe
+		// 59) eat.inputs in eat.eatenItem_ofEat
 		// 60) bijectionFiltered[sources, transferOrderPay, order]
 		// 61) bijectionFiltered[targets, transferOrderPay, pay]
 		// 62) subsettingItemRuleForSources[transferOrderPay]
 		// 63) subsettingItemRuleForTargets[transferOrderPay]
-		// 64) transferOrderPay.items in transferOrderPay.sources.orderedFoodItem + transferOrderPay.sources.orderAmount
-		// 65) transferOrderPay.sources.orderedFoodItem + transferOrderPay.sources.orderAmount in transferOrderPay.items
-		// 66) transferOrderPay.items in transferOrderPay.targets.paidFoodItem + transferOrderPay.targets.paidAmount
-		// 67) transferOrderPay.targets.paidFoodItem + transferOrderPay.targets.paidAmount in transferOrderPay.items
+		// 64) transferOrderPay.items in transferOrderPay.sources.orderedFoodItem_ofOrder + transferOrderPay.sources.orderAmount_ofCustomOrder
+		// 65) transferOrderPay.sources.orderedFoodItem_ofOrder + transferOrderPay.sources.orderAmount_ofCustomOrder in transferOrderPay.items
+		// 66) transferOrderPay.items in transferOrderPay.targets.paidFoodItem_ofPay + transferOrderPay.targets.paidAmount_ofPay
+		// 67) transferOrderPay.targets.paidFoodItem_ofPay + transferOrderPay.targets.paidAmount_ofPay in transferOrderPay.items
 		// 68) bijectionFiltered[sources, transferPayEat, pay]
 		// 69) bijectionFiltered[targets, transferPayEat, eat]
 		// 70) subsettingItemRuleForSources[transferPayEat]
 		// 71) subsettingItemRuleForTargets[transferPayEat]
-		// 72) transferPayEat.items in transferPayEat.sources.paidFoodItem
-		// 73) transferPayEat.items in transferPayEat.targets.eatenItem
-		// 74) transferPayEat.sources.paidFoodItem in transferPayEat.items
-		// 75) transferPayEat.targets.eatenItem in transferPayEat.items
-		// 76) transferOrderServe.items in transferOrderServe.sources.orderedFoodItem
-		// 77) transferOrderServe.items in transferOrderServe.targets.servedFoodItem
-		// 78) transferOrderServe.sources.orderedFoodItem in transferOrderServe.items
-		// 79) transferOrderServe.targets.servedFoodItem in transferOrderServe.items
+		// 72) transferPayEat.items in transferPayEat.sources.paidFoodItem_ofPay
+		// 73) transferPayEat.items in transferPayEat.targets.eatenItem_ofEat
+		// 74) transferPayEat.sources.paidFoodItem_ofPay in transferPayEat.items
+		// 75) transferPayEat.targets.eatenItem_ofEat in transferPayEat.items
+		// 76) transferOrderServe.items in transferOrderServe.sources.orderedFoodItem_ofOrder
+		// 77) transferOrderServe.items in transferOrderServe.targets.servedFoodItem_ofServe
+		// 78) transferOrderServe.sources.orderedFoodItem_ofOrder in transferOrderServe.items
+		// 79) transferOrderServe.targets.servedFoodItem_ofServe in transferOrderServe.items
 		// 80) bijectionFiltered[sources, transferOrderPrepare, order]
 		// 81) bijectionFiltered[targets, transferOrderPrepare, prepare]
 		// 82) subsettingItemRuleForSources[transferOrderPrepare]
 		// 83) subsettingItemRuleForTargets[transferOrderPrepare]
-		// 84) transferOrderPrepare.items in transferOrderPrepare.sources.orderedFoodItem + transferOrderPrepare.sources.orderDestination
-		// 85) transferOrderPrepare.items in transferOrderPrepare.targets.preparedFoodItem + transferOrderPrepare.targets.prepareDestination
-		// 86) transferOrderPrepare.sources.orderedFoodItem + transferOrderPrepare.sources.orderDestination in transferOrderPrepare.items
-		// 87) transferOrderPrepare.targets.preparedFoodItem + transferOrderPrepare.targets.prepareDestination in transferOrderPrepare.items
-		// 88) transferPrepareServe.items in transferPrepareServe.sources.preparedFoodItem + transferPrepareServe.sources.prepareDestination
-		// 89) transferPrepareServe.sources.preparedFoodItem + transferPrepareServe.sources.prepareDestination in transferPrepareServe.items
-		// 90) transferPrepareServe.items in transferPrepareServe.targets.servedFoodItem + transferPrepareServe.targets.serviceDestination
-		// 91) transferPrepareServe.targets.servedFoodItem + transferPrepareServe.targets.serviceDestination in transferPrepareServe.items
-		// 92) transferServeEat.items in transferServeEat.sources.servedFoodItem
-		// 93) transferServeEat.items in transferServeEat.targets.eatenItem
-		// 94) transferServeEat.sources.servedFoodItem in transferServeEat.items
-		// 95) transferServeEat.targets.eatenItem in transferServeEat.items
+		// 84) transferOrderPrepare.items in transferOrderPrepare.sources.orderedFoodItem_ofOrder + transferOrderPrepare.sources.orderDestination_ofCustomOrder
+		// 85) transferOrderPrepare.items in transferOrderPrepare.targets.preparedFoodItem_ofPrepare + transferOrderPrepare.targets.prepareDestination_ofCustomPrepare
+		// 86) transferOrderPrepare.sources.orderedFoodItem_ofOrder + transferOrderPrepare.sources.orderDestination_ofCustomOrder in transferOrderPrepare.items
+		// 87) transferOrderPrepare.targets.preparedFoodItem_ofPrepare + transferOrderPrepare.targets.prepareDestination_ofCustomPrepare in transferOrderPrepare.items
+		// 88) transferPrepareServe.items in transferPrepareServe.sources.preparedFoodItem_ofPrepare + transferPrepareServe.sources.prepareDestination_ofCustomPrepare
+		// 89) transferPrepareServe.sources.preparedFoodItem_ofPrepare + transferPrepareServe.sources.prepareDestination_ofCustomPrepare in transferPrepareServe.items
+		// 90) transferPrepareServe.items in transferPrepareServe.targets.servedFoodItem_ofServe + transferPrepareServe.targets.serviceDestination_ofCustomServe
+		// 91) transferPrepareServe.targets.servedFoodItem_ofServe + transferPrepareServe.targets.serviceDestination_ofCustomServe in transferPrepareServe.items
+		// 92) transferServeEat.items in transferServeEat.sources.servedFoodItem_ofServe
+		// 93) transferServeEat.items in transferServeEat.targets.eatenItem_ofEat
+		// 94) transferServeEat.sources.servedFoodItem_ofServe in transferServeEat.items
+		// 95) transferServeEat.targets.eatenItem_ofEat in transferServeEat.items
 		// Explicit Fact
 		// 46) of_single_food_service.order in OFCustomOrder
 		// 47) of_single_food_service.prepare in OFCustomPrepare
@@ -505,50 +507,50 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// 49) of_single_food_service.transferOrderPrepare + of_single_food_service.transferOrderPay + of_single_food_service.transferPayEat in of_single_food_service.steps
 		// 50) of_single_food_service.steps in of_single_food_service.order + of_single_food_service.prepare + of_single_food_service.pay + of_single_food_service.serve + of_single_food_service.eat + of_single_food_service.transferPrepareServe + of_single_food_service.transferOrderServe + of_single_food_service.transferServeEat + of_single_food_service.transferOrderPrepare + of_single_food_service.transferOrderPay + of_single_food_service.transferPayEat
 		// 51) #of_single_food_service.order = 1
-		// 52) (of_single_food_service.order).outputs in (of_single_food_service.order).orderedFoodItem + (of_single_food_service.order).orderAmount + (of_single_food_service.order).orderDestination
-		// 53) (of_single_food_service.pay).inputs + (of_single_food_service.pay).paidAmount in (of_single_food_service.pay).paidFoodItem
-		// 54) (of_single_food_service.pay).outputs in (of_single_food_service.pay).paidFoodItem
-		// 55) (of_single_food_service.prepare).inputs in (of_single_food_service.prepare).preparedFoodItem + (of_single_food_service.prepare).prepareDestination
-		// 56) (of_single_food_service.prepare).outputs in (of_single_food_service.prepare).preparedFoodItem + (of_single_food_service.prepare).prepareDestination
-		// 57) (of_single_food_service.serve).inputs in (of_single_food_service.serve).servedFoodItem + (of_single_food_service.serve).serviceDestination
-		// 58) (of_single_food_service.serve).outputs in (of_single_food_service.serve).servedFoodItem + (of_single_food_service.serve).serviceDestination
-		// 59) (of_single_food_service.eat).inputs in (of_single_food_service.eat).eatenItem
+		// 52) (of_single_food_service.order).outputs in (of_single_food_service.order).orderedFoodItem_ofOrder + (of_single_food_service.order).orderAmount_ofCustomOrder + (of_single_food_service.order).orderDestination_ofCustomOrder
+		// 53) (of_single_food_service.pay).inputs + (of_single_food_service.pay).paidAmount_ofPay in (of_single_food_service.pay).paidFoodItem_ofPay
+		// 54) (of_single_food_service.pay).outputs in (of_single_food_service.pay).paidFoodItem_ofPay
+		// 55) (of_single_food_service.prepare).inputs in (of_single_food_service.prepare).preparedFoodItem_ofPrepare + (of_single_food_service.prepare).prepareDestination_ofCustomPrepare
+		// 56) (of_single_food_service.prepare).outputs in (of_single_food_service.prepare).preparedFoodItem_ofPrepare + (of_single_food_service.prepare).prepareDestination_ofCustomPrepare
+		// 57) (of_single_food_service.serve).inputs in (of_single_food_service.serve).servedFoodItem_ofServe + (of_single_food_service.serve).serviceDestination_ofCustomServe
+		// 58) (of_single_food_service.serve).outputs in (of_single_food_service.serve).servedFoodItem_ofServe + (of_single_food_service.serve).serviceDestination_ofCustomServe
+		// 59) (of_single_food_service.eat).inputs in (of_single_food_service.eat).eatenItem_ofEat
 		// 60) bijectionFiltered[sources, of_single_food_service.transferOrderPay, of_single_food_service.order]
 		// 61) bijectionFiltered[targets, of_single_food_service.transferOrderPay, of_single_food_service.pay]
 		// 62) subsettingItemRuleForSources[of_single_food_service.transferOrderPay]
 		// 63) subsettingItemRuleForTargets[of_single_food_service.transferOrderPay]
-		// 64) (of_single_food_service.transferOrderPay).items in (of_single_food_service.transferOrderPay).sources.orderedFoodItem + (of_single_food_service.transferOrderPay).sources.orderAmount
-		// 65) (of_single_food_service.transferOrderPay).sources.orderedFoodItem + (of_single_food_service.transferOrderPay).sources.orderAmount in (of_single_food_service.transferOrderPay).items
-		// 66) (of_single_food_service.transferOrderPay).items in (of_single_food_service.transferOrderPay).targets.paidFoodItem + (of_single_food_service.transferOrderPay).targets.paidAmount
-		// 67) (of_single_food_service.transferOrderPay).targets.paidFoodItem + (of_single_food_service.transferOrderPay).targets.paidAmount in (of_single_food_service.transferOrderPay).items
+		// 64) (of_single_food_service.transferOrderPay).items in (of_single_food_service.transferOrderPay).sources.orderedFoodItem_ofOrder + (of_single_food_service.transferOrderPay).sources.orderAmount_ofCustomOrder
+		// 65) (of_single_food_service.transferOrderPay).sources.orderedFoodItem_ofOrder + (of_single_food_service.transferOrderPay).sources.orderAmount_ofCustomOrder in (of_single_food_service.transferOrderPay).items
+		// 66) (of_single_food_service.transferOrderPay).items in (of_single_food_service.transferOrderPay).targets.paidFoodItem_ofPay + (of_single_food_service.transferOrderPay).targets.paidAmount_ofPay
+		// 67) (of_single_food_service.transferOrderPay).targets.paidFoodItem_ofPay + (of_single_food_service.transferOrderPay).targets.paidAmount_ofPay in (of_single_food_service.transferOrderPay).items
 		// 68) bijectionFiltered[sources, of_single_food_service.transferPayEat, of_single_food_service.pay]
 		// 69) bijectionFiltered[targets, of_single_food_service.transferPayEat, of_single_food_service.eat]
 		// 70) subsettingItemRuleForSources[of_single_food_service.transferPayEat]
 		// 71) subsettingItemRuleForTargets[of_single_food_service.transferPayEat]
-		// 72) (of_single_food_service.transferPayEat).items in (of_single_food_service.transferPayEat).sources.paidFoodItem
-		// 73) (of_single_food_service.transferPayEat).items in (of_single_food_service.transferPayEat).targets.eatenItem
-		// 74) (of_single_food_service.transferPayEat).sources.paidFoodItem in (of_single_food_service.transferPayEat).items
-		// 75) (of_single_food_service.transferPayEat).targets.eatenItem in (of_single_food_service.transferPayEat).items
-		// 76) (of_single_food_service.transferOrderServe).items in (of_single_food_service.transferOrderServe).sources.orderedFoodItem
-		// 77) (of_single_food_service.transferOrderServe).items in (of_single_food_service.transferOrderServe).targets.servedFoodItem
-		// 78) (of_single_food_service.transferOrderServe).sources.orderedFoodItem in (of_single_food_service.transferOrderServe).items
-		// 79) (of_single_food_service.transferOrderServe).targets.servedFoodItem in (of_single_food_service.transferOrderServe).items
+		// 72) (of_single_food_service.transferPayEat).items in (of_single_food_service.transferPayEat).sources.paidFoodItem_ofPay
+		// 73) (of_single_food_service.transferPayEat).items in (of_single_food_service.transferPayEat).targets.eatenItem_ofEat
+		// 74) (of_single_food_service.transferPayEat).sources.paidFoodItem_ofPay in (of_single_food_service.transferPayEat).items
+		// 75) (of_single_food_service.transferPayEat).targets.eatenItem_ofEat in (of_single_food_service.transferPayEat).items
+		// 76) (of_single_food_service.transferOrderServe).items in (of_single_food_service.transferOrderServe).sources.orderedFoodItem_ofOrder
+		// 77) (of_single_food_service.transferOrderServe).items in (of_single_food_service.transferOrderServe).targets.servedFoodItem_ofServe
+		// 78) (of_single_food_service.transferOrderServe).sources.orderedFoodItem_ofOrder in (of_single_food_service.transferOrderServe).items
+		// 79) (of_single_food_service.transferOrderServe).targets.servedFoodItem_ofServe in (of_single_food_service.transferOrderServe).items
 		// 80) bijectionFiltered[sources, of_single_food_service.transferOrderPrepare, of_single_food_service.order]
 		// 81) bijectionFiltered[targets, of_single_food_service.transferOrderPrepare, of_single_food_service.prepare]
 		// 82) subsettingItemRuleForSources[of_single_food_service.transferOrderPrepare]
 		// 83) subsettingItemRuleForTargets[of_single_food_service.transferOrderPrepare]
-		// 84) (of_single_food_service.transferOrderPrepare).items in (of_single_food_service.transferOrderPrepare).sources.orderedFoodItem + (of_single_food_service.transferOrderPrepare).sources.orderDestination
-		// 85) (of_single_food_service.transferOrderPrepare).items in (of_single_food_service.transferOrderPrepare).targets.preparedFoodItem + (of_single_food_service.transferOrderPrepare).targets.prepareDestination
-		// 86) (of_single_food_service.transferOrderPrepare).sources.orderedFoodItem + (of_single_food_service.transferOrderPrepare).sources.orderDestination in (of_single_food_service.transferOrderPrepare).items
-		// 87) (of_single_food_service.transferOrderPrepare).targets.preparedFoodItem + (of_single_food_service.transferOrderPrepare).targets.prepareDestination in (of_single_food_service.transferOrderPrepare).items
-		// 88) (of_single_food_service.transferPrepareServe).items in (of_single_food_service.transferPrepareServe).sources.preparedFoodItem + (of_single_food_service.transferPrepareServe).sources.prepareDestination
-		// 89) (of_single_food_service.transferPrepareServe).sources.preparedFoodItem + (of_single_food_service.transferPrepareServe).sources.prepareDestination in (of_single_food_service.transferPrepareServe).items
-		// 90) (of_single_food_service.transferPrepareServe).items in (of_single_food_service.transferPrepareServe).targets.servedFoodItem + (of_single_food_service.transferPrepareServe).targets.serviceDestination
-		// 91) (of_single_food_service.transferPrepareServe).targets.servedFoodItem + (of_single_food_service.transferPrepareServe).targets.serviceDestination in (of_single_food_service.transferPrepareServe).items
-		// 92) (of_single_food_service.transferServeEat).items in (of_single_food_service.transferServeEat).sources.servedFoodItem
-		// 93) (of_single_food_service.transferServeEat).items in (of_single_food_service.transferServeEat).targets.eatenItem
-		// 94) (of_single_food_service.transferServeEat).sources.servedFoodItem in (of_single_food_service.transferServeEat).items
-		// 95) (of_single_food_service.transferServeEat).targets.eatenItem in (of_single_food_service.transferServeEat).items
+		// 84) (of_single_food_service.transferOrderPrepare).items in (of_single_food_service.transferOrderPrepare).sources.orderedFoodItem_ofOrder + (of_single_food_service.transferOrderPrepare).sources.orderDestination_ofCustomOrder
+		// 85) (of_single_food_service.transferOrderPrepare).items in (of_single_food_service.transferOrderPrepare).targets.preparedFoodItem_ofPrepare + (of_single_food_service.transferOrderPrepare).targets.prepareDestination_ofCustomPrepare
+		// 86) (of_single_food_service.transferOrderPrepare).sources.orderedFoodItem_ofOrder + (of_single_food_service.transferOrderPrepare).sources.orderDestination_ofCustomOrder in (of_single_food_service.transferOrderPrepare).items
+		// 87) (of_single_food_service.transferOrderPrepare).targets.preparedFoodItem_ofPrepare + (of_single_food_service.transferOrderPrepare).targets.prepareDestination_ofCustomPrepare in (of_single_food_service.transferOrderPrepare).items
+		// 88) (of_single_food_service.transferPrepareServe).items in (of_single_food_service.transferPrepareServe).sources.preparedFoodItem_ofPrepare + (of_single_food_service.transferPrepareServe).sources.prepareDestination_ofCustomPrepare
+		// 89) (of_single_food_service.transferPrepareServe).sources.preparedFoodItem_ofPrepare + (of_single_food_service.transferPrepareServe).sources.prepareDestination_ofCustomPrepare in (of_single_food_service.transferPrepareServe).items
+		// 90) (of_single_food_service.transferPrepareServe).items in (of_single_food_service.transferPrepareServe).targets.servedFoodItem_ofServe + (of_single_food_service.transferPrepareServe).targets.serviceDestination_ofCustomServe
+		// 91) (of_single_food_service.transferPrepareServe).targets.servedFoodItem_ofServe + (of_single_food_service.transferPrepareServe).targets.serviceDestination_ofCustomServe in (of_single_food_service.transferPrepareServe).items
+		// 92) (of_single_food_service.transferServeEat).items in (of_single_food_service.transferServeEat).sources.servedFoodItem_ofServe
+		// 93) (of_single_food_service.transferServeEat).items in (of_single_food_service.transferServeEat).targets.eatenItem_ofEat
+		// 94) (of_single_food_service.transferServeEat).sources.servedFoodItem_ofServe in (of_single_food_service.transferServeEat).items
+		// 95) (of_single_food_service.transferServeEat).targets.eatenItem_ofEat in (of_single_food_service.transferServeEat).items
 		
 		ExprVar ofSingleFoodService_var = ExprVar.make(null, "of_single_food_service", ofSingleFoodService.type());
 		Decl ofSingleFoodService_decl = new Decl(null, null, null, List.of(ofSingleFoodService_var), ofSingleFoodService.oneOf());
@@ -556,60 +558,283 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		/*46*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(order).in(ofCustomOrder).forAll(ofSingleFoodService_decl));
 		/*47*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(prepare).in(ofCustomPrepare).forAll(ofSingleFoodService_decl));
 		/*48*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(serve).in(ofCustomServe).forAll(ofSingleFoodService_decl));
-		/*49*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare).plus(ofSingleFoodService_var.join(transferOrderPay)).plus(ofSingleFoodService_var.join(transferPayEat)).in(ofSingleFoodService_var.join(steps.call())).forAll(ofSingleFoodService_decl));
-		/*50*/	alloy.addToOverallFact(ofSingleFoodService_var.join(steps.call()).in(ofSingleFoodService_var.join(order).plus(ofSingleFoodService_var.join(prepare)).plus(ofSingleFoodService_var.join(pay)).plus(ofSingleFoodService_var.join(serve)).plus(ofSingleFoodService_var.join(eat)).plus(ofSingleFoodService_var.join(transferPrepareServe)).plus(ofSingleFoodService_var.join(transferOrderServe)).plus(ofSingleFoodService_var.join(transferServeEat)).plus(ofSingleFoodService_var.join(transferOrderPrepare)).plus(ofSingleFoodService_var.join(transferOrderPay)).plus(ofSingleFoodService_var.join(transferPayEat))).forAll(ofSingleFoodService_decl));
+		/*49*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).plus(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService)).plus(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService)).in(ofSingleFoodService_var.join(steps.call())).forAll(ofSingleFoodService_decl));
+		/*50*/	alloy.addToOverallFact(ofSingleFoodService_var.join(steps.call()).in(ofSingleFoodService_var.join(order).plus(ofSingleFoodService_var.join(prepare)).plus(ofSingleFoodService_var.join(pay)).plus(ofSingleFoodService_var.join(serve)).plus(ofSingleFoodService_var.join(eat)).plus(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService)).plus(ofSingleFoodService_var.join(transferOrderServe_ofFoodService)).plus(ofSingleFoodService_var.join(transferServeEat_ofFoodService)).plus(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService)).plus(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService)).plus(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService))).forAll(ofSingleFoodService_decl));
 		/*51*/	alloy.addToOverallFact(ofSingleFoodService_var.join(order).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(ofSingleFoodService_decl));
-		/*52*/	alloy.addToOverallFact(ofSingleFoodService_var.join(order).join(outputs.call()).in(ofSingleFoodService_var.join(order).join(orderedFoodItem).plus(ofSingleFoodService_var.join(order).join(orderAmount)).plus(ofSingleFoodService_var.join(order).join(orderDestination))).forAll(ofSingleFoodService_decl));
-		/*53*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(pay).join(inputs.call()).plus(ofSingleFoodService_var.join(pay).join(paidAmount)).in(ofSingleFoodService_var.join(pay).join(paidFoodItem)).forAll(ofSingleFoodService_decl));
-		/*54*/	alloy.addToOverallFact(ofSingleFoodService_var.join(pay).join(outputs.call()).in(ofSingleFoodService_var.join(pay).join(paidFoodItem)).forAll(ofSingleFoodService_decl));
-		/*55*/	alloy.addToOverallFact(ofSingleFoodService_var.join(prepare).join(inputs.call()).in(ofSingleFoodService_var.join(prepare).join(preparedFoodItem).plus(ofSingleFoodService_var.join(prepare).join(prepareDestination))).forAll(ofSingleFoodService_decl));
-		/*56*/	alloy.addToOverallFact(ofSingleFoodService_var.join(prepare).join(outputs.call()).in(ofSingleFoodService_var.join(prepare).join(preparedFoodItem).plus(ofSingleFoodService_var.join(prepare).join(prepareDestination))).forAll(ofSingleFoodService_decl));
-		/*57*/	alloy.addToOverallFact(ofSingleFoodService_var.join(serve).join(inputs.call()).in(ofSingleFoodService_var.join(serve).join(servedFoodItem)).plus(ofSingleFoodService_var.join(serve).join(serviceDestination)).forAll(ofSingleFoodService_decl));
-		/*58*/	alloy.addToOverallFact(ofSingleFoodService_var.join(serve).join(outputs.call()).in(ofSingleFoodService_var.join(serve).join(servedFoodItem)).plus(ofSingleFoodService_var.join(serve).join(serviceDestination)).forAll(ofSingleFoodService_decl));
-		/*59*/	alloy.addToOverallFact(ofSingleFoodService_var.join(eat).join(inputs.call()).in(ofSingleFoodService_var.join(eat).join(eatenItem)).forAll(ofSingleFoodService_decl));
-		/*60*/ 	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService_var.join(transferOrderPay), ofSingleFoodService.join(order)).forAll(ofSingleFoodService_decl));
-		/*61*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService_var.join(transferOrderPay), ofSingleFoodService.join(pay)).forAll(ofSingleFoodService_decl));
-		/*62*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService_var.join(transferOrderPay)).forAll(ofSingleFoodService_decl));
-		/*63*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService_var.join(transferOrderPay)).forAll(ofSingleFoodService_decl));
-		/*64*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPay).join(sources.call()).join(orderedFoodItem).plus(ofSingleFoodService_var).join(transferOrderPay).join(sources.call()).join(orderAmount)).forAll(ofSingleFoodService_decl));
-		/*65*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay).join(sources.call()).join(orderedFoodItem).plus(ofSingleFoodService_var.join(transferOrderPay).join(sources.call()).join(orderAmount)).in(ofSingleFoodService.join(transferOrderPay).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*66*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPay).join(targets.call()).join(paidFoodItem).plus(ofSingleFoodService_var.join(transferOrderPay).join(targets.call()).join(paidAmount))).forAll(ofSingleFoodService_decl));
-		/*67*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPay).join(targets.call()).join(paidFoodItem).plus(ofSingleFoodService_var.join(transferOrderPay).join(targets.call()).join(paidAmount)).in(ofSingleFoodService_var.join(transferOrderPay).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*68*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService.join(transferPayEat), ofSingleFoodService.join(pay)).forAll(ofSingleFoodService_decl));
-		/*69*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService.join(transferPayEat), ofSingleFoodService.join(eat)).forAll(ofSingleFoodService_decl));
-		/*70*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService.join(transferPayEat)).forAll(ofSingleFoodService_decl));
-		/*71*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService.join(transferPayEat)).forAll(ofSingleFoodService_decl));
-		/*72*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat).join(items.call()).in(ofSingleFoodService_var.join(transferPayEat).join(sources.call().join(paidFoodItem))).forAll(ofSingleFoodService_decl));
-		/*73*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat).join(items.call()).in(ofSingleFoodService_var.join(transferPayEat).join(targets.call().join(eatenItem))).forAll(ofSingleFoodService_decl));
-		/*74*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPayEat).join(sources.call()).join(paidFoodItem).in(ofSingleFoodService.join(transferPayEat).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*75*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat).join(targets.call()).join(eatenItem).in(ofSingleFoodService_var.join(transferPayEat).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*76*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe).join(items.call()).in(ofSingleFoodService.join(transferOrderServe).join(sources.call()).join(orderedFoodItem)).forAll(ofSingleFoodService_decl));
-		/*77*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe).join(items.call()).in(ofSingleFoodService.join(transferOrderServe).join(targets.call()).join(servedFoodItem)).forAll(ofSingleFoodService_decl));
-		/*78*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe).join(sources.call()).join(orderedFoodItem).in(ofSingleFoodService.join(transferOrderServe).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*79*/ 	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe).join(targets.call()).join(servedFoodItem).in(ofSingleFoodService.join(transferOrderServe).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*80*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService_var.join(transferOrderPrepare), ofSingleFoodService.join(order)).forAll(ofSingleFoodService_decl));
-		/*81*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService_var.join(transferOrderPrepare), ofSingleFoodService.join(prepare)).forAll(ofSingleFoodService_decl));
-		/*82*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService_var.join(transferOrderPrepare)).forAll(ofSingleFoodService_decl));
-		/*83*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService_var.join(transferOrderPrepare)).forAll(ofSingleFoodService_decl));
-		/*84*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPrepare).join(sources.call()).join(orderedFoodItem).plus(ofSingleFoodService_var.join(transferOrderPrepare).join(sources.call()).join(orderDestination))).forAll(ofSingleFoodService_decl));
-		/*85*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPrepare).join(targets.call()).join(preparedFoodItem).plus(ofSingleFoodService_var.join(transferOrderPrepare).join(targets.call()).join(prepareDestination))).forAll(ofSingleFoodService_decl));
-		/*86*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPrepare).join(sources.call()).join(orderedFoodItem).plus(ofSingleFoodService_var.join(transferOrderPrepare).join(sources.call()).join(orderDestination)).in(ofSingleFoodService_var.join(transferOrderPrepare).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*87*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPrepare).join(targets.call()).join(preparedFoodItem).plus(ofSingleFoodService_var.join(transferOrderPrepare).join(targets.call()).join(prepareDestination)).in(ofSingleFoodService_var.join(transferOrderPrepare).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*88*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe).join(items.call()).in(ofSingleFoodService_var.join(transferPrepareServe).join(sources.call()).join(preparedFoodItem).plus(ofSingleFoodService_var.join(transferPrepareServe).join(sources.call()).join(prepareDestination))).forAll(ofSingleFoodService_decl));
-		/*89*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe).join(sources.call()).join(preparedFoodItem).plus(ofSingleFoodService_var.join(transferPrepareServe).join(sources.call()).join(prepareDestination).in(ofSingleFoodService_var.join(transferPrepareServe).join(items.call()))).forAll(ofSingleFoodService_decl));
-		/*90*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe).join(items.call()).in(ofSingleFoodService_var.join(transferPrepareServe).join(targets.call()).join(servedFoodItem).plus(ofSingleFoodService_var.join(transferPrepareServe).join(targets.call()).join(serviceDestination))).forAll(ofSingleFoodService_decl));
-		/*91*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe).join(targets.call()).join(servedFoodItem).plus(ofSingleFoodService_var.join(transferPrepareServe).join(targets.call()).join(serviceDestination)).in(ofSingleFoodService_var.join(transferPrepareServe).join(items.call())).forAll(ofSingleFoodService_decl));
-		/*92*/	alloy.addToOverallFact(ofSingleFoodService.join(transferServeEat).join(items.call()).in(ofSingleFoodService.join(transferServeEat).join(sources.call()).join(servedFoodItem)));
-		/*93*/	alloy.addToOverallFact(ofSingleFoodService.join(transferServeEat).join(items.call()).in(ofSingleFoodService_var.join(transferServeEat).join(targets.call()).join(eatenItem)));
-		/*94*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferServeEat).join(sources.call()).join(servedFoodItem).in(ofSingleFoodService_var.join(transferServeEat).join(items.call())));
-		/*95*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferServeEat).join(targets.call()).join(eatenItem).in(ofSingleFoodService_var.join(transferServeEat).join(items.call())));
+		/*52*/	alloy.addToOverallFact(ofSingleFoodService_var.join(order).join(outputs.call()).in(ofSingleFoodService_var.join(order).join(orderedFoodItem_ofOrder).plus(ofSingleFoodService_var.join(order).join(orderAmount_ofCustomOrder)).plus(ofSingleFoodService_var.join(order).join(orderDestination_ofCustomOrder))).forAll(ofSingleFoodService_decl));
+		/*53*/ 	alloy.addToOverallFact(ofSingleFoodService_var.join(pay).join(inputs.call()).plus(ofSingleFoodService_var.join(pay).join(paidAmount_ofPay)).in(ofSingleFoodService_var.join(pay).join(paidFoodItem_ofPay)).forAll(ofSingleFoodService_decl));
+		/*54*/	alloy.addToOverallFact(ofSingleFoodService_var.join(pay).join(outputs.call()).in(ofSingleFoodService_var.join(pay).join(paidFoodItem_ofPay)).forAll(ofSingleFoodService_decl));
+		/*55*/	alloy.addToOverallFact(ofSingleFoodService_var.join(prepare).join(inputs.call()).in(ofSingleFoodService_var.join(prepare).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(prepare).join(prepareDestination_ofCustomPrepare))).forAll(ofSingleFoodService_decl));
+		/*56*/	alloy.addToOverallFact(ofSingleFoodService_var.join(prepare).join(outputs.call()).in(ofSingleFoodService_var.join(prepare).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(prepare).join(prepareDestination_ofCustomPrepare))).forAll(ofSingleFoodService_decl));
+		/*57*/	alloy.addToOverallFact(ofSingleFoodService_var.join(serve).join(inputs.call()).in(ofSingleFoodService_var.join(serve).join(servedFoodItem_ofServe)).plus(ofSingleFoodService_var.join(serve).join(serviceDestination_ofCustomServe)).forAll(ofSingleFoodService_decl));
+		/*58*/	alloy.addToOverallFact(ofSingleFoodService_var.join(serve).join(outputs.call()).in(ofSingleFoodService_var.join(serve).join(servedFoodItem_ofServe)).plus(ofSingleFoodService_var.join(serve).join(serviceDestination_ofCustomServe)).forAll(ofSingleFoodService_decl));
+		/*59*/	alloy.addToOverallFact(ofSingleFoodService_var.join(eat).join(inputs.call()).in(ofSingleFoodService_var.join(eat).join(eatenItem_ofEat)).forAll(ofSingleFoodService_decl));
+		/*60*/ 	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService), ofSingleFoodService.join(order)).forAll(ofSingleFoodService_decl));
+		/*61*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService), ofSingleFoodService.join(pay)).forAll(ofSingleFoodService_decl));
+		/*62*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).forAll(ofSingleFoodService_decl)));
+		/*63*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService)).forAll(ofSingleFoodService_decl));
+		/*64*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofSingleFoodService_var).join(transferOrderPay_ofSingleFoodService).join(sources.call()).join(orderAmount_ofCustomOrder)).forAll(ofSingleFoodService_decl));
+		/*65*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(sources.call()).join(orderAmount_ofCustomOrder)).in(ofSingleFoodService.join(transferOrderPay_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*66*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(targets.call()).join(paidFoodItem_ofPay).plus(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(targets.call()).join(paidAmount_ofPay))).forAll(ofSingleFoodService_decl));
+		/*67*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPay_ofSingleFoodService).join(targets.call()).join(paidFoodItem_ofPay).plus(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(targets.call()).join(paidAmount_ofPay)).in(ofSingleFoodService_var.join(transferOrderPay_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*68*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService.join(transferPayEat_ofSingleFoodService), ofSingleFoodService.join(pay)).forAll(ofSingleFoodService_decl));
+		/*69*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService.join(transferPayEat_ofSingleFoodService), ofSingleFoodService.join(eat)).forAll(ofSingleFoodService_decl));
+		/*70*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService.join(transferPayEat_ofSingleFoodService)).forAll(ofSingleFoodService_decl));
+		/*71*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService.join(transferPayEat_ofSingleFoodService)).forAll(ofSingleFoodService_decl));
+		/*72*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService).join(sources.call().join(paidFoodItem_ofPay))).forAll(ofSingleFoodService_decl));
+		/*73*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService).join(targets.call().join(eatenItem_ofEat))).forAll(ofSingleFoodService_decl));
+		/*74*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService).join(sources.call()).join(paidFoodItem_ofPay).in(ofSingleFoodService.join(transferPayEat_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*75*/	alloy.addToOverallFact(ofSingleFoodService.join(transferPayEat_ofSingleFoodService).join(targets.call()).join(eatenItem_ofEat).in(ofSingleFoodService_var.join(transferPayEat_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*76*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(items.call()).in(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(sources.call()).join(orderedFoodItem_ofOrder)).forAll(ofSingleFoodService_decl));
+		/*77*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(items.call()).in(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe)).forAll(ofSingleFoodService_decl));
+		/*78*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).in(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*79*/ 	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).in(ofSingleFoodService.join(transferOrderServe_ofFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*80*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService), ofSingleFoodService.join(order)).forAll(ofSingleFoodService_decl));
+		/*81*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService), ofSingleFoodService.join(prepare)).forAll(ofSingleFoodService_decl));
+		/*82*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService)).forAll(ofSingleFoodService_decl));
+		/*83*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService)).forAll(ofSingleFoodService_decl));
+		/*84*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(sources.call()).join(orderDestination_ofCustomOrder))).forAll(ofSingleFoodService_decl));
+		/*85*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(targets.call()).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(targets.call()).join(prepareDestination_ofCustomPrepare))).forAll(ofSingleFoodService_decl));
+		/*86*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPrepare_ofSingleFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(sources.call()).join(orderDestination_ofCustomOrder)).in(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*87*/	alloy.addToOverallFact(ofSingleFoodService.join(transferOrderPrepare_ofSingleFoodService).join(targets.call()).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(targets.call()).join(prepareDestination_ofCustomPrepare)).in(ofSingleFoodService_var.join(transferOrderPrepare_ofSingleFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*88*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(sources.call()).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(sources.call()).join(prepareDestination_ofCustomPrepare))).forAll(ofSingleFoodService_decl));
+		/*89*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(sources.call()).join(preparedFoodItem_ofPrepare).plus(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(sources.call()).join(prepareDestination_ofCustomPrepare).in(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(items.call()))).forAll(ofSingleFoodService_decl));
+		/*90*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).plus(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(targets.call()).join(serviceDestination_ofCustomServe))).forAll(ofSingleFoodService_decl));
+		/*91*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).plus(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(targets.call()).join(serviceDestination_ofCustomServe)).in(ofSingleFoodService_var.join(transferPrepareServe_ofFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*92*/	alloy.addToOverallFact(ofSingleFoodService.join(transferServeEat_ofFoodService).join(items.call()).in(ofSingleFoodService.join(transferServeEat_ofFoodService).join(sources.call()).join(servedFoodItem_ofServe)).forAll(ofSingleFoodService_decl));
+		/*93*/	alloy.addToOverallFact(ofSingleFoodService.join(transferServeEat_ofFoodService).join(items.call()).in(ofSingleFoodService_var.join(transferServeEat_ofFoodService).join(targets.call()).join(eatenItem_ofEat)).forAll(ofSingleFoodService_decl));
+		/*94*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferServeEat_ofFoodService).join(sources.call()).join(servedFoodItem_ofServe).in(ofSingleFoodService_var.join(transferServeEat_ofFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
+		/*95*/	alloy.addToOverallFact(ofSingleFoodService_var.join(transferServeEat_ofFoodService).join(targets.call()).join(eatenItem_ofEat).in(ofSingleFoodService_var.join(transferServeEat_ofFoodService).join(items.call())).forAll(ofSingleFoodService_decl));
 	
 		// OFLoopFoodService
 		// Implicit Fact
+		// 96) order in OFCustomOrder
+		// 97) prepare in OFCustomPrepare
+		// 98) serve in OFCustomServe
+		// 99) start + end + transferOrderPrepare + transferOrderPay + transferPayEat in this.steps
+		// 100) this.steps in order + prepare + pay + serve + eat + start + end + transferPrepareServe + transferOrderServe	 + transferServeEat + transferOrderPrepare + transferOrderPay + transferPayEat
+		// 101) #start = 1
+		// 102) functionFiltered[happensBefore, start, order]
+		// 103) #order = 2
+		// 104) order.outputs in order.orderedFoodItem + order.orderAmount + order.orderDestination
+		// 105) bijectionFiltered[outputs, order, FoodItem]
+		// 106) bijectionFiltered[outputs, order, Real]
+		// 107) bijectionFiltered[outputs, order, Location]
+		// 108) inverseFunctionFiltered[happensBefore, start + eat, order]
+		// 109) pay.inputs in pay.paidAmount + pay.paidFoodItem
+		// 110) bijectionFiltered[inputs, pay, Real]
+		// 111) bijectionFiltered[inputs, pay, FoodItem]
+		// 112) pay.outputs in pay.paidFoodItem
+		// 113) functionFiltered[outputs, pay, FoodItem]
+		// 114) prepare.inputs in prepare.preparedFoodItem + prepare.prepareDestination
+		// 115) bijectionFiltered[inputs, prepare, FoodItem]
+		// 116) bijectionFiltered[inputs, prepare, Location]
+		// 117) prepare.outputs in prepare.preparedFoodItem + prepare.prepareDestination
+		// 118) bijectionFiltered[outputs, prepare, FoodItem]
+		// 119) bijectionFiltered[outputs, prepare, Location]
+		// 120) serve.inputs in serve.servedFoodItem + serve.serviceDestination
+		// 121) bijectionFiltered[inputs, serve, FoodItem]
+		// 122) bijectionFiltered[inputs, serve, Location]
+		// 123) serve.outputs in serve.servedFoodItem + serve.serviceDestination
+		// 124) bijectionFiltered[outputs, serve, Location]
+		// 125) bijectionFiltered[outputs, serve, FoodItem]
+		// 126) eat.inputs in eat.eatenItem
+		// 127) bijectionFiltered[inputs, eat, FoodItem] 
+		// 128) functionFiltered[happensBefore, eat, end + order]
+		// 129) #end = 1
+		// 130) bijectionFiltered[sources, transferOrderPay, order]
+		// 131) bijectionFiltered[targets, transferOrderPay, pay]
+		// 132) subsettingItemRuleForSources[transferOrderPay]
+		// 133) subsettingItemRuleForTargets[transferOrderPay]
+		// 134) transferOrderPay.items in transferOrderPay.sources.orderedFoodItem + transferOrderPay.sources.orderAmount
+		// 135) transferOrderPay.sources.orderedFoodItem + transferOrderPay.sources.orderAmount in transferOrderPay.items
+		// 136) transferOrderPay.items in transferOrderPay.targets.paidFoodItem + transferOrderPay.targets.paidAmount
+		// 137) transferOrderPay.targets.paidFoodItem + transferOrderPay.targets.paidAmount in transferOrderPay.items
+		// 138) bijectionFiltered[sources, transferPayEat, pay]
+		// 139) bijectionFiltered[targets, transferPayEat, eat]
+		// 140) subsettingItemRuleForSources[transferPayEat]
+		// 141) subsettingItemRuleForTargets[transferPayEat]
+		// 142) transferPayEat.items in transferPayEat.sources.paidFoodItem
+		// 143) transferPayEat.items in transferPayEat.targets.eatenItem
+		// 144) transferPayEat.sources.paidFoodItem in transferPayEat.items
+		// 145) transferPayEat.targets.eatenItem in transferPayEat.items
+		// 146) transferOrderServe.items in transferOrderServe.sources.orderedFoodItem
+		// 147) transferOrderServe.items in transferOrderServe.targets.servedFoodItem
+		// 148) transferOrderServe.sources.orderedFoodItem in transferOrderServe.items
+		// 149) transferOrderServe.targets.servedFoodItem in transferOrderServe.items
+		// 150) bijectionFiltered[sources, transferOrderPrepare, order]
+		// 151) bijectionFiltered[targets, transferOrderPrepare, prepare]
+		// 152) subsettingItemRuleForSources[transferOrderPrepare]
+		// 153) subsettingItemRuleForTargets[transferOrderPrepare]
+		// 154) transferOrderPrepare.items in transferOrderPrepare.sources.orderedFoodItem + transferOrderPrepare.sources.orderDestination
+		// 155) transferOrderPrepare.items in transferOrderPrepare.targets.preparedFoodItem + transferOrderPrepare.targets.prepareDestination
+		// 156) transferOrderPrepare.sources.orderedFoodItem + transferOrderPrepare.sources.orderDestination in transferOrderPrepare.items
+		// 157) transferOrderPrepare.targets.preparedFoodItem + transferOrderPrepare.targets.prepareDestination in transferOrderPrepare.items
+		// 158) transferPrepareServe.items in transferPrepareServe.sources.preparedFoodItem + transferPrepareServe.sources.prepareDestination
+		// 159) transferPrepareServe.sources.preparedFoodItem + transferPrepareServe.sources.prepareDestination in transferPrepareServe.items
+		// 160) transferPrepareServe.items in transferPrepareServe.targets.servedFoodItem + transferPrepareServe.targets.serviceDestination
+		// 161) transferPrepareServe.targets.servedFoodItem + transferPrepareServe.targets.serviceDestination in transferPrepareServe.items
+		// 162) transferServeEat.items in transferServeEat.sources.servedFoodItem
+		// 163) transferServeEat.items in transferServeEat.targets.eatenItem
+		// 164) transferServeEat.sources.servedFoodItem in transferServeEat.items
+		// 165) transferServeEat.targets.eatenItem in transferServeEat.items
+		
 		// Explicit Fact
+		// 96) (of_loop_food_service.order) in OFCustomOrder
+		// 97) (of_loop_food_service.prepare) in OFCustomPrepare
+		// 98) (of_loop_food_service.serve) in OFCustomServe
+		// 99) (of_loop_food_service.start) + (of_loop_food_service.end) + (of_loop_food_service.transferOrderPrepare) + (of_loop_food_service.transferOrderPay) + (of_loop_food_service.transferPayEat) in (of_loop_food_service.steps)
+		// 100) (of_loop_food_service.steps) in (of_loop_food_service.order) + (of_loop_food_service.prepare) + (of_loop_food_service.pay) + (of_loop_food_service.serve) + (of_loop_food_service.eat) + (of_loop_food_service.start) + (of_loop_food_service.end) + (of_loop_food_service.transferPrepareServe) + (of_loop_food_service.transferOrderServe) + (of_loop_food_service.transferServeEat) + (of_loop_food_service.transferOrderPrepare) + (of_loop_food_service.transferOrderPay) + (of_loop_food_service.transferPayEat)
+		// 101) #(of_loop_food_service.start) = 1
+		// 102) functionFiltered[happensBefore, (of_loop_food_service.start), (of_loop_food_service.order)]
+		// 103) #(of_loop_food_service.order) = 2
+		// 104) (of_loop_food_service.order).outputs in (of_loop_food_service.order).orderedFoodItem + (of_loop_food_service.order).orderAmount + (of_loop_food_service.order).orderDestination
+		// 105) bijectionFiltered[outputs, (of_loop_food_service.order), FoodItem]
+		// 106) bijectionFiltered[outputs, (of_loop_food_service.order), Real]
+		// 107) bijectionFiltered[outputs, (of_loop_food_service.order), Location]
+		// 108) inverseFunctionFiltered[happensBefore, (of_loop_food_service.start) + (of_loop_food_service.eat), (of_loop_food_service.order)]
+		// 109) (of_loop_food_service.pay).inputs in (of_loop_food_service.pay).paidAmount + (of_loop_food_service.pay).paidFoodItem
+		// 110) bijectionFiltered[inputs, (of_loop_food_service.pay), Real]
+		// 111) bijectionFiltered[inputs, (of_loop_food_service.pay), FoodItem]
+		// 112) (of_loop_food_service.pay).outputs in (of_loop_food_service.pay).paidFoodItem
+		// 113) functionFiltered[outputs, (of_loop_food_service.pay), FoodItem]
+		// 114) (of_loop_food_service.prepare).inputs in (of_loop_food_service.prepare).preparedFoodItem + (of_loop_food_service.prepare).prepareDestination
+		// 115) bijectionFiltered[inputs, (of_loop_food_service.prepare), FoodItem]
+		// 116) bijectionFiltered[inputs, (of_loop_food_service.prepare), Location]
+		// 117) (of_loop_food_service.prepare).outputs in (of_loop_food_service.prepare).preparedFoodItem + (of_loop_food_service.prepare).prepareDestination
+		// 118) bijectionFiltered[outputs, (of_loop_food_service.prepare), FoodItem]
+		// 119) bijectionFiltered[outputs, (of_loop_food_service.prepare), Location]
+		// 120) (of_loop_food_service.serve).inputs in (of_loop_food_service.serve).servedFoodItem + (of_loop_food_service.serve).serviceDestination
+		// 121) bijectionFiltered[inputs, (of_loop_food_service.serve), FoodItem]
+		// 122) bijectionFiltered[inputs, (of_loop_food_service.serve), Location]
+		// 123) (of_loop_food_service.serve).outputs in (of_loop_food_service.serve).servedFoodItem + (of_loop_food_service.serve).serviceDestination
+		// 124) bijectionFiltered[outputs, (of_loop_food_service.serve), Location]
+		// 125) bijectionFiltered[outputs, (of_loop_food_service.serve), FoodItem]
+		// 126) (of_loop_food_service.eat).inputs in (of_loop_food_service.eat).eatenItem
+		// 127) bijectionFiltered[inputs, (of_loop_food_service.eat), FoodItem]
+		// 128) functionFiltered[happensBefore, (of_loop_food_service.eat), (of_loop_food_service.end) + (of_loop_food_service.order)]
+		// 129) #(of_loop_food_service.end) = 1
+		// 130) bijectionFiltered[sources, (of_loop_food_service.transferOrderPay), (of_loop_food_service.order)]
+		// 131) bijectionFiltered[targets, (of_loop_food_service.transferOrderPay), (of_loop_food_service.pay)]
+		// 132) subsettingItemRuleForSources[(of_loop_food_service.transferOrderPay)]
+		// 133) subsettingItemRuleForTargets[(of_loop_food_service.transferOrderPay)]
+		// 134) (of_loop_food_service.transferOrderPay).items in (of_loop_food_service.transferOrderPay).sources.orderedFoodItem + (of_loop_food_service.transferOrderPay).sources.orderAmount
+		// 135) (of_loop_food_service.transferOrderPay).sources.orderedFoodItem + (of_loop_food_service.transferOrderPay).sources.orderAmount in (of_loop_food_service.transferOrderPay).items
+		// 136) (of_loop_food_service.transferOrderPay).items in (of_loop_food_service.transferOrderPay).targets.paidFoodItem + (of_loop_food_service.transferOrderPay).targets.paidAmount
+		// 137) (of_loop_food_service.transferOrderPay).targets.paidFoodItem + (of_loop_food_service.transferOrderPay).targets.paidAmount in (of_loop_food_service.transferOrderPay).items
+		// 138) bijectionFiltered[sources, (of_loop_food_service.transferPayEat), (of_loop_food_service.pay)]
+		// 139) bijectionFiltered[targets, (of_loop_food_service.transferPayEat), (of_loop_food_service.eat)]
+		// 140) subsettingItemRuleForSources[(of_loop_food_service.transferPayEat)]
+		// 141) subsettingItemRuleForTargets[(of_loop_food_service.transferPayEat)]
+		// 142) (of_loop_food_service.transferPayEat).items in (of_loop_food_service.transferPayEat).sources.paidFoodItem
+		// 143) (of_loop_food_service.transferPayEat).items in (of_loop_food_service.transferPayEat).targets.eatenItem
+		// 144) (of_loop_food_service.transferPayEat).sources.paidFoodItem in (of_loop_food_service.transferPayEat).items
+		// 145) (of_loop_food_service.transferPayEat).targets.eatenItem in (of_loop_food_service.transferPayEat).items
+		// 146) (of_loop_food_service.transferOrderServe).items in (of_loop_food_service.transferOrderServe).sources.orderedFoodItem
+		// 147) (of_loop_food_service.transferOrderServe).items in (of_loop_food_service.transferOrderServe).targets.servedFoodItem
+		// 148) (of_loop_food_service.transferOrderServe).sources.orderedFoodItem in (of_loop_food_service.transferOrderServe).items
+		// 149) (of_loop_food_service.transferOrderServe).targets.servedFoodItem in (of_loop_food_service.transferOrderServe).items
+		// 150) bijectionFiltered[sources, (of_loop_food_service.transferOrderPrepare), (of_loop_food_service.order)]
+		// 151) bijectionFiltered[targets, (of_loop_food_service.transferOrderPrepare), (of_loop_food_service.prepare)]
+		// 152) subsettingItemRuleForSources[(of_loop_food_service.transferOrderPrepare)]
+		// 153) subsettingItemRuleForTargets[(of_loop_food_service.transferOrderPrepare)]
+		// 154) (of_loop_food_service.transferOrderPrepare).items in (of_loop_food_service.transferOrderPrepare).sources.orderedFoodItem + (of_loop_food_service.transferOrderPrepare).sources.orderDestination
+		// 155) (of_loop_food_service.transferOrderPrepare).items in (of_loop_food_service.transferOrderPrepare).targets.preparedFoodItem + (of_loop_food_service.transferOrderPrepare).targets.prepareDestination
+		// 156) (of_loop_food_service.transferOrderPrepare).sources.orderedFoodItem + (of_loop_food_service.transferOrderPrepare).sources.orderDestination in (of_loop_food_service.transferOrderPrepare).items
+		// 157) (of_loop_food_service.transferOrderPrepare).targets.preparedFoodItem + (of_loop_food_service.transferOrderPrepare).targets.prepareDestination in (of_loop_food_service.transferOrderPrepare).items
+		// 158) (of_loop_food_service.transferPrepareServe).items in (of_loop_food_service.transferPrepareServe).sources.preparedFoodItem + (of_loop_food_service.transferPrepareServe).sources.prepareDestination
+		// 159) (of_loop_food_service.transferPrepareServe).sources.preparedFoodItem + (of_loop_food_service.transferPrepareServe).sources.prepareDestination in (of_loop_food_service.transferPrepareServe).items
+		// 160) (of_loop_food_service.transferPrepareServe).items in (of_loop_food_service.transferPrepareServe).targets.servedFoodItem + (of_loop_food_service.transferPrepareServe).targets.serviceDestination
+		// 161) (of_loop_food_service.transferPrepareServe).targets.servedFoodItem + (of_loop_food_service.transferPrepareServe).targets.serviceDestination in (of_loop_food_service.transferPrepareServe).items
+		// 162) (of_loop_food_service.transferServeEat).items in (of_loop_food_service.transferServeEat).sources.servedFoodItem
+		// 163) (of_loop_food_service.transferServeEat).items in (of_loop_food_service.transferServeEat).targets.eatenItem
+		// 164) (of_loop_food_service.transferServeEat).sources.servedFoodItem in (of_loop_food_service.transferServeEat).items
+		// 165) (of_loop_food_service.transferServeEat).targets.eatenItem in (of_loop_food_service.transferServeEat).items
 		
 		ExprVar ofLoopFoodServiceVar = ExprVar.make(null, "of_loop_food_service", ofLoopFoodService.type());
 		Decl ofLoopFoodServiceDecl = new Decl(null, null, null, List.of(ofLoopFoodServiceVar), ofLoopFoodService.oneOf());
+		
+		/*96*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(order).in(ofCustomOrder).forAll(ofLoopFoodServiceDecl));
+		/*97*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(prepare).in(ofCustomPrepare).forAll(ofLoopFoodServiceDecl));
+		/*98*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(serve).in(ofCustomServe).forAll(ofLoopFoodServiceDecl));
+		/*99*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(start_ofLoopFoodService).plus(ofLoopFoodServiceVar.join(end_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService)).plus(ofLoopFoodService.join(transferOrderPay_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService)).in(ofLoopFoodServiceVar.join(steps.call())).forAll(ofLoopFoodServiceDecl));
+		/*100*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(steps.call()).in(ofLoopFoodServiceVar.join(order).plus(ofLoopFoodServiceVar.join(prepare).plus(ofLoopFoodServiceVar.join(pay)).plus(ofLoopFoodServiceVar.join(serve)).plus(ofLoopFoodServiceVar.join(eat)).plus(ofLoopFoodServiceVar.join(start_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(end_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService)).plus(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService)).plus(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService)).plus(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService)).plus(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService)))).forAll(ofLoopFoodServiceDecl));
+		/*101*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(start_ofLoopFoodService).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(ofLoopFoodServiceDecl));
+		/*102*/	alloy.addToOverallFact(functionFiltered.call(happensBefore.call(), ofLoopFoodServiceVar.join(start_ofLoopFoodService), ofLoopFoodServiceVar.join(order_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*103*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(order_foodService).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(ofLoopFoodServiceDecl));
+		/*104*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(order_foodService).join(outputs.call()).in(ofLoopFoodServiceVar.join(order_foodService)).join(orderedFoodItem_ofOrder).plus(ofLoopFoodServiceVar.join(order_foodService).join(orderAmount_ofCustomOrder)).plus(ofLoopFoodServiceVar.join(order_foodService).join(orderDestination_ofCustomOrder)).forAll(ofLoopFoodServiceDecl));
+		/*105*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodServiceVar.join(order_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*106*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodService.join(order_foodService), real).forAll(ofLoopFoodServiceDecl));
+		/*107*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodService.join(order_foodService), location).forAll(ofLoopFoodServiceDecl));
+		/*108*/	alloy.addToOverallFact(inverseFunctionFiltered.call(happensBefore.call(), ofLoopFoodServiceVar.join(start_ofLoopFoodService).plus(ofLoopFoodServiceVar.join(eat_foodService)), ofLoopFoodServiceVar.join(order_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*109*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(pay_foodService).join(inputs.call()).in(ofLoopFoodServiceVar.join(pay_foodService).join(paidAmount_ofPay).plus(ofLoopFoodServiceVar.join(paidFoodItem_ofPay))).forAll(ofLoopFoodServiceDecl));
+		/*110*/ alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodServiceVar.join(pay_foodService), real).forAll(ofLoopFoodServiceDecl));
+		/*111*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodServiceVar.join(pay_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*112*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(ofLoopFoodServiceVar.join(pay_foodService)).join(outputs.call()).in(ofLoopFoodServiceVar.join(pay_foodService)).join(paidFoodItem_ofPay).forAll(ofLoopFoodServiceDecl));
+		/*113*/ alloy.addToOverallFact(functionFiltered.call(outputs.call(), ofLoopFoodService.join(pay_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*114*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(prepare_foodService).join(inputs.call()).in(ofLoopFoodServiceVar.join(prepare_foodService)).join(preparedFoodItem_ofPrepare).forAll(ofLoopFoodServiceDecl));
+		/*115*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodService.join(prepare_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*116*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodService.join(prepare_foodService), location).forAll(ofLoopFoodServiceDecl));
+		/*117*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(prepare_foodService).join(outputs.call()).in(ofLoopFoodServiceVar.join(prepare_foodService).join(preparedFoodItem_ofPrepare).plus(ofLoopFoodServiceVar).join(prepare_foodService).join(prepareDestination_ofCustomPrepare)).forAll(ofLoopFoodServiceDecl));
+		/*118*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodService.join(prepare_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*119*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodService.join(prepare_foodService), location).forAll(ofLoopFoodServiceDecl));
+		/*120*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(serve_foodService).join(inputs.call()).in(ofLoopFoodServiceVar.join(serve_foodService).join(servedFoodItem_ofServe).plus(ofLoopFoodServiceVar.join(serve_foodService).join(serviceDestination_ofCustomServe))).forAll(ofLoopFoodServiceDecl));
+		/*121*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodServiceVar.join(serve_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*122*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodServiceVar.join(serve_foodService), location).forAll(ofLoopFoodServiceDecl));
+		/*123*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(serve_foodService).join(outputs.call()).in(ofLoopFoodServiceVar.join(serve_foodService).join(servedFoodItem_ofServe).plus(ofLoopFoodServiceVar.join(serve_foodService).join(serviceDestination_ofCustomServe))).forAll(ofLoopFoodServiceDecl));
+		/*124*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodServiceVar.join(serve_foodService), location).forAll(ofLoopFoodServiceDecl));
+		/*125*/	alloy.addToOverallFact(bijectionFiltered.call(outputs.call(), ofLoopFoodServiceVar.join(serve_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*126*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(eat_foodService).join(inputs.call()).in(ofLoopFoodServiceVar.join(eat_foodService)).join(eatenItem_ofEat).forAll(ofLoopFoodServiceDecl));
+		/*127*/	alloy.addToOverallFact(bijectionFiltered.call(inputs.call(), ofLoopFoodService.join(eat_foodService), foodItem).forAll(ofLoopFoodServiceDecl));
+		/*128*/	alloy.addToOverallFact(functionFiltered.call(happensBefore.call(), ofLoopFoodService.join(eat_foodService), ofLoopFoodService.join(end_ofLoopFoodService).plus(ofLoopFoodServiceVar.join(order_foodService))).forAll(ofLoopFoodServiceDecl));
+		/*129*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(end_ofLoopFoodService).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(ofLoopFoodServiceDecl));
+		/*130*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService), ofLoopFoodServiceVar.join(order_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*131*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService), ofLoopFoodServiceVar.join(pay_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*132*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*133*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*134*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(sources.call()).join(orderAmount_ofCustomOrder))).forAll(ofLoopFoodServiceDecl));
+		/*135*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(sources.call()).join(orderAmount_ofCustomOrder)).in(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*136*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(targets.call()).join(paidFoodItem_ofPay).plus(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(targets.call()).join(paidAmount_ofPay))).forAll(ofLoopFoodServiceDecl));
+		/*137*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(targets.call()).join(paidFoodItem_ofPay).plus(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(targets.call()).join(paidAmount_ofPay)).in(ofLoopFoodServiceVar.join(transferOrderPay_ofLoopFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*138*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofLoopFoodService.join(transferPayEat_ofLoopFoodService), ofLoopFoodService.join(pay_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*139*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofLoopFoodService.join(transferPayEat_ofLoopFoodService), ofLoopFoodService.join(eat_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*140*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*141*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*142*/ alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService).join(sources.call()).join(paidFoodItem_ofPay)).forAll(ofLoopFoodServiceDecl));
+		/*143*/ alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService).join(targets.call()).join(eatenItem_ofEat)).forAll(ofLoopFoodServiceDecl));
+		/*144*/ alloy.addToOverallFact(ofLoopFoodService.join(transferPayEat_ofLoopFoodService).join(sources.call()).join(paidFoodItem_ofPay).in(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService)).join(items.call()).forAll(ofLoopFoodServiceDecl));
+		/*145*/	alloy.addToOverallFact(ofLoopFoodService.join(transferPayEat_ofLoopFoodService).join(targets.call()).join(eatenItem_ofEat).in(ofLoopFoodServiceVar.join(transferPayEat_ofLoopFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*146*/	alloy.addToOverallFact(ofLoopFoodService.join(transferOrderServe_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(sources.call()).join(orderedFoodItem_ofOrder)).forAll(ofLoopFoodServiceDecl));
+		/*147*/	alloy.addToOverallFact(ofLoopFoodService.join(transferOrderServe_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe)).forAll(ofLoopFoodServiceDecl));
+		/*148*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).in(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*149*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).in(ofLoopFoodServiceVar.join(transferOrderServe_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*150*/	alloy.addToOverallFact(bijectionFiltered.call(sources.call(), ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService), ofLoopFoodServiceVar.join(order_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*151*/	alloy.addToOverallFact(bijectionFiltered.call(targets.call(), ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService), ofLoopFoodServiceVar.join(prepare_foodService)).forAll(ofLoopFoodServiceDecl));
+		/*152*/	alloy.addToOverallFact(subsettingItemRuleForSources.call(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*153*/	alloy.addToOverallFact(subsettingItemRuleForTargets.call(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService)).forAll(ofLoopFoodServiceDecl));
+		/*154*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(sources.call()).join(orderDestination_ofCustomOrder))).forAll(ofLoopFoodServiceDecl));
+		/*155*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(targets.call()).join(preparedFoodItem_ofPrepare).plus(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(targets.call()).join(prepareDestination_ofCustomPrepare))).forAll(ofLoopFoodServiceDecl));
+		/*156*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(sources.call()).join(orderedFoodItem_ofOrder).plus(transferOrderPrepare_ofLoopFoodService.join(sources.call()).join(orderDestination_ofCustomOrder)).in(transferOrderPrepare_ofLoopFoodService.join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*157*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferOrderPrepare_ofLoopFoodService).join(targets.call()).join(preparedFoodItem_ofPrepare).plus(transferOrderPrepare_ofLoopFoodService.join(targets.call()).join(prepareDestination_ofCustomPrepare)).in(transferOrderPrepare_ofLoopFoodService.join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*158*/	alloy.addToOverallFact((ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(sources.call()).join(preparedFoodItem_ofPrepare).plus(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(sources.call()).join(prepareDestination_ofCustomPrepare)))).forAll(ofLoopFoodServiceDecl));
+		/*159*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(sources.call()).join(preparedFoodItem_ofPrepare).plus(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(sources.call()).join(prepareDestination_ofCustomPrepare)).in(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*160*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).plus(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(targets.call()).join(serviceDestination_ofCustomServe))).forAll(ofLoopFoodServiceDecl));
+		/*161*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(targets.call()).join(servedFoodItem_ofServe).plus(ofLoopFoodServiceVar.join(transferPrepareServe_ofFoodService).join(targets.call()).join(serviceDestination_ofCustomServe)).in(ofLoopFoodService.join(transferPrepareServe_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*162*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(sources.call()).join(servedFoodItem_ofServe)).forAll(ofLoopFoodServiceDecl));
+		/*163*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(items.call()).in(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(targets.call()).join(eatenItem_ofEat)).forAll(ofLoopFoodServiceDecl));
+		/*164*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(sources.call()).join(servedFoodItem_ofServe).in(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+		/*165*/	alloy.addToOverallFact(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(targets.call()).join(eatenItem_ofEat).in(ofLoopFoodServiceVar.join(transferServeEat_ofFoodService).join(items.call())).forAll(ofLoopFoodServiceDecl));
+	
+		// OFParallelFoodService
+		// Implicit Fact
+		// 166) bijectionFiltered[happensBefore, pay, prepare]
+		// Explicit Fact
+		// 166) bijectionFiltered[happensBefore, of_parallel_food_service.pay, of_parallel_food_service.prepare]
+		
+		ExprVar ofParallelFoodServiceVar = ExprVar.make(null, "of_parallel_food_service", ofParallelFoodService.type());
+		Decl ofParallelFoodServiceDecl = new Decl(null, null, null, List.of(ofParallelFoodServiceVar), ofParallelFoodService.oneOf());
+		
+		/*166*/	alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), ofParallelFoodServiceVar.join(pay_foodService), ofParallelFoodService.join(prepare_foodService)).forAll(ofParallelFoodServiceDecl));
 		
 	}	
 
