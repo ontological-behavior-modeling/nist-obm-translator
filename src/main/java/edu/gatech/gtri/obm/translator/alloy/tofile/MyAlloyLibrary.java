@@ -16,8 +16,8 @@ public class MyAlloyLibrary {
 
   public static String removeSlash(String sig) {
     if (sig.contains("/")) {
-      int index = sig.indexOf('/');
-      return sig.substring(index + 1, sig.length());
+    	int index = sig.lastIndexOf('/');
+    	return sig.substring(index + 1, sig.length());
     }
 
     return sig;

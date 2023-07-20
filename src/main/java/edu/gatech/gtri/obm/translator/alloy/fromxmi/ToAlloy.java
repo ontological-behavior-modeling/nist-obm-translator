@@ -44,6 +44,14 @@ public class ToAlloy {
     } else
       return sigByName.get(name);
   }
+  
+  public Expr getOverallFacts() {
+	  return alloy.getOverAllFact();
+  }
+  
+  public Map<String, Sig> getSigMap() {
+	  return sigByName;
+  }
 
   public Sig addAlloySig(String name, String not_used_parentName) {
     return addAlloySig(name, not_used_parentName, false);
