@@ -17,11 +17,11 @@ abstract sig Occurrence {}
 sig Order, Prepare, Serve, Eat, Pay extends Occurrence {}
 
 sig FoodItem, Location, Real extends Occurrence {}{
-	// no this.happensBefore && no happensBefore.this && no this.steps && no this.inputs && no this.outputs
+	// no this.happensBefore and no happensBefore.this and no this.steps and no this.inputs and no this.outputs
 }
 
 sig OFStart, OFEnd extends Occurrence {}{
-	// no inputs.this && no outputs.this && no items.this
+	// no inputs.this and no outputs.this and no items.this
 }
 //***********************************************************************************************************
 /** 				OFOrder */
@@ -388,60 +388,31 @@ sig OFParallelFoodService extends OFFoodService{}{
 
 // Explicit facts
 
-// FoodItem -- OK
-fact f1 {all food_item: FoodItem | no food_item.happensBefore && no happensBefore.food_item && no food_item.steps && no food_item.inputs && no food_item.outputs}
-
-// Location -- OK
-fact f2 {all location: Location | no location.happensBefore && no happensBefore.location && no location.steps && no location.inputs && no location.outputs}
-
-// Real -- OK
-fact f3 {all real: Real | no real.happensBefore && no happensBefore.real && no real.steps && no real.inputs && no real.outputs}
-
-// OFStart -- OK
-fact f4 {all of_start: OFStart | no inputs.of_start && no outputs.of_start && no items.of_start}
-
-// OFEnd -- OK
-fact f5 {all of_end: OFEnd | no inputs.of_end && no outputs.of_end && no items.of_end}
-
-// OFOrder -- OK
+fact f1 {all food_item: FoodItem | no food_item.happensBefore and no happensBefore.food_item and no food_item.steps and no food_item.inputs and no food_item.outputs}
+fact f2 {all location: Location | no location.happensBefore and no happensBefore.location and no location.steps and no location.inputs and no location.outputs}
+fact f3 {all real: Real | no real.happensBefore and no happensBefore.real and no real.steps and no real.inputs and no real.outputs}
+fact f4 {all of_start: OFStart | no inputs.of_start and no outputs.of_start and no items.of_start}
+fact f5 {all of_end: OFEnd | no inputs.of_end and no outputs.of_end and no items.of_end}
 fact f6 {all of_order: OFOrder | no of_order.inputs}
 fact f7 {all of_order: OFOrder | of_order.orderedFoodItem in of_order.outputs}
-
-// OFCustomOrder -- OK
 fact f8 {all of_custom_order: OFCustomOrder | of_custom_order.orderAmount in of_custom_order.outputs}
 fact f9 {all of_custom_order: OFCustomOrder | of_custom_order.orderDestination in of_custom_order.outputs}
-
-// OFPrepare -- OK
 fact f10 {all of_prepare: OFPrepare | of_prepare.preparedFoodItem in of_prepare.inputs}
 fact f11 {all of_prepare: OFPrepare | of_prepare.preparedFoodItem in of_prepare.outputs}
-
-// OFCustomPrepare -- OK
 fact f12 {all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination in of_custom_prepare.inputs}
 fact f13 {all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination in of_custom_prepare.outputs}
-
-// OFServe -- OK
 fact f14 {all of_serve: OFServe | of_serve.servedFoodItem in of_serve.inputs}
 fact f15 {all of_serve: OFServe | of_serve.servedFoodItem in of_serve.outputs}
-
-// OFCustomServe -- OK
 fact f16 {all of_custom_serve: OFCustomServe | of_custom_serve.serviceDestination in of_custom_serve.inputs}
-
-// OFEat -- OK
 fact f17 {all of_eat: OFEat | of_eat.eatenItem in of_eat.inputs}
 fact f18 {all of_eat: OFEat | no of_eat.outputs}
-
-// OFPay -- OK
 fact f19 {all of_pay: OFPay | of_pay.paidAmount in of_pay.inputs}
 fact f20 {all of_pay: OFPay | of_pay.paidFoodItem in of_pay.inputs}
 fact f21 {all of_pay: OFPay | of_pay.paidFoodItem in of_pay.outputs}
-
-// FoodService -- OK
 fact f22 {all food_service: FoodService | bijectionFiltered[happensBefore, food_service.order, food_service.serve]}
 fact f23 {all food_service: FoodService | bijectionFiltered[happensBefore, food_service.prepare, food_service.serve]}
 fact f24 {all food_service: FoodService | bijectionFiltered[happensBefore, food_service.serve, food_service.eat]}
 fact f25 {all food_service: FoodService | food_service.order + food_service.prepare + food_service.pay + food_service.eat + food_service.serve in food_service.steps}
-
-// OFFoodService -- OK
 fact f26 {all of_food_service: OFFoodService | no of_food_service.inputs and no inputs.of_food_service}
 fact f27 {all of_food_service: OFFoodService | no of_food_service.outputs and no outputs.of_food_service}
 fact f28 {all of_food_service: OFFoodService | of_food_service.order in OFOrder}
@@ -462,8 +433,6 @@ fact f42 {all of_food_service: OFFoodService | bijectionFiltered[sources, of_foo
 fact f43 {all of_food_service: OFFoodService | bijectionFiltered[targets, of_food_service.transferOrderServe, of_food_service.serve]}
 fact f44 {all of_food_service: OFFoodService | subsettingItemRuleForSources[of_food_service.transferOrderServe]}
 fact f45 {all of_food_service: OFFoodService | subsettingItemRuleForTargets[of_food_service.transferOrderServe]}
-
-// OFSingleFoodService -- OK
 fact f46 {all of_single_food_service: OFSingleFoodService | of_single_food_service.order in OFCustomOrder}
 fact f47 {all of_single_food_service: OFSingleFoodService | of_single_food_service.prepare in OFCustomPrepare}
 fact f48 {all of_single_food_service: OFSingleFoodService | of_single_food_service.serve in OFCustomServe}
@@ -514,9 +483,6 @@ fact f92 {all of_single_food_service: OFSingleFoodService | (of_single_food_serv
 fact f93 {all of_single_food_service: OFSingleFoodService | (of_single_food_service.transferServeEat).items in (of_single_food_service.transferServeEat).targets.eatenItem}
 fact f94 {all of_single_food_service: OFSingleFoodService | (of_single_food_service.transferServeEat).sources.servedFoodItem in (of_single_food_service.transferServeEat).items}
 fact f95 {all of_single_food_service: OFSingleFoodService | (of_single_food_service.transferServeEat).targets.eatenItem in (of_single_food_service.transferServeEat).items}
-
-// OFLoopFoodService OK
-
 fact f96 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.order) in OFCustomOrder}
 fact f97 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.prepare) in OFCustomPrepare}
 fact f98 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.serve) in OFCustomServe}
@@ -587,8 +553,6 @@ fact f162 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.t
 fact f163 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.transferServeEat).items in (of_loop_food_service.transferServeEat).targets.eatenItem}
 fact f164 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.transferServeEat).sources.servedFoodItem in (of_loop_food_service.transferServeEat).items}
 fact f165 {all of_loop_food_service: OFLoopFoodService | (of_loop_food_service.transferServeEat).targets.eatenItem in (of_loop_food_service.transferServeEat).items}
-
-// OFParallelFoodService OK OK
 fact f166 {all of_parallel_food_service: OFParallelFoodService | bijectionFiltered[happensBefore, of_parallel_food_service.pay, of_parallel_food_service.prepare]}
 fact f167 {all of_parallel_food_service: OFParallelFoodService | bijectionFiltered[happensBefore, of_parallel_food_service.pay, of_parallel_food_service.order]}
 
@@ -597,18 +561,18 @@ fact f167 {all of_parallel_food_service: OFParallelFoodService | bijectionFilter
 //***********************************************************************************************************
 //pred suppressTransfers {no Transfer}
 //pred suppressIO {no inputs and no outputs}
-pred instancesDuringExample{Order in OFFoodService.order && Prepare in OFFoodService.prepare
-		&& Serve in OFFoodService.serve && Eat in OFFoodService.eat && Pay in OFFoodService.pay}
-pred onlyOFFoodService {FoodService in OFFoodService && noChildFoodService && #OFFoodService = 1 && noCustomFoodService}
+pred instancesDuringExample{Order in OFFoodService.order and Prepare in OFFoodService.prepare
+		and Serve in OFFoodService.serve and Eat in OFFoodService.eat and Pay in OFFoodService.pay}
+pred onlyOFFoodService {FoodService in OFFoodService and noChildFoodService and #OFFoodService = 1 and noCustomFoodService}
 pred onlyOFSingleFoodService {FoodService in OFSingleFoodService}
 pred onlyOFLoopFoodService {FoodService in OFLoopFoodService}
 pred onlyOFParallelFoodService {FoodService in OFParallelFoodService}
-pred noCustomFoodService {no OFCustomOrder && no OFCustomPrepare && no OFCustomServe}
-pred noChildFoodService {no OFSingleFoodService && no OFLoopFoodService && no OFParallelFoodService}
+pred noCustomFoodService {no OFCustomOrder and no OFCustomPrepare and no OFCustomServe}
+pred noChildFoodService {no OFSingleFoodService and no OFLoopFoodService and no OFParallelFoodService}
 //***********************************************************************************************************
 /** 				Checks and Runs */
 //***********************************************************************************************************
-run showOFFoodService{nonZeroDurationOnly && instancesDuringExample && onlyOFFoodService && #OFFoodService.order = 1} for 12
-run showOFSingleFoodService{nonZeroDurationOnly && instancesDuringExample && onlyOFSingleFoodService} for 15 but exactly 1 OFSingleFoodService
-run showOFLoopFoodService{nonZeroDurationOnly && instancesDuringExample && onlyOFLoopFoodService} for 30 but exactly 1 OFLoopFoodService
-run showOFParallelFoodService{nonZeroDurationOnly && instancesDuringExample && onlyOFParallelFoodService} for 10
+run showOFFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFFoodService and #OFFoodService.order = 1} for 12
+run showOFSingleFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFSingleFoodService} for 15 but exactly 1 OFSingleFoodService
+run showOFLoopFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFLoopFoodService} for 30 but exactly 1 OFLoopFoodService
+run showOFParallelFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFParallelFoodService} for 10

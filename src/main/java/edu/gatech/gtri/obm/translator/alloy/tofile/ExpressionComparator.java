@@ -1,11 +1,14 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.Set;
+import java.util.HashMap;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -26,7 +29,7 @@ import edu.mit.csail.sdg.ast.Type;
 
 public class ExpressionComparator {
 
-	private final Set<Expr> visitedExpressions;
+	private final Set<List<Expr>> visitedExpressions;
 	
 	public ExpressionComparator() {
 		visitedExpressions = new HashSet<>();
@@ -366,13 +369,6 @@ public class ExpressionComparator {
 		expr1 = expr1.deNOP();
 		expr2 = expr2.deNOP();
 		
-		if(visitedExpressions.contains(expr1) && visitedExpressions.contains(expr2)) {
-			return true;
-		}
-		
-		visitedExpressions.add(expr1);
-		visitedExpressions.add(expr2);
-		
 		if(!expr1.getClass().equals(expr2.getClass())) {
 			System.err.println(expr1);
 			System.err.println(expr2);
@@ -382,6 +378,12 @@ public class ExpressionComparator {
 			System.err.println();
 			return false;
 		}
+		
+		if(visitedExpressions.contains(List.of(expr1, expr2))) {
+			return true;
+		}		
+		
+		visitedExpressions.add(List.of(expr1, expr2));
 		
 		if(expr1.getClass().equals(Expr.class)) {
 			System.err.println("Expr: not implemented");
@@ -409,8 +411,7 @@ public class ExpressionComparator {
 		}
 		else if(expr1.getClass().equals(ExprConstant.class)) {
 			if(!compareExprConstant((ExprConstant) expr1, (ExprConstant) expr2)) {
-				System.err.println("compareExpr: !compareExprConstant("
-					+ "(ExprConstant) expr1, (ExprConstant) expr2)");
+				System.err.println("compareExpr: !compareExprConstant((ExprConstant) expr1, (ExprConstant) expr2)");
 				System.err.println("expr1=" + expr1);
 				System.err.println("expr2=" + expr2);
 				System.err.println();
@@ -418,7 +419,13 @@ public class ExpressionComparator {
 			}
 		}
 		else if(expr1.getClass().equals(ExprITE.class)) {
-			System.err.println("ExprITE: not implemented");
+			if(!compareExprITE((ExprITE) expr1, (ExprITE) expr2)) {
+				System.err.println("compareExpr: !compareExprITE((ExprITE) expr1, (ExprITE) expr2)");
+				System.err.println("expr1=" + expr1);
+				System.err.println("expr2=" + expr2);
+				System.err.println();
+				return false;
+			}
 		}
 		else if(expr1.getClass().equals(ExprLet.class)) {
 			System.err.println("ExprLet: not implemented");
@@ -492,8 +499,6 @@ public class ExpressionComparator {
 	}
 	
 	private boolean compareExprBinary(ExprBinary expr1, ExprBinary expr2) {
-		
-		
 		
 		if(expr1 == null && expr2 == null) {
 			return true;
@@ -636,6 +641,49 @@ public class ExpressionComparator {
 			System.err.println("ExprConstant1: " + expr1);
 			System.err.println("ExprConstant2: " + expr2);
 			System.err.println("ExprConstant: expr1.string != expr2.string");
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private boolean compareExprITE(ExprITE expr1, ExprITE expr2) {
+		
+		if(expr1 == null && expr2 == null) {
+			return true;
+		}
+		if(expr1 == null || expr2 == null) {
+			System.err.println("compareExprITE: expr1 != null || expr2 != null");
+			System.err.println("ExprITE 1: " + expr1);
+			System.err.println("ExprITE 2: " + expr2);
+			System.err.println();
+			return false;
+		}
+		if(!compareExpr(expr1.cond, expr2.cond)) {
+			System.err.println("compareExprITE: !compareExpr(expr1.cond, expr2.cond)");
+			System.err.println("ExprITE 1: " + expr1);
+			System.err.println("ExprITE 2: " + expr2);
+			System.err.println("expr1.cond=" + expr1.cond);
+			System.err.println("expr2.cond=" + expr2.cond);
+			System.err.println();
+			return false;
+		}
+		if(!compareExpr(expr1.left, expr2.left)) {
+			System.err.println("compareExprITE: !compareExpr(expr1.left, expr2.left)");
+			System.err.println("ExprITE 1: " + expr1);
+			System.err.println("ExprITE 2: " + expr2);
+			System.err.println("expr1.left=" + expr1.left);
+			System.err.println("expr2.left=" + expr2.left);
+			System.err.println();
+			return false;
+		}
+		if(!compareExpr(expr1.right, expr2.right)) {
+			System.err.println("compareExprITE: !compareExpr(expr1.right, expr2.right)");
+			System.err.println("ExprITE 1: " + expr1);
+			System.err.println("ExprITE 2: " + expr2);
+			System.err.println("expr1.right=" + expr1.right);
+			System.err.println("expr2.right=" + expr2.right);
+			System.err.println();
 			return false;
 		}
 		
