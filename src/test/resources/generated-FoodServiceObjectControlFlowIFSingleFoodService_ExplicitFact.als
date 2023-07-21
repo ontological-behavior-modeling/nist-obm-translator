@@ -31,12 +31,12 @@ sig OFLoopFoodService extends OFFoodService { start: one OFStart, end: one OFEnd
 sig OFParallelFoodService extends OFFoodService {}
 
 // Facts:
-fact f1 {all food_item: FoodItem | no food_item.happensBefore and no happensBefore.food_item and no food_item.steps and no food_item.inputs and no food_item.outputs}
-fact f2 {all location: Location | no location.happensBefore and no happensBefore.location and no location.steps and no location.inputs and no location.outputs}
-fact f3 {all real: Real | no real.happensBefore and no happensBefore.real and no real.steps and no real.inputs and no real.outputs}
-fact f4 {all of_start: OFStart | no inputs.of_start and no outputs.of_start and no items.of_start}
-fact f5 {all of_end: OFEnd | no inputs.of_end and no outputs.of_end and no items.of_end}
-fact f6 {all of_order: OFOrder | no of_order.inputs}
+fact f1 {all food_item: FoodItem | no (food_item.happensBefore) and no (happensBefore.food_item) and no (food_item.steps) and no (food_item.inputs) and no (food_item.outputs)}
+fact f2 {all location: Location | no (location.happensBefore) and no (happensBefore.location) and no (location.steps) and no (location.inputs) and no (location.outputs)}
+fact f3 {all real: Real | no (real.happensBefore) and no (happensBefore.real) and no (real.steps) and no (real.inputs) and no (real.outputs)}
+fact f4 {all of_start: OFStart | no (inputs.of_start) and no (outputs.of_start) and no (items.of_start)}
+fact f5 {all of_end: OFEnd | no (inputs.of_end) and no (outputs.of_end) and no (items.of_end)}
+fact f6 {all of_order: OFOrder | no (of_order.inputs)}
 fact f7 {all of_order: OFOrder | of_order.orderedFoodItem in of_order.outputs}
 fact f8 {all of_custom_order: OFCustomOrder | of_custom_order.orderAmount in of_custom_order.outputs}
 fact f9 {all of_custom_order: OFCustomOrder | of_custom_order.orderDestination in of_custom_order.outputs}
@@ -48,7 +48,7 @@ fact f14 {all of_serve: OFServe | of_serve.servedFoodItem in of_serve.inputs}
 fact f15 {all of_serve: OFServe | of_serve.servedFoodItem in of_serve.outputs}
 fact f16 {all of_custom_serve: OFCustomServe | of_custom_serve.serviceDestination in of_custom_serve.inputs}
 fact f17 {all of_eat: OFEat | of_eat.eatenItem in of_eat.inputs}
-fact f18 {all of_eat: OFEat | no of_eat.outputs}
+fact f18 {all of_eat: OFEat | no (of_eat.outputs)}
 fact f19 {all of_pay: OFPay | of_pay.paidAmount in of_pay.inputs}
 fact f20 {all of_pay: OFPay | of_pay.paidFoodItem in of_pay.inputs}
 fact f21 {all of_pay: OFPay | of_pay.paidFoodItem in of_pay.outputs}
@@ -56,8 +56,8 @@ fact f22 {all food_service: FoodService | bijectionFiltered[happensBefore, food_
 fact f23 {all food_service: FoodService | bijectionFiltered[happensBefore, food_service.prepare, food_service.serve]}
 fact f24 {all food_service: FoodService | bijectionFiltered[happensBefore, food_service.serve, food_service.eat]}
 fact f25 {all food_service: FoodService | food_service.order + food_service.prepare + food_service.pay + food_service.eat + food_service.serve in food_service.steps}
-fact f26 {all of_food_service: OFFoodService | no of_food_service.inputs and no inputs.of_food_service}
-fact f27 {all of_food_service: OFFoodService | no of_food_service.outputs and no outputs.of_food_service}
+fact f26 {all of_food_service: OFFoodService | no (of_food_service.inputs) and no (inputs.of_food_service)}
+fact f27 {all of_food_service: OFFoodService | no (of_food_service.outputs) and no (outputs.of_food_service)}
 fact f28 {all of_food_service: OFFoodService | of_food_service.order in OFOrder}
 fact f29 {all of_food_service: OFFoodService | of_food_service.prepare in OFPrepare}
 fact f30 {all of_food_service: OFFoodService | of_food_service.pay in OFPay}
@@ -81,7 +81,7 @@ fact f47 {all of_single_food_service: OFSingleFoodService | of_single_food_servi
 fact f48 {all of_single_food_service: OFSingleFoodService | of_single_food_service.serve in OFCustomServe}
 fact f49 {all of_single_food_service: OFSingleFoodService | of_single_food_service.transferOrderPrepare + of_single_food_service.transferOrderPay + of_single_food_service.transferPayEat in of_single_food_service.steps}
 fact f50 {all of_single_food_service: OFSingleFoodService | of_single_food_service.steps in of_single_food_service.order + of_single_food_service.prepare + of_single_food_service.pay + of_single_food_service.serve + of_single_food_service.eat + of_single_food_service.transferPrepareServe + of_single_food_service.transferOrderServe + of_single_food_service.transferServeEat + of_single_food_service.transferOrderPrepare + of_single_food_service.transferOrderPay + of_single_food_service.transferPayEat}
-fact f51 {all of_single_food_service: OFSingleFoodService | #of_single_food_service.order = 1}
+fact f51 {all of_single_food_service: OFSingleFoodService | #(of_single_food_service.order) = 1}
 fact f52 {all of_single_food_service: OFSingleFoodService | of_single_food_service.order.outputs in of_single_food_service.order.orderedFoodItem + of_single_food_service.order.orderAmount + of_single_food_service.order.orderDestination}
 fact f53 {all of_single_food_service: OFSingleFoodService | of_single_food_service.pay.inputs + of_single_food_service.pay.paidAmount in of_single_food_service.pay.paidFoodItem}
 fact f54 {all of_single_food_service: OFSingleFoodService | of_single_food_service.pay.outputs in of_single_food_service.pay.paidFoodItem}
@@ -131,9 +131,9 @@ fact f97 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.pre
 fact f98 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.serve in OFCustomServe}
 fact f99 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.start + of_loop_food_service.end + of_loop_food_service.transferOrderPrepare + of_loop_food_service.transferOrderPay + of_loop_food_service.transferPayEat in of_loop_food_service.steps}
 fact f100 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.steps in of_loop_food_service.order + of_loop_food_service.prepare + of_loop_food_service.pay + of_loop_food_service.serve + of_loop_food_service.eat + of_loop_food_service.start + of_loop_food_service.end + of_loop_food_service.transferPrepareServe + of_loop_food_service.transferOrderServe + of_loop_food_service.transferServeEat + of_loop_food_service.transferOrderPrepare + of_loop_food_service.transferOrderPay + of_loop_food_service.transferPayEat}
-fact f101 {all of_loop_food_service: OFLoopFoodService | #of_loop_food_service.start = 1}
+fact f101 {all of_loop_food_service: OFLoopFoodService | #(of_loop_food_service.start) = 1}
 fact f102 {all of_loop_food_service: OFLoopFoodService | functionFiltered[happensBefore, of_loop_food_service.start, of_loop_food_service.order]}
-fact f103 {all of_loop_food_service: OFLoopFoodService | #of_loop_food_service.order = 2}
+fact f103 {all of_loop_food_service: OFLoopFoodService | #(of_loop_food_service.order) = 2}
 fact f104 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.order.outputs in of_loop_food_service.order.orderedFoodItem + of_loop_food_service.order.orderAmount + of_loop_food_service.order.orderDestination}
 fact f105 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[outputs, of_loop_food_service.order, FoodItem]}
 fact f106 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[outputs, of_loop_food_service.order, Real]}
@@ -159,7 +159,7 @@ fact f125 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[outpu
 fact f126 {all of_loop_food_service: OFLoopFoodService | of_loop_food_service.eat.inputs in of_loop_food_service.eat.eatenItem}
 fact f127 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[inputs, of_loop_food_service.eat, FoodItem]}
 fact f128 {all of_loop_food_service: OFLoopFoodService | functionFiltered[happensBefore, of_loop_food_service.eat, of_loop_food_service.end + of_loop_food_service.order]}
-fact f129 {all of_loop_food_service: OFLoopFoodService | #of_loop_food_service.end = 1}
+fact f129 {all of_loop_food_service: OFLoopFoodService | #(of_loop_food_service.end) = 1}
 fact f130 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[sources, of_loop_food_service.transferOrderPay, of_loop_food_service.order]}
 fact f131 {all of_loop_food_service: OFLoopFoodService | bijectionFiltered[targets, of_loop_food_service.transferOrderPay, of_loop_food_service.pay]}
 fact f132 {all of_loop_food_service: OFLoopFoodService | subsettingItemRuleForSources[of_loop_food_service.transferOrderPay]}
@@ -209,7 +209,7 @@ pred onlyOFLoopFoodService{FoodService in OFLoopFoodService}
 pred onlyOFParallelFoodService{FoodService in OFParallelFoodService}
 
 // Commands:
-run showOFFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFFoodService and #OFFoodService.order = 1} for 12
+run showOFFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFFoodService and #(OFFoodService.order) = 1} for 12
 run showOFSingleFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFSingleFoodService} for 15 but exactly 1 OFSingleFoodService
 run showOFLoopFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFLoopFoodService} for 30 but exactly 1 OFLoopFoodService
 run showOFParallelFoodService{nonZeroDurationOnly and instancesDuringExample and onlyOFParallelFoodService} for 10

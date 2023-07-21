@@ -103,8 +103,11 @@ class FoodServiceControlFlowExplicitFactTest {
 		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(bs, buffetServiceSig, foodService_eatField, foodService_payField);
 		
 		// ChurchSupperService:
+		Func bijectionFiltered =  Helper.getFunction(Alloy.transferModule, "o/bijectionFiltered");
+		Func happensBefore =  Helper.getFunction(Alloy.transferModule, "o/happensBefore");
 		ExprVar css = ExprVar.make(null, "css", churchSupperServiceSig.type());
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(css, churchSupperServiceSig, foodService_payField, foodService_prepareField);
+		Decl cssDecl = new Decl(null, null, null, List.of(css), churchSupperServiceSig.oneOf());
+		alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), css.join(foodService_payField), css.join(foodService_prepareField)).forAll(cssDecl));
 		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(css, churchSupperServiceSig, foodService_payField, foodService_orderField);
 		
 		// FastFoodService:

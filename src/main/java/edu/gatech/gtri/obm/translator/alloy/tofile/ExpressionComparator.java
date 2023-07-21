@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.mit.csail.sdg.ast.Attr;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Decl;
@@ -47,6 +48,10 @@ public class ExpressionComparator {
 		visitedExpressions.clear();
 		return same;
 		
+	}
+	
+	public boolean compareAttr(Attr a1, Attr a2) {
+		return true;
 	}
 	
 	public boolean compareCommand(Command c1, Command c2) {
@@ -1031,8 +1036,26 @@ public class ExpressionComparator {
 		&& !comparePrimSig((Sig.PrimSig) sig1, (Sig.PrimSig) sig2)) {
 			return false;
 		}
-			
-		// ConstList<Attr> comparison not implemented.
+					
+//		if(sig1.attributes.size() != sig2.attributes.size()) {
+//			System.err.println("sig1: " + sig1);
+//			System.err.println("sig2: " + sig2);
+//			System.err.println("compareSig: sig1.attributes.size() != sig2.attributes.size()");
+//			System.err.println("sig1.attributes.size()=" + sig1.attributes.size());
+//			System.err.println("sig2.attributes.size()=" + sig2.attributes.size());
+//			return false;
+//		}
+//		
+//		for(int i = 0; i < sig1.attributes.size(); i++) {
+//			if(!compareAttr(sig1.attributes.get(i), sig2.attributes.get(i))) {
+//				System.err.println("sig1: " + sig1);
+//				System.err.println("sig2: " + sig2);
+//				System.err.println("compareSig: !compareAttr(sig1.attributes.get(i), sig2.attributes.get(i)) for i=" + i);
+//				System.err.println("attr1=" + sig1.attributes.get(i));
+//				System.err.println("attr2=" + sig2.attributes.get(i));
+//				return false;
+//			}
+//		}
 
 		if(sig1.builtin != sig2.builtin) {
 			System.err.println("sig1: " + sig1);
