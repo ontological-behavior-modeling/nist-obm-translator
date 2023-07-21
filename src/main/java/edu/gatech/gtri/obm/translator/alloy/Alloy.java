@@ -1,10 +1,10 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +48,13 @@ public class Alloy {
   protected Expr _nameExpr;
 
 
+
   public Alloy() {
+
+    File tFile = new File(Alloy.class.getResource("/Transfer.als").getFile());
+    System.setProperty(("java.io.tmpdir"), tFile.getParent());// find
+
+
     A4Reporter rep = new A4Reporter();
     templateModule = CompUtil.parseEverything_fromString(rep, templateString);
 
@@ -227,7 +233,8 @@ public class Alloy {
         .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
 
-  public void addSteps(Sig ownerSig, Map<String, Field> fieldByName) {
+  public void addSteps(Sig ownerSig, /* Map<String, Field> fieldByName, */
+      Map<Field, Sig> filedTypeByField) {
 
     // steps
     Func osteps = Helper.getFunction(transferModule, "o/steps");
@@ -237,28 +244,28 @@ public class Alloy {
     ExprVar s1 = ExprVar.make(null, "s", ownerSig.type());
     List<ExprHasName> names1 = new ArrayList<>(List.of(s1));
     Decl decl1 = new Decl(null, null, null, names1, ownerSig.oneOf());
-
-    Expr expr1 = createStepExpr(s1, ownerSig, fieldByName);
-    addToOverallFact((expr1).in(s1.join(ostepsExpr1)).forAll(decl1));
-
+    Expr expr1 = createStepExpr(s1, ownerSig, filedTypeByField);
+    if (expr1 != null)
+      addToOverallFact((expr1).in(s1.join(ostepsExpr1)).forAll(decl1));
 
     ExprVar s2 = ExprVar.make(null, "s", ownerSig.type());
     List<ExprHasName> names2 = new ArrayList<>(List.of(s2));
     Decl decl2 = new Decl(null, null, null, names2, ownerSig.oneOf());
-
-    Expr expr2 = createStepExpr(s2, ownerSig, fieldByName);
-    this.addToOverallFact(s2.join(ostepsExpr2).in(expr2).forAll(decl2));
-
-
+    Expr expr2 = createStepExpr(s2, ownerSig, filedTypeByField);
+    if (expr2 != null)
+      this.addToOverallFact(s2.join(ostepsExpr2).in(expr2).forAll(decl2));
   }
 
-  private Expr createStepExpr(ExprVar s, Sig ownerSig, Map<String, Field> fieldByName) {
+  private Expr createStepExpr(ExprVar s, Sig ownerSig,
+      /* Map<String, Field> fieldByName*, */ Map<Field, Sig> filedTypeByField) {
     Expr expr = null;
-    for (Iterator<String> iter = fieldByName.keySet().iterator(); iter.hasNext();) {
-      String fieldName = iter.next();
-      Sig.Field field = fieldByName.get(fieldName);
-      expr =
-          expr == null ? s.join(ownerSig.domain(field)) : expr.plus(s.join(ownerSig.domain(field)));
+    // for (Iterator<String> iter = fieldByName.keySet().iterator(); iter.hasNext();) {
+    // String fieldName = iter.next();
+    // Sig.Field field = fieldByName.get(fieldName);
+    for (Field field : filedTypeByField.keySet()) {
+      if (field.sig == ownerSig)
+        expr = expr == null ? s.join(ownerSig.domain(field))
+            : expr.plus(s.join(ownerSig.domain(field)));
     }
 
     return expr;
@@ -281,8 +288,10 @@ public class Alloy {
   }
 
 
-  public void addConstraint(Sig ownerSig, Map<String, Field> fieldByName,
-      Map<String, Sig> fieldTypeByFieldName, Map<Field, Sig> fieldByFieldType) {
+  public void addConstraint(Sig ownerSig,
+      /*
+       * Map<String, Field> fieldByName, Map<String, Sig> fieldTypeByFieldName,
+       */ Map<Field, Sig> fieldByFieldType) {
 
     Map<Sig, List<Field>> fieldsByFieldType = toFieldsByFieldType(fieldByFieldType);
     Expr duringExampleExpressions = null;
@@ -290,30 +299,36 @@ public class Alloy {
       String labelPrefix = "";
       Expr body = null;
       for (Field field : fieldsByFieldType.get(type)) {
-        body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
-        labelPrefix += field.label;
+        if (field.sig == ownerSig) {
+          body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
+          labelPrefix += field.label;
+        }
       }
-      Expr pDuringExampleBody = type.in(body);
-      String label = labelPrefix + "DuringExample"; // p1DuringExample
-      Pos pos = null;
-      List<Decl> decls = new ArrayList<>();
-      Expr returnDecl = null;
-      Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
-      Expr duringExampleExpression = duringExamplePredicate.call();
-      duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
-          : duringExampleExpressions.and(duringExampleExpression);
+      if (body != null) {
+        Expr pDuringExampleBody = type.in(body);
+        String label = labelPrefix + "DuringExample"; // p1DuringExample
+        Pos pos = null;
+        List<Decl> decls = new ArrayList<>();
+        Expr returnDecl = null;
+        Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
+        Expr duringExampleExpression = duringExamplePredicate.call();
+        duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
+            : duringExampleExpressions.and(duringExampleExpression);
+      }
+    }
+    if (duringExampleExpressions != null) {
+      Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
+          new ArrayList<>(), null, duringExampleExpressions);
+      Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
+      addToNameExpr(instancesDuringExampleExpression);
     }
 
+  }
 
-    Func instancesDuringExamplePredicate =
-        new Func(null, "instancesDuringExample", new ArrayList<>(), null, duringExampleExpressions);
-    Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
-
-    Func onlySimpleSequencePredicate = new Func(null, "only" + ownerSig.label, new ArrayList<>(),
-        null, ownerSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
+  public void addOnlyConstraint(Sig sig) {
+    Func onlySimpleSequencePredicate = new Func(null, "only" + sig.label, new ArrayList<>(), null,
+        sig.cardinality().equal(ExprConstant.makeNUMBER(1)));
     Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
-
-    addToNameExpr(instancesDuringExampleExpression);
     addToNameExpr(onlySimpleSequenceExpression);
   }
 

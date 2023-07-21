@@ -14,7 +14,6 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
 import org.eclipse.uml2.uml.Constraint;
@@ -48,22 +47,24 @@ public class OBMXMI2Alloy {
         "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");
     OBMXMI2Alloy test = new OBMXMI2Alloy();
     File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
+
     // String className = "Model::Basic::BehaviorFork";
     // String className = "Model::Basic::BehaviorJoin";
     // String className = "Model::Basic::ControlFlowBehavior";
     // String className = "Model::Basic::BehaviorDecision";
     // String className = "Model::Basic::Loop";
-    String className = "Model::Basic::ComplexBehavior";
+    // String className = "Model::Basic::ComplexBehavior";
     // String className = "Model::Basic::ComplexBehavior_MW";
+    String className = "Model::Basic::ComposedBehavior";
     test.createAlloyFile(xmiFile, className);
   }
-  
+
   public Expr getOverallFacts() {
-	  return toAlloy.getOverallFacts();
+    return toAlloy.getOverallFacts();
   }
-  
+
   public Map<String, Sig> getSigMap() {
-	  return toAlloy.getSigMap();
+    return toAlloy.getSigMap();
   }
 
   public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
@@ -72,7 +73,8 @@ public class OBMXMI2Alloy {
 
   }
 
-  public void createAlloyFile(File xmiFile, String className) throws Exception {
+  public void createAlloyFile(File xmiFile, String className)
+      throws FileNotFoundException, UMLModelErrorException {
     if (!xmiFile.exists() || !xmiFile.canRead())
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
     else {
@@ -82,14 +84,40 @@ public class OBMXMI2Alloy {
     }
   }
 
+  private Map<org.eclipse.uml2.uml.Class, Map<org.eclipse.uml2.uml.Class, List<Property>>> addClasses(
+      org.eclipse.uml2.uml.Class umlClass, SysMLUtil sysMLUtil,
+      Map<org.eclipse.uml2.uml.Class, Map<org.eclipse.uml2.uml.Class, List<Property>>> propertiesByClass) {
+    Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getAllCorrectedAttributes(umlClass);
+    // find property having the same type
+    Map<org.eclipse.uml2.uml.Class, List<Property>> propertiesByTheirType = new HashMap<>();
+    for (Property p : atts) {
+      org.eclipse.uml2.uml.Type eType = p.getType();
+      List<Property> ps = null;
+      if ((ps = propertiesByTheirType.get(eType)) == null) {
+        ps = new ArrayList<>();
+        propertiesByTheirType.put((org.eclipse.uml2.uml.Class) eType, ps);
+      }
+      propertiesByTheirType.get(eType).add(p);
+
+      if (eType instanceof org.eclipse.uml2.uml.Class) {
+        toAlloy.addAlloySig(eType.getName(), "parent not used for now");
+        addClasses((org.eclipse.uml2.uml.Class) eType, sysMLUtil, propertiesByClass);
+      }
+      propertiesByClass.put(umlClass, propertiesByTheirType);
+    }
+    return propertiesByClass;
+  }
 
   /**
    * @xmiFile xmi file containing activity
    * @param _className QualifiedName of Class containing activities
    * @param startNodeName name of initial node.
+   * @throws FileNotFoundException
+   * @throws UMLModelErrorException
    * @throws Exception
    */
-  public void loadOBMAndCreateAlloy(File xmiFile, String _className) throws Exception {
+  public void loadOBMAndCreateAlloy(File xmiFile, String _className)
+      throws FileNotFoundException, UMLModelErrorException {
 
     ResourceSet rs = EMFUtil.createResourceSet();
     Resource r = EMFUtil.loadResourceWithDependencies(rs,
@@ -103,65 +131,80 @@ public class OBMXMI2Alloy {
     SysMLAdapter sysmladapter = new SysMLAdapter(xmiFile, null);
     org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, _className);
     Graph2AlloyExpr ge = new Graph2AlloyExpr();
-    Sig mainSig;
-    if (mainClass instanceof org.eclipse.uml2.uml.Class) {
-      Class c = (org.eclipse.uml2.uml.Class) mainClass;
-      mainSig = toAlloy.addAlloySig(mainClass.getName(), "parent not used for now", true);
-      Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getAllCorrectedAttributes(c);
+    Map<org.eclipse.uml2.uml.Class, Map<org.eclipse.uml2.uml.Class, List<Property>>> propertiesByClass =
+        new HashMap<>();
+
+    if (mainClass == null)
+      return;
+    else if (mainClass instanceof org.eclipse.uml2.uml.Class) {
+      Sig mainSig = toAlloy.addAlloySig(mainClass.getName(), "parent not used for now", true);
+      propertiesByClass =
+          addClasses((org.eclipse.uml2.uml.Class) mainClass, sysMLUtil, propertiesByClass);
+    }
+
+    for (org.eclipse.uml2.uml.Class c : propertiesByClass.keySet()) {
+      Map<org.eclipse.uml2.uml.Class, List<Property>> propertiesByType = propertiesByClass.get(c);
+      for (org.eclipse.uml2.uml.Class propertyType : propertiesByType.keySet()) {
+        List<Property> ps = propertiesByType.get(propertyType);
+        String[] fsa = new String[ps.size()];
+        int i = 0;
+        for (Property p : ps) {
+          fsa[i] = p.getName();
+          ge.addNode(p.getName());
+          i++;
+        }
+        Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, propertyType.getName(), c.getName());
+        i = 0;
+        for (Property p : ps) {
+          if (p.getLower() == 1 && p.getUpper() == 1)
+            toAlloy.addOneConstraintToField(fields[i], c.getName());
+          i++;
+        }
+
+      }
+      Sig thisSig = toAlloy.getSigMap().get(c.getName());
+      // }//end of class
+
+
+
+      // if (mainClass instanceof org.eclipse.uml2.uml.Class) {
+      // org.eclipse.uml2.uml.Class c = (org.eclipse.uml2.uml.Class) mainClass;
+      // mainSig = toAlloy.addAlloySig(mainClass.getName(), "parent not used for now", true);
+      // Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getAllCorrectedAttributes(c);
+      //
+      // Map<Sig, List<Property>> fieldNameByTypeSig = new HashMap<>();
       // for (Property p : atts) {
+      // System.out.println(p.getName());
       // ge.addNode(p.getName());
       // org.eclipse.uml2.uml.Type eType = p.getType();
-      // // edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(eType);
-      // // System.out.println("type: " + omgE + " " + omgE.getClass());
-      // // System.out.println("type's general....");
       // if (eType instanceof org.eclipse.uml2.uml.Class) {
+      // Sig typeSig = toAlloy.addAlloySig(eType.getName(), "parent not used for now");
+      // List<Property> fieldNames = fieldNameByTypeSig.get(typeSig);
+      // System.out.println(fieldNames);
+      // if (fieldNames == null) {
+      // fieldNames = new ArrayList<>();
+      // fieldNames.add(p);
+      // fieldNameByTypeSig.put(typeSig, fieldNames);
+      // } else {
+      // fieldNames.add(p);
+      // // fieldNameByTypeSig.put(typeSig, fieldNames);
+      // }
+      // }
+      // }
       //
-      // // Set<org.eclipse.uml2.uml.Classifier> generals =
-      // // sysMLUtil.getGenerals((org.eclipse.uml2.uml.Class) eType, false, false);
-      // // System.out.println("#of general: " + generals.size());
-      // // // for (Classifier general : generals) {
-      // // System.out.println("General: " + general);
-      // // System.out
-      // // .println("================Alloy create Sig based for field's ================");
-      // // addAlloySig(eType.getName(), general.getName());
-      // toAlloy.addAlloySig(eType.getName(), "???");
-      // // }
-      // Sig.Field f = toAlloy.addAlloyField(p.getName(),
-      // ((org.eclipse.uml2.uml.Class) eType).getName(), mainClass.getName());
-      // if (p.getLower() == 1 && p.getUpper() == 1)
-      // toAlloy.addOneConstraintToField(f, mainClass.getName());
+      // for (Sig keysig : fieldNameByTypeSig.keySet()) {
+      // List<Property> fs = fieldNameByTypeSig.get(keysig);
+      // System.out.println(keysig.label);
+      // System.out.println(fs.size());
+      // String[] fsa = new String[fs.size()];
+      // for (int i = 0; i < fs.size(); i++)
+      // fsa[i] = fs.get(i).getName();
+      // Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, keysig.label, mainClass.getName());
+      // for (int i = 0; i < fs.size(); i++) {
+      // if (fs.get(i).getLower() == 1 && fs.get(i).getUpper() == 1)
+      // toAlloy.addOneConstraintToField(fields[i], mainClass.getName());
       // }
       // }
-
-      Map<Sig, List<Property>> fieldNameByTypeSig = new HashMap<>();
-      for (Property p : atts) {
-        ge.addNode(p.getName());
-        org.eclipse.uml2.uml.Type eType = p.getType();
-        if (eType instanceof org.eclipse.uml2.uml.Class) {
-          Sig typeSig = toAlloy.addAlloySig(eType.getName(), "???");
-          List<Property> fieldNames = fieldNameByTypeSig.get(typeSig);
-          if (fieldNames == null) {
-            fieldNames = new ArrayList<>();
-            fieldNames.add(p);
-            fieldNameByTypeSig.put(typeSig, fieldNames);
-          } else {
-            fieldNames.add(p);
-            // fieldNameByTypeSig.put(typeSig, fieldNames);
-          }
-        }
-      }
-
-      for (Sig keysig : fieldNameByTypeSig.keySet()) {
-        List<Property> fs = fieldNameByTypeSig.get(keysig);
-        String[] fsa = new String[fs.size()];
-        for (int i = 0; i < fs.size(); i++)
-          fsa[i] = fs.get(i).getName();
-        Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, keysig, mainClass.getName());
-        for (int i = 0; i < fs.size(); i++) {
-          if (fs.get(i).getLower() == 1 && fs.get(i).getUpper() == 1)
-            toAlloy.addOneConstraintToField(fields[i], mainClass.getName());
-        }
-      }
 
 
 
@@ -225,14 +268,14 @@ public class OBMXMI2Alloy {
       Map<IObject, IObject> happensBeforeFnInfo = ge.getHappensBeforeFunction(); // before, after
       Graph2AlloyExpr.print(happensBeforeFnInfo);
       for (IObject before : happensBeforeFnInfo.keySet()) {
-        List<Expr> lbefore = toExprs(before, mainSig);
-        List<Expr> lafter = toExprs(happensBeforeFnInfo.get(before), mainSig);
+        List<Expr> lbefore = toExprs(before, thisSig);
+        List<Expr> lafter = toExprs(happensBeforeFnInfo.get(before), thisSig);
 
         for (int i = 0; i < lbefore.size(); i++) {
           Expr beforeExpr = lbefore.get(i);
           for (int j = 0; j < lafter.size(); j++) {
             Expr afterExpr = lafter.get(j);
-            toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(mainSig, beforeExpr,
+            toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig, beforeExpr,
                 afterExpr);
           }
         }
@@ -243,17 +286,18 @@ public class OBMXMI2Alloy {
       Graph2AlloyExpr.print(happensBeforeInvFnInfo); // after
 
       for (IObject before : happensBeforeInvFnInfo.keySet()) {
-        List<Expr> lbefore = toExprs(before, mainSig);
-        List<Expr> lafter = toExprs(happensBeforeInvFnInfo.get(before), mainSig);
+        List<Expr> lbefore = toExprs(before, thisSig);
+        List<Expr> lafter = toExprs(happensBeforeInvFnInfo.get(before), thisSig);
 
         for (int i = 0; i < lbefore.size(); i++) {
           Expr beforeExpr = lbefore.get(i);
           for (int j = 0; j < lafter.size(); j++) {
             Expr afterExpr = lafter.get(j);
 
-            // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(mainSig, beforeExpr,
+            // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(mainSig,
+            // beforeExpr,
             // afterExpr);
-            toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(mainSig,
+            toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig,
                 beforeExpr, afterExpr);
           }
         }
@@ -304,26 +348,37 @@ public class OBMXMI2Alloy {
     // }
   }
 
-  public List<Expr> toExprs(IObject _o, Sig _mainSig) {
+  // assume if 1st list field in _aSig, all fields are also in _aSig
+  public List<Expr> toExprs(IObject _o, Sig _aSig) {
     List<Expr> exprs = new ArrayList<>();
     if (_o instanceof OListOR) {
       ONode onode = (ONode) ((OListOR) _o).get(0);
-      Expr expr = _mainSig.domain(toAlloy.getFieldByName().get(onode.getName()));
-      for (int i = 1; i < ((OListOR) _o).size(); i++) {
-        onode = (ONode) ((OListOR) _o).get(i);
-        expr = expr.plus(_mainSig.domain(toAlloy.getFieldByName().get(onode.getName())));
+      Sig.Field f = toAlloy.getField(onode.getName());
+      if (f.sig == _aSig) {
+        Expr expr = _aSig.domain(f);
+        for (int i = 1; i < ((OListOR) _o).size(); i++) {
+          onode = (ONode) ((OListOR) _o).get(i);
+          expr = expr.plus(_aSig.domain(toAlloy.getField(onode.getName())));
+        }
+        exprs.add(expr);
       }
-      exprs.add(expr);
+
     } else if (_o instanceof OListAND) {
       ONode onode = (ONode) ((OListAND) _o).get(0);
-      exprs.add(_mainSig.domain(toAlloy.getFieldByName().get(onode.getName())));
-      for (int i = 1; i < ((OListAND) _o).size(); i++) {
-        onode = (ONode) ((OListAND) _o).get(i);
-        exprs.add(_mainSig.domain(toAlloy.getFieldByName().get(onode.getName())));
+      Sig.Field f = toAlloy.getField(onode.getName());
+      if (f.sig == _aSig) {
+        exprs.add(_aSig.domain(f));
+        for (int i = 1; i < ((OListAND) _o).size(); i++) {
+          onode = (ONode) ((OListAND) _o).get(i);
+          f = toAlloy.getField(onode.getName());
+          exprs.add(_aSig.domain(f));
+        }
       }
     } else {
       ONode onode = (ONode) _o;
-      exprs.add(_mainSig.domain(toAlloy.getFieldByName().get(onode.getName())));
+      Sig.Field f = toAlloy.getField(onode.getName());
+      if (f.sig == _aSig)
+        exprs.add(_aSig.domain(f));
     }
     return exprs;
   }
