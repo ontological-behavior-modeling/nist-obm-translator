@@ -687,8 +687,7 @@ public class ExpressionComparator {
 		
 		for(int i = 0; i < expr1.args.size(); i++) {
 			if(!compareExpr(expr1.args.get(i), expr2.args.get(i))) {
-				System.err.println("compareExprList: "
-					+ "expr1.args != expr2.args for i = " + i);
+				System.err.println("compareExprList: "+ "expr1.args != expr2.args for i = " + i);
 				System.err.println("expr1.args: " + expr1.args);
 				System.err.println("expr2.args: " + expr2.args);
 				System.err.println();

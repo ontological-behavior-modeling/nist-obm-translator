@@ -149,9 +149,7 @@ public class ExprVisitor extends VisitQuery<String> {
 		op.append(' ').append(x.op.toString().toLowerCase()).append(' ');
 		
 		// Remove empty strings from array
-		args = Arrays.stream(args).filter(Predicate.isEqual("").negate())
-				.toArray(String[]::new);
-		
+		args = Arrays.stream(args).filter(Predicate.isEqual("").negate()).toArray(String[]::new);
 		return String.join(op, args);
     }
 	
@@ -176,8 +174,7 @@ public class ExprVisitor extends VisitQuery<String> {
 		}		
 		   	    	
 		StringBuilder sb = new StringBuilder();
-        return sb.append(op).append(' ').append(names).append(": ")
-    		.append(MyAlloyLibrary.removeSlash(sigType)).append(" | ").append(sub).toString();
+        return sb.append(op).append(' ').append(names).append(": ").append(MyAlloyLibrary.removeSlash(sigType)).append(" | ").append(sub).toString();
     }
 	
 	@Override

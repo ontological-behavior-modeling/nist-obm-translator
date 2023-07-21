@@ -2,17 +2,26 @@ package manualtest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
+import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
+import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
+import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
+import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Decl;
+import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.parser.CompModule;
 import edu.mit.csail.sdg.alloy4.Pos;
 
 
@@ -29,13 +38,13 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		Sig prepare = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Prepare");
 		Sig serve = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Serve");
 		Sig eat = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Eat");
-		Sig pay = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Serve");
+		Sig pay = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Pay");
 		Sig foodItem = alloy.createSigAsChildOfOccSigAndAddToAllSigs("FoodItem");
 		Sig location = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Location");
 		Sig real = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Real");
-		Sig ofStart = alloy.createSigAsChildOfOccSigAndAddToAllSigs("ofStart");
-		Sig ofEnd = alloy.createSigAsChildOfOccSigAndAddToAllSigs("ofEnd");
-		Sig ofOrder = alloy.createSigAndAddToAllSigs("ofOrder", (Sig.PrimSig) order);
+		Sig ofStart = alloy.createSigAsChildOfOccSigAndAddToAllSigs("OFStart");
+		Sig ofEnd = alloy.createSigAsChildOfOccSigAndAddToAllSigs("OFEnd");
+		Sig ofOrder = alloy.createSigAndAddToAllSigs("OFOrder", (Sig.PrimSig) order);
 		Sig ofCustomOrder = alloy.createSigAndAddToAllSigs("OFCustomOrder", (Sig.PrimSig) ofOrder);
 		Sig ofPrepare = alloy.createSigAndAddToAllSigs("OFPrepare", (Sig.PrimSig) prepare);
 		Sig ofCustomPrepare = alloy.createSigAndAddToAllSigs("OFCustomPrepare", (Sig.PrimSig) ofPrepare);
@@ -49,7 +58,7 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		Sig ofLoopFoodService = alloy.createSigAndAddToAllSigs("OFLoopFoodService", (Sig.PrimSig) ofFoodService);
 		Sig ofParallelFoodService = alloy.createSigAndAddToAllSigs("OFParallelFoodService", (Sig.PrimSig) ofFoodService);
 		
-		Sig transferBefore = Helper.getReachableSig(alloy.getTemplateModule(), "TransferBefore");
+		Sig transferBefore = Helper.getReachableSig(alloy.getTemplateModule(), "o/TransferBefore");
 
 		// ========== Define list of relations unique to the file ==========
 		
@@ -65,32 +74,33 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// ofEnd: none
 		
 		// ofOrder
-		Sig.Field orderedFoodItem_ofOrder = FuncUtils.addOneField("orderedFoodItem_ofOrder", ofOrder, foodItem);
+		Sig.Field orderedFoodItem_ofOrder = FuncUtils.addOneField("orderedFoodItem", ofOrder, foodItem);
 		
 		// OFCustomOrder
-		Sig.Field orderAmount_ofCustomOrder = FuncUtils.addOneField("orderAmount_ofCustomOrder", ofCustomOrder, real);
-		Sig.Field orderDestination_ofCustomOrder = FuncUtils.addOneField("orderDestination_ofCustomOrder", ofCustomOrder, location);
+		Sig.Field orderAmount_ofCustomOrder = FuncUtils.addOneField("orderAmount", ofCustomOrder, real);
+		Sig.Field orderDestination_ofCustomOrder = FuncUtils.addOneField("orderDestination", ofCustomOrder, location);
 		
 		// OFPrepare
-		Sig.Field preparedFoodItem_ofPrepare = FuncUtils.addOneField("preparedFoodItem_ofPrepare", ofPrepare, foodItem);
+		Sig.Field preparedFoodItem_ofPrepare = FuncUtils.addOneField("preparedFoodItem", ofPrepare, foodItem);
 		
 		// OFCustomPrepare
-		Sig.Field prepareDestination_ofCustomPrepare = FuncUtils.addOneField("prepareDestination_ofCustomPrepare", ofCustomPrepare, location);
+		Sig.Field prepareDestination_ofCustomPrepare = FuncUtils.addOneField("prepareDestination", ofCustomPrepare, location);
 		
 		// OFServe
-		Sig.Field servedFoodItem_ofServe = FuncUtils.addOneField("servedFoodItem_ofServe", ofServe, foodItem);
+		Sig.Field servedFoodItem_ofServe = FuncUtils.addOneField("servedFoodItem", ofServe, foodItem);
 		
 		// OFCustomServe
-		Sig.Field serviceDestination_ofCustomServe = FuncUtils.addOneField("serviceDestination_ofCustomServe", ofCustomServe, location);
+		Sig.Field serviceDestination_ofCustomServe = FuncUtils.addOneField("serviceDestination", ofCustomServe, location);
 		
 		// OFEat
-		Sig.Field eatenItem_ofEat = FuncUtils.addOneField("eatenItem_ofEat", ofEat, foodItem);
+		Sig.Field eatenItem_ofEat = FuncUtils.addOneField("eatenItem", ofEat, foodItem);
 		
 		// OFPay
-		Sig.Field paidAmount_ofPay = FuncUtils.addOneField("paidAmount_ofPay", ofPay, real);
-		Sig.Field paidFoodItem_ofPay = FuncUtils.addOneField("paidFoodItem_ofPay", ofPay, foodItem);
+		Sig.Field paidAmount_ofPay = FuncUtils.addOneField("paidAmount", ofPay, real);
+		Sig.Field paidFoodItem_ofPay = FuncUtils.addOneField("paidFoodItem", ofPay, foodItem);
 		
 		// FoodService
+
 		Sig.Field order_foodService = FuncUtils.addField("order", foodService, order);
 		Sig.Field prepare_foodService = FuncUtils.addField("prepare", foodService, prepare);
 		Sig.Field pay_foodService = FuncUtils.addField("pay", foodService, pay);
@@ -98,19 +108,13 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		Sig.Field serve_foodService = FuncUtils.addField("serve", foodService, serve);
 		
 		// OFFoodService
-		Sig.Field[] ofFoodService_fields = ofFoodService.addTrickyField(
-			null, null, Pos.UNKNOWN, null, null, 
-			new String[] {"transferPrepareServe", "transferOrderServe", "transferServeEat"}, 
-			transferBefore);
+		Sig.Field[] ofFoodService_fields = ofFoodService.addTrickyField(null, null, Pos.UNKNOWN, null, null, new String[] {"transferPrepareServe", "transferOrderServe", "transferServeEat"}, transferBefore);
 		Sig.Field transferPrepareServe_ofFoodService = ofFoodService_fields[0];
 		Sig.Field transferOrderServe_ofFoodService = ofFoodService_fields[1];
 		Sig.Field transferServeEat_ofFoodService = ofFoodService_fields[2];
 		
 		// OFSingleFoodService
-		Sig.Field[] ofSingleFoodService_fields = ofSingleFoodService.addTrickyField(
-			null, null, Pos.UNKNOWN, null, null, 
-			new String[] {"transferOrderPrepare", "transferOrderPay", "transferPayEat"}, 
-			transferBefore);
+		Sig.Field[] ofSingleFoodService_fields = ofSingleFoodService.addTrickyField(null, null, Pos.UNKNOWN, null, null, new String[] {"transferOrderPrepare", "transferOrderPay", "transferPayEat"}, transferBefore);
 		Sig.Field transferOrderPrepare_ofSingleFoodService = ofSingleFoodService_fields[0];
 		Sig.Field transferOrderPay_ofSingleFoodService = ofSingleFoodService_fields[1];
 		Sig.Field transferPayEat_ofSingleFoodService = ofSingleFoodService_fields[2];
@@ -254,10 +258,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_custom_order: OFCustomOrder | of_custom_order.orderDestination_ofCustomOrder in of_custom_order.outputs"
 		
 		ExprVar ofCustomOrder_var = ExprVar.make(null, "of_custom_order", ofCustomOrder.type());
-		Decl ofCustomOrder_decl = new Decl(null, null, null, List.of(ofCustomOrder_var), ofCustomOrder_var.oneOf());
+		Decl ofCustomOrder_decl = new Decl(null, null, null, List.of(ofCustomOrder_var), ofCustomOrder.oneOf());
 		
-		alloy.addToOverallFact(ofCustomOrder_var.join(orderAmount_ofCustomOrder).in(ofCustomOrder_var.join(outputs.call())).forAll(ofCustomOrder_decl));
-		alloy.addToOverallFact(ofCustomOrder.join(orderDestination_ofCustomOrder).in(ofCustomOrder.join(outputs.call())));
+		/*8*/ alloy.addToOverallFact(ofCustomOrder_var.join(orderAmount_ofCustomOrder).in(ofCustomOrder_var.join(outputs.call())).forAll(ofCustomOrder_decl));
+		/*9*/ alloy.addToOverallFact(ofCustomOrder.join(orderDestination_ofCustomOrder).in(ofCustomOrder.join(outputs.call())).forAll(ofCustomOrder_decl));
 		
 		// OFPrepare
 		// Implicit fact:
@@ -268,10 +272,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_prepare: OFPrepare | of_prepare.preparedFoodItem_ofPrepare in of_prepare.outputs"
 		
 		ExprVar ofPrepare_var = ExprVar.make(null, "of_prepare", ofPrepare.type());
-		Decl ofPrepareOrder_decl = new Decl(null, null, null, List.of(ofPrepare_var), ofPrepare_var.oneOf());
+		Decl ofPrepareOrder_decl = new Decl(null, null, null, List.of(ofPrepare_var), ofPrepare.oneOf());
 		
-		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(inputs.call())).forAll(ofPrepareOrder_decl));
-		alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(outputs.call())).forAll(ofPrepareOrder_decl));
+		/*10*/ alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(inputs.call())).forAll(ofPrepareOrder_decl));
+		/*11*/ alloy.addToOverallFact(ofPrepare_var.join(preparedFoodItem_ofPrepare).in(ofPrepare_var.join(outputs.call())).forAll(ofPrepareOrder_decl));
 		
 		// OFCustomPrepare
 		// Implicit fact:
@@ -282,17 +286,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_custom_prepare: OFCustomPrepare | of_custom_prepare.prepareDestination_ofCustomPrepare in of_custom_prepare.outputs"
 		
 		ExprVar ofCustomPrepare_var = ExprVar.make(null, "of_custom_prepare", ofCustomPrepare.type());
-		Decl ofCustomPrepare_decl = new Decl(null, null, null, List.of(ofCustomPrepare_var), ofCustomPrepare_var.oneOf());
+		Decl ofCustomPrepare_decl = new Decl(null, null, null, List.of(ofCustomPrepare_var), ofCustomPrepare.oneOf());
 		
-		alloy.addToOverallFact(
-			ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare)
-			.in(ofCustomPrepare_var.join(inputs.call()))
-			.forAll(ofCustomPrepare_decl));
-		
-		alloy.addToOverallFact(
-			ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare)
-			.in(ofCustomPrepare_var.join(outputs.call()))
-			.forAll(ofCustomPrepare_decl));
+		/*12*/ alloy.addToOverallFact(ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare).in(ofCustomPrepare_var.join(inputs.call())).forAll(ofCustomPrepare_decl));
+		/*13*/ alloy.addToOverallFact(ofCustomPrepare_var.join(prepareDestination_ofCustomPrepare).in(ofCustomPrepare_var.join(outputs.call())).forAll(ofCustomPrepare_decl));
 		
 		// OFServe
 		// Implicit fact:
@@ -303,10 +300,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_serve: OFServe | of_serve.servedFoodItem_ofServe in of_serve.outputs"
 		
 		ExprVar ofServe_var = ExprVar.make(null, "of_serve", ofServe.type());
-		Decl ofServe_decl = new Decl(null, null, null, List.of(ofServe_var), ofServe_var.oneOf());
+		Decl ofServe_decl = new Decl(null, null, null, List.of(ofServe_var), ofServe.oneOf());
 		
-		alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var).join(inputs.call()).forAll(ofServe_decl));
-		alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var).join(outputs.call()).forAll(ofServe_decl));
+		/*14*/ alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var.join(inputs.call())).forAll(ofServe_decl));
+		/*15*/ alloy.addToOverallFact(ofServe_var.join(servedFoodItem_ofServe).in(ofServe_var.join(outputs.call())).forAll(ofServe_decl));
 		
 		// OFCustomServe
 		// Implicit fact:
@@ -315,12 +312,9 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_custom_serve: OFCustomServe | of_custom_serve.serviceDestination_ofCustomServe in of_custom_serve.inputs"
 		
 		ExprVar ofCustomServe_var = ExprVar.make(null, "of_custom_serve", ofCustomServe.type());
-		Decl ofCustomServe_decl = new Decl(null, null, null, List.of(ofCustomServe_var), ofCustomServe_var.oneOf());
+		Decl ofCustomServe_decl = new Decl(null, null, null, List.of(ofCustomServe_var), ofCustomServe.oneOf());
 		
-		alloy.addToOverallFact(
-			ofCustomServe_var.join(serviceDestination_ofCustomServe)
-			.in(ofCustomServe_var.join(inputs.call()))
-			.forAll(ofCustomServe_decl));
+		/*16*/ alloy.addToOverallFact(ofCustomServe_var.join(serviceDestination_ofCustomServe).in(ofCustomServe_var.join(inputs.call())).forAll(ofCustomServe_decl));
 		
 		// OFEat
 		// Implicit fact:
@@ -331,10 +325,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// "all of_eat: OFEat | no of_eat.outputs"
 		
 		ExprVar ofEat_var = ExprVar.make(null, "of_eat", ofEat.type());
-		Decl ofEat_decl = new Decl(null, null, null, List.of(ofEat_var), ofEat_var.oneOf());
+		Decl ofEat_decl = new Decl(null, null, null, List.of(ofEat_var), ofEat.oneOf());
 		
-		alloy.addToOverallFact(ofEat_var.join(eatenItem_ofEat).in(ofEat_var.join(inputs.call())).forAll(ofEat_decl));
-		alloy.addToOverallFact(ofEat_var.join(outputs.call()).no().forAll(ofEat_decl));
+		/*17*/ alloy.addToOverallFact(ofEat_var.join(eatenItem_ofEat).in(ofEat_var.join(inputs.call())).forAll(ofEat_decl));
+		/*18*/ alloy.addToOverallFact(ofEat_var.join(outputs.call()).no().forAll(ofEat_decl));
 		
 		// OFPay
 		// Implicit fact:
@@ -347,11 +341,11 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// all of_pay: OFPay | of_pay.paidFoodItem_ofPay in of_pay.outputs
 		
 		ExprVar ofPay_var = ExprVar.make(null, "of_pay", ofPay.type());
-		Decl ofPay_decl = new Decl(null, null, null, List.of(ofPay_var), ofPay_var.oneOf());
+		Decl ofPay_decl = new Decl(null, null, null, List.of(ofPay_var), ofPay.oneOf());
 		
-		alloy.addToOverallFact(ofPay_var.join(paidAmount_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
-		alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
-		alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(outputs.call())).forAll(ofPay_decl));
+		/*19*/ alloy.addToOverallFact(ofPay_var.join(paidAmount_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
+		/*20*/ alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(inputs.call())).forAll(ofPay_decl));
+		/*21*/ alloy.addToOverallFact(ofPay_var.join(paidFoodItem_ofPay).in(ofPay_var.join(outputs.call())).forAll(ofPay_decl));
 		
 		// FoodService
 		// Implicit facts:
@@ -368,11 +362,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		ExprVar foodService_var = ExprVar.make(null, "food_service", foodService.type());
 		Decl foodService_decl = new Decl(null, null, null, List.of(foodService_var), foodService.oneOf());
 		
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, order_foodService, serve_foodService);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, prepare_foodService, serve_foodService);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(foodService, serve_foodService, eat_foodService);
-		
-		alloy.addToOverallFact(foodService_var.join(order_foodService)
+		/*22*/ alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), foodService_var.join(order_foodService), foodService_var.join(serve_foodService)).forAll(foodService_decl));
+		/*23*/ alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), foodService_var.join(prepare_foodService), foodService_var.join(serve_foodService)).forAll(foodService_decl));
+		/*24*/ alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), foodService_var.join(serve_foodService), foodService_var.join(eat_foodService)).forAll(foodService_decl));
+		/*25*/ alloy.addToOverallFact(foodService_var.join(order_foodService)
 			.plus(foodService_var.join(prepare_foodService))
 			.plus(foodService_var.join(pay_foodService))
 			.plus(foodService_var.join(eat_foodService))
@@ -426,7 +419,7 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		ExprVar ofFoodService_var = ExprVar.make(null, "of_food_service", ofFoodService.type());
 		Decl ofFoodService_decl = new Decl(null, null, null, List.of(ofFoodService_var), ofFoodService.oneOf());
 		
-		/*26*/ alloy.addToOverallFact(ofFoodService_var.join(inputs.call()).and(inputs.call().join(ofFoodService_var)).forAll(ofFoodService_decl).forAll(ofFoodService_decl));
+		/*26*/ alloy.addToOverallFact(ofFoodService_var.join(inputs.call()).no().and(inputs.call().join(ofFoodService_var).no()).forAll(ofFoodService_decl));
 		/*27*/ alloy.addToOverallFact(ofFoodService_var.join(outputs.call()).no().and(outputs.call().and(ofFoodService_var)).no().forAll(ofFoodService_decl));
 		/*28*/ alloy.addToOverallFact(ofFoodService_var.join(order).in(ofOrder).forAll(ofFoodService_decl));
 		/*29*/ alloy.addToOverallFact(ofFoodService_var.join(prepare).in(ofPrepare).forAll(ofFoodService_decl));
@@ -828,14 +821,130 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 		// OFParallelFoodService
 		// Implicit Fact
 		// 166) bijectionFiltered[happensBefore, pay, prepare]
+		// 167) bijectionFiltered[happensBefore, pay, order]
 		// Explicit Fact
 		// 166) bijectionFiltered[happensBefore, of_parallel_food_service.pay, of_parallel_food_service.prepare]
+		// 167) bijectionFiltered[happensBefore, of_parallel_food_service.pay, of_parallel_food_service.order]
 		
 		ExprVar ofParallelFoodServiceVar = ExprVar.make(null, "of_parallel_food_service", ofParallelFoodService.type());
 		Decl ofParallelFoodServiceDecl = new Decl(null, null, null, List.of(ofParallelFoodServiceVar), ofParallelFoodService.oneOf());
 		
 		/*166*/	alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), ofParallelFoodServiceVar.join(pay_foodService), ofParallelFoodService.join(prepare_foodService)).forAll(ofParallelFoodServiceDecl));
+		/*167*/	alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(), ofParallelFoodServiceVar.join(pay_foodService), ofParallelFoodService.join(order_foodService)).forAll(ofParallelFoodServiceDecl));
 		
+		// General Functions and Predicates
+		
+		// instancesDuringExample
+		Expr instancesDuringExampleExpr = order.in(ofFoodService).and(prepare.in(ofFoodService.join(prepare_foodService))).and(serve.in(ofFoodService.join(serve_foodService))).and(eat.in(ofFoodService.join(eat_foodService))).and(pay.in(ofFoodService.join(pay_foodService)));
+		Func instancesDuringExampleFunc = new Func(null, "instancesDuringExample", null, null, instancesDuringExampleExpr);
+		
+		// noCustomFoodService
+		Expr noCustomFoodServiceExpr = ofCustomOrder.no().and(ofCustomPrepare.no()).and(ofCustomServe.no());
+		Func noCustomFoodServiceFunc = new Func(null, "noCustomFoodService", null, null, noCustomFoodServiceExpr);
+		
+		// noChildFoodService
+		Expr noChildFoodServiceExpr = ofSingleFoodService.no().and(ofLoopFoodService.no()).and(ofParallelFoodService.no());
+		Func noChildFoodServiceFunc = new Func(null, "noChildFoodService", null, null, noChildFoodServiceExpr);
+	
+		// onlyOFFoodService
+		Expr onlyOfFoodServiceExpr = foodService.in(ofFoodService).and(noChildFoodServiceFunc.call()).and(ofFoodService.cardinality().equal(ExprConstant.makeNUMBER(1))).and(noCustomFoodServiceFunc.call());
+		Func onlyOfFoodServiceFunc = new Func(null, "onlyOFFoodService", null, null, onlyOfFoodServiceExpr);
+		
+		// onlyOFSingleFoodService
+		Expr onlyOfSingleFoodServiceExpr = foodService.in(ofSingleFoodService);
+		Func onlyOfSingleFoodServiceFunc = new Func(null, "onlyOFSingleFoodService", null, null, onlyOfSingleFoodServiceExpr);
+		
+		// onlyOFLoopFoodService
+		Expr onlyOfLoopFoodServiceExpr = foodService.in(ofLoopFoodService);
+		Func onlyOfLoopFoodServiceFunc = new Func(null, "onlyOFLoopFoodService", null, null, onlyOfLoopFoodServiceExpr);
+		
+		// onlyOFParallelFoodService
+		Expr onlyOfParallelFoodServiceExpr = foodService.in(ofParallelFoodService);
+		Func onlyOfParallelFoodServiceFunc = new Func(null, "onlyOFParallelFoodService", null, null, onlyOfParallelFoodServiceExpr);
+		
+		// Checks and runs
+		
+		// setup
+		
+		Func nonZeroDurationOnlyFunc = Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
+		
+		// showOFFoodService
+		Expr showOFFoodServiceExpr = nonZeroDurationOnlyFunc.call().and(instancesDuringExampleFunc.call()).and(onlyOfFoodServiceFunc.call()).and(ofFoodService.join(order_foodService).cardinality().equal(ExprConstant.makeNUMBER(1)));
+		Command showOFFoodServiceCommand = new Command(null, showOFFoodServiceExpr, "showOFFoodService", false, 12, -1, -1, -1, List.of(), List.of(), showOFFoodServiceExpr.and(alloy.getOverAllFact()), null);
+		
+		// showOFSingleFoodService
+		Expr showOFSingleFoodServiceExpr = nonZeroDurationOnlyFunc.call().and(instancesDuringExampleFunc.call()).and(onlyOfSingleFoodServiceFunc.call());
+		Command showOFSingleFoodServiceCommand = new Command(null, showOFSingleFoodServiceExpr, "showOFSingleFoodService", false, 15, -1, -1, -1, List.of(), List.of(), showOFSingleFoodServiceExpr.and(alloy.getOverAllFact()), null);
+		
+		// showOFLoopFoodService
+		Expr showOFLoopFoodServiceExpr = nonZeroDurationOnlyFunc.call().and(instancesDuringExampleFunc.call()).and(onlyOfLoopFoodServiceFunc.call());
+		Command showOFLoopFoodServiceCommand = new Command(null, showOFLoopFoodServiceExpr, "showOFLoopFoodService", false, 30, -1, -1, -1, List.of(), List.of(), showOFLoopFoodServiceExpr.and(alloy.getOverAllFact()), null);
+		
+		// showOFParallelFoodService
+		Expr showOFParallelFoodServiceExpr = nonZeroDurationOnlyFunc.call().and(instancesDuringExampleFunc.call()).and(onlyOfParallelFoodServiceFunc.call());
+		Command showOFParallelFoodServiceCommand = new Command(null, showOFParallelFoodServiceExpr, "showOFParallelFoodService", false, 10, -1, -1, -1, List.of(), List.of(), showOFParallelFoodServiceExpr.and(alloy.getOverAllFact()), null);
+		
+		Command[] commands = {showOFFoodServiceCommand, showOFSingleFoodServiceCommand, showOFLoopFoodServiceCommand, showOFParallelFoodServiceCommand};
+		
+		// ===== Create Alloy file version =====
+		String filename = "src/test/resources/4.2.2_FoodServiceObjectFlowIFSingleFoodService_ExplicitFacts.als";
+		CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
+		
+		// ========== Test if facts are equal ==========
+	    
+	    ExpressionComparator ec = new ExpressionComparator();
+	    
+	    Expr fileFacts = importedModule.getAllReachableFacts();
+	    Expr apiFacts = alloy.getOverAllFact();
+	    assertTrue(ec.compareTwoExpressions(fileFacts, apiFacts));
+	    
+	    // ========== Test if signatures are equal ==========
+	    
+	    List<Sig> fileSigs = importedModule.getAllReachableUserDefinedSigs();
+	    List<Sig> apiSigs = alloy.getAllSigs();
+	    Map<String, Sig> fileMap = new HashMap<>();
+	    Map<String, Sig> apiMap = new HashMap<>();
+	    
+	    for(Sig sig : fileSigs) {
+	    	fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+	    }
+	    for(Sig sig : apiSigs) {
+	    	apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+	    }
+	    
+	    assertTrue(fileSigs.size() == apiSigs.size());
+	    
+	    for(String sigName : fileMap.keySet()) {
+	    	assertTrue(apiMap.containsKey(sigName));
+	    	assertTrue(
+    			ec.compareTwoExpressions(fileMap.get(sigName), 
+				apiMap.get(sigName)));
+	    }
+	    
+	    // ========== Test if command(s) are equal ==========
+	    
+	    List<Command> importedCommands = importedModule.getAllCommands();
+	    
+	    assertEquals(commands.length, importedCommands.size());
+	    
+	    for(int i = 0; i < commands.length; i++) {
+	    	assertTrue(ec.compareCommand(commands[i], importedCommands.get(i)));
+	    }
+	    
+	    // ========== Write file ==========
+	    
+	    AlloyModule alloyModule = new AlloyModule(
+    		"FoodServiceControlFlow_ExplicitFast", alloy.getAllSigs(), 
+    		alloy.getOverAllFact(), commands);
+	    
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), 
+    		alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    
+	    String outFileName = "src/test/resources/generated-" 
+    		+ alloyModule.getModuleName() + ".als";
+	    
+	    translator.generateAlsFileContents(alloyModule, outFileName);
+	
 	}	
 
 }

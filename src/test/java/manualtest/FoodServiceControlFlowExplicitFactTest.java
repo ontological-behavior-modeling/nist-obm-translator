@@ -38,39 +38,26 @@ class FoodServiceControlFlowExplicitFactTest {
 		// ========== Define list of signatures unique to the file ==========
 		
 		Sig orderSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Order");
-		Sig prepareSig = 
-			alloy.createSigAsChildOfOccSigAndAddToAllSigs("Prepare");
+		Sig prepareSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Prepare");
 		Sig serveSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Serve");
 		Sig eatSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Eat");
 		Sig paySig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("Pay");
-		Sig foodServiceSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs(
-			"FoodService");
-		Sig singleFoodServiceSig = alloy.createSigAndAddToAllSigs(
-			"SingleFoodService", (Sig.PrimSig) foodServiceSig);
-		Sig buffetServiceSig = alloy.createSigAndAddToAllSigs(
-			"BuffetService", (Sig.PrimSig) singleFoodServiceSig);
-		Sig churchSupperServiceSig = alloy.createSigAndAddToAllSigs(
-			"ChurchSupperService", (Sig.PrimSig) singleFoodServiceSig);
-		Sig fastFoodServiceSig = alloy.createSigAndAddToAllSigs(
-			"FastFoodService", (Sig.PrimSig) singleFoodServiceSig);
-		Sig restaurantServiceSig = alloy.createSigAndAddToAllSigs(
-			"RestaurantService", (Sig.PrimSig) singleFoodServiceSig);
-		Sig unsatisfiableFoodServiceSig = alloy.createSigAndAddToAllSigs(
-			"UnsatisfiableFoodService", (Sig.PrimSig) singleFoodServiceSig);
+		Sig foodServiceSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("FoodService");
+		Sig singleFoodServiceSig = alloy.createSigAndAddToAllSigs("SingleFoodService", (Sig.PrimSig) foodServiceSig);
+		Sig buffetServiceSig = alloy.createSigAndAddToAllSigs("BuffetService", (Sig.PrimSig) singleFoodServiceSig);
+		Sig churchSupperServiceSig = alloy.createSigAndAddToAllSigs("ChurchSupperService", (Sig.PrimSig) singleFoodServiceSig);
+		Sig fastFoodServiceSig = alloy.createSigAndAddToAllSigs("FastFoodService", (Sig.PrimSig) singleFoodServiceSig);
+		Sig restaurantServiceSig = alloy.createSigAndAddToAllSigs("RestaurantService", (Sig.PrimSig) singleFoodServiceSig);
+		Sig unsatisfiableFoodServiceSig = alloy.createSigAndAddToAllSigs("UnsatisfiableFoodService", (Sig.PrimSig) singleFoodServiceSig);
 		
 		// ========== Define list of relations unique to the file ==========
 		
 		// FoodService fields:
-		Sig.Field foodService_orderField = FuncUtils.addField("order", 
-			foodServiceSig, orderSig);
-		Sig.Field foodService_prepareField = FuncUtils.addField("prepare", 
-			foodServiceSig, prepareSig);
-		Sig.Field foodService_payField = FuncUtils.addField("pay", 
-			foodServiceSig, paySig);
-		Sig.Field foodService_eatField = FuncUtils.addField("eat", 
-			foodServiceSig, eatSig);
-		Sig.Field foodService_serveField = FuncUtils.addField("serve", 
-			foodServiceSig, serveSig);
+		Sig.Field foodService_orderField = FuncUtils.addField("order", foodServiceSig, orderSig);
+		Sig.Field foodService_prepareField = FuncUtils.addField("prepare", foodServiceSig, prepareSig);
+		Sig.Field foodService_payField = FuncUtils.addField("pay", foodServiceSig, paySig);
+		Sig.Field foodService_eatField = FuncUtils.addField("eat", foodServiceSig, eatSig);
+		Sig.Field foodService_serveField = FuncUtils.addField("serve", foodServiceSig, serveSig);
 		
 		// SingleFoodService fields: none
 		// BuffetService fields: none
@@ -83,26 +70,17 @@ class FoodServiceControlFlowExplicitFactTest {
 		
 		// FoodService:
 		
-		ExprVar fs = ExprVar.make(null, "fs", 
-			foodServiceSig.type());
+		ExprVar fs = ExprVar.make(null, "fs", foodServiceSig.type());
 		
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			fs, foodServiceSig, foodService_orderField,
-			foodService_serveField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig, foodService_orderField, foodService_serveField);
 		
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			fs, foodServiceSig, foodService_prepareField,
-			foodService_serveField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig, foodService_prepareField, foodService_serveField);
 		
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			fs, foodServiceSig, foodService_serveField,
-			foodService_eatField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig, foodService_serveField, foodService_eatField);
 				
 		Map<String, Sig.Field> fieldByName = new LinkedHashMap<>();
-		fieldByName.put(
-			foodService_orderField.label, foodService_orderField);
-		fieldByName.put(foodService_prepareField.label, 
-			foodService_prepareField);
+		fieldByName.put(foodService_orderField.label, foodService_orderField);
+		fieldByName.put(foodService_prepareField.label, foodService_prepareField);
 		fieldByName.put(foodService_payField.label, foodService_payField);
 		fieldByName.put(foodService_eatField.label, foodService_eatField);
 		fieldByName.put(foodService_serveField.label, foodService_serveField);
@@ -113,48 +91,30 @@ class FoodServiceControlFlowExplicitFactTest {
 		
 		ExprVar sfs = ExprVar.make(null, "sfs", singleFoodServiceSig.type());
 		
-		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, 
-			foodService_orderField);
-		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, 
-			foodService_prepareField);
-		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, 
-			foodService_payField);
-		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, 
-			foodService_eatField);
-		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, 
-			foodService_serveField);
+		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, foodService_orderField);
+		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, foodService_prepareField);
+		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, foodService_payField);
+		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, foodService_eatField);
+		alloy.addOneConstraintToField(sfs, singleFoodServiceSig, foodService_serveField);
 		
 		// BuffetService:
 		ExprVar bs = ExprVar.make(null,  "bs", buffetServiceSig.type());
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			bs, buffetServiceSig, foodService_prepareField, 
-			foodService_orderField);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			bs, buffetServiceSig, foodService_eatField, foodService_payField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(bs, buffetServiceSig, foodService_prepareField, foodService_orderField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(bs, buffetServiceSig, foodService_eatField, foodService_payField);
 		
 		// ChurchSupperService:
 		ExprVar css = ExprVar.make(null, "css", churchSupperServiceSig.type());
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			css, churchSupperServiceSig, foodService_payField, 
-			foodService_prepareField);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			css, churchSupperServiceSig, foodService_payField, 
-			foodService_orderField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(css, churchSupperServiceSig, foodService_payField, foodService_prepareField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(css, churchSupperServiceSig, foodService_payField, foodService_orderField);
 		
 		// FastFoodService:
 		ExprVar ffs = ExprVar.make(null, "ffs", fastFoodServiceSig.type());
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			ffs, fastFoodServiceSig, foodService_orderField, 
-			foodService_payField);
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			ffs, fastFoodServiceSig, foodService_payField, 
-			foodService_eatField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ffs, fastFoodServiceSig, foodService_orderField, foodService_payField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ffs, fastFoodServiceSig, foodService_payField, foodService_eatField);
 		
 		// RestaurantService:
 		ExprVar rs = ExprVar.make(null, "rs", restaurantServiceSig.type());
-		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
-			rs, restaurantServiceSig, foodService_eatField, 
-			foodService_payField);
+		alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(rs, restaurantServiceSig, foodService_eatField, foodService_payField);
 		
 		// UnsatisfiableFoodService
 		ExprVar ufs = ExprVar.make(null, "ufs",
@@ -269,30 +229,21 @@ class FoodServiceControlFlowExplicitFactTest {
 		// ========== Commands ==========
 		
 		// nonZeroDurationOnly
-		Func nonZeroDurationOnlyFunc = Helper.getFunction(Alloy.transferModule, 
-			"o/nonZeroDurationOnly");
+		Func nonZeroDurationOnlyFunc = Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
 		
 	    // suppressTransfers
-		Sig transfer = Helper.getReachableSig(Alloy.transferModule, 
-			"o/Transfer");
+		Sig transfer = Helper.getReachableSig(Alloy.transferModule, "o/Transfer");
 	    Expr suppressTransfersExpessionBody = transfer.no();
-	    Func suppressTransfersFunc = new Func(null, "suppressTransfers", null, 
-    		null, suppressTransfersExpessionBody);
+	    Func suppressTransfersFunc = new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
 	    
 	    // suppressIO
 	    Func inputs = Helper.getFunction(Alloy.transferModule, "o/inputs");
 	    Func outputs = Helper.getFunction(Alloy.transferModule, "o/outputs");
-	    Expr suppressIOExpressionBody = inputs.call().no()
-    		.and(outputs.call().no());
-	    
-	    Func suppressIOFunc = new Func(null, "suppressIO", null, null, 
-    		suppressIOExpressionBody);
+	    Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
+	    Func suppressIOFunc = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
 		
 		// showFoodService
-	    Expr showFoodServiceCmdExpr = nonZeroDurationOnlyFunc.call()
-    		.and(instancesDuringExampleFunc.call())
-    		.and(onlyFoodServiceFunc.call()).and(suppressTransfersFunc.call())
-    		.and(suppressIOFunc.call());
+	    Expr showFoodServiceCmdExpr = nonZeroDurationOnlyFunc.call().and(instancesDuringExampleFunc.call()).and(onlyFoodServiceFunc.call()).and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
 	    
 	    Command showFoodServiceCmd = new Command(
 	    	null, showFoodServiceCmdExpr, "showFoodService", false, 10, -1, -1,
@@ -373,8 +324,7 @@ class FoodServiceControlFlowExplicitFactTest {
     		showUnsatisfiableFoodServiceCmd};
 		
 		// ========== Create Alloy file version ==========
-		String filename = 
-			"src/test/resources/4.2.1_FoodServiceControlFlow_ExplicitFacts.als";
+		String filename = "src/test/resources/4.2.1_FoodServiceControlFlow_ExplicitFacts.als";
 	    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 		
 	    // ========== Test if facts are equal ==========
@@ -403,9 +353,7 @@ class FoodServiceControlFlowExplicitFactTest {
 	    
 	    for(String sigName : fileMap.keySet()) {
 	    	assertTrue(apiMap.containsKey(sigName));
-	    	assertTrue(
-    			ec.compareTwoExpressions(fileMap.get(sigName), 
-				apiMap.get(sigName)));
+	    	assertTrue(ec.compareTwoExpressions(fileMap.get(sigName), apiMap.get(sigName)));
 	    }
 	    
 	    // ========== Test if command(s) are equal ==========
@@ -420,17 +368,9 @@ class FoodServiceControlFlowExplicitFactTest {
 	    
 	    // ========== Write file ==========
 	    
-	    AlloyModule alloyModule = new AlloyModule(
-    		"FoodServiceControlFlow_ExplicitFast", alloy.getAllSigs(), 
-    		alloy.getOverAllFact(), commands);
-	    
-	    Translator translator = new Translator(alloy.getIgnoredExprs(), 
-    		alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
-	    
-	    String outFileName = "src/test/resources/generated-" 
-    		+ alloyModule.getModuleName() + ".als";
-	    
+	    AlloyModule alloyModule = new AlloyModule("FoodServiceControlFlow_ExplicitFast", alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+	    Translator translator = new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+	    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
 	    translator.generateAlsFileContents(alloyModule, outFileName);
-	    
 	}
 }
