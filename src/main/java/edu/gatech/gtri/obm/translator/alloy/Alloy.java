@@ -52,7 +52,8 @@ public class Alloy {
   public Alloy() {
 
     File tFile = new File(Alloy.class.getResource("/Transfer.als").getFile());
-    System.setProperty(("java.io.tmpdir"), tFile.getParent());// find
+    System.out.println(tFile.getAbsolutePath());
+    // System.setProperty(("java.io.tmpdir"), tFile.getParent());// find
 
 
     A4Reporter rep = new A4Reporter();

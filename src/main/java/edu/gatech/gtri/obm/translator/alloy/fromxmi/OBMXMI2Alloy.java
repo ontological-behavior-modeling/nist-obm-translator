@@ -48,14 +48,14 @@ public class OBMXMI2Alloy {
     OBMXMI2Alloy test = new OBMXMI2Alloy();
     File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
 
-    // String className = "Model::Basic::BehaviorFork";
+    String className = "Model::Basic::BehaviorFork";
     // String className = "Model::Basic::BehaviorJoin";
     // String className = "Model::Basic::ControlFlowBehavior";
     // String className = "Model::Basic::BehaviorDecision";
     // String className = "Model::Basic::Loop";
     // String className = "Model::Basic::ComplexBehavior";
     // String className = "Model::Basic::ComplexBehavior_MW";
-    String className = "Model::Basic::ComposedBehavior";
+    // String className = "Model::Basic::ComposedBehavior";
     test.createAlloyFile(xmiFile, className);
   }
 

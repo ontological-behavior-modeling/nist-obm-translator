@@ -21,8 +21,8 @@ class OBMXMI2AlloyTest {
 
 
   @ParameterizedTest
-  @CsvSource({"generated-ComplexBehavior_MW.als, Model::Basic::ComplexBehavior_MW",
-  // "generated-BehaviorFork.als, Model::Basic::BehaviorFork",
+  @CsvSource({// "generated-ComplexBehavior_MW.als, Model::Basic::ComplexBehavior_MW",
+      "generated-BehaviorFork.als, Model::Basic::BehaviorFork",
   // "generated-BehaviorJoin.als, Model::Basic::BehaviorJoin",
   // "generated-ComplexBehavior.als, Model::Basic::ComplexBehavior",
   // "generated-ControlFlowBehavior.als, Model::Basic::ControlFlowBehavior",
@@ -40,16 +40,19 @@ class OBMXMI2AlloyTest {
   void sameAbstractSyntaxTreeTestAndSignatures(String fileName, String className)
       throws FileNotFoundException, UMLModelErrorException {
 
-    System.setProperty(("java.io.tmpdir"),
-        "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");// find
-                                                                                         // transfer.als
+    // System.setProperty(("java.io.tmpdir"),
+    // "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");// find
+    // transfer.als
     System.out.println("fileName = " + fileName);
     System.out.println("className = " + className);
 
     // ========== Create Alloy model from SysML ==========
 
     OBMXMI2Alloy test = new OBMXMI2Alloy();
-    File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
+    // File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
+    File xmiFile = new File(
+        "C:/Users/mw107/Documents/Projects/NIST OBM/GIT/NIST-OBM-Translator.git/develop_mw/target/classes/OBMModel_MW.xmi");
+    System.out.println(xmiFile.exists());
     test.createAlloyFile(xmiFile, className);
 
     File testFile = new File(OBMXMI2AlloyTest.class.getResource("/" + fileName).getFile());
