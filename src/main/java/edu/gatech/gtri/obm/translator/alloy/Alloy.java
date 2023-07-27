@@ -234,7 +234,7 @@ public class Alloy {
         .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
 
-  public void addSteps(Sig ownerSig, /* Map<String, Field> fieldByName, */
+  public void addSteps(ExprVar var, Sig ownerSig, /* Map<String, Field> fieldByName, */
       Map<Field, Sig> filedTypeByField) {
 
     // steps
@@ -242,19 +242,18 @@ public class Alloy {
     Expr ostepsExpr1 = osteps.call();
     Expr ostepsExpr2 = osteps.call();
 
-    ExprVar s1 = ExprVar.make(null, "s", ownerSig.type());
-    List<ExprHasName> names1 = new ArrayList<>(List.of(s1));
-    Decl decl1 = new Decl(null, null, null, names1, ownerSig.oneOf());
-    Expr expr1 = createStepExpr(s1, ownerSig, filedTypeByField);
-    if (expr1 != null)
-      addToOverallFact((expr1).in(s1.join(ostepsExpr1)).forAll(decl1));
 
-    ExprVar s2 = ExprVar.make(null, "s", ownerSig.type());
-    List<ExprHasName> names2 = new ArrayList<>(List.of(s2));
-    Decl decl2 = new Decl(null, null, null, names2, ownerSig.oneOf());
-    Expr expr2 = createStepExpr(s2, ownerSig, filedTypeByField);
+    Decl decl1 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    Expr expr1 = createStepExpr(var, ownerSig, filedTypeByField);
+    if (expr1 != null)
+      addToOverallFact((expr1).in(var.join(ostepsExpr1)).forAll(decl1));
+
+
+
+    Decl decl2 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    Expr expr2 = createStepExpr(var, ownerSig, filedTypeByField);
     if (expr2 != null)
-      this.addToOverallFact(s2.join(ostepsExpr2).in(expr2).forAll(decl2));
+      this.addToOverallFact(var.join(ostepsExpr2).in(expr2).forAll(decl2));
   }
 
   private Expr createStepExpr(ExprVar s, Sig ownerSig,

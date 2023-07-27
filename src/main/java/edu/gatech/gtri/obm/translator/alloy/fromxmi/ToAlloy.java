@@ -10,6 +10,7 @@ import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 
@@ -108,8 +109,10 @@ public class ToAlloy {
 
   public void addRemainingFactAndPredicate() {
 
+
     for (Sig sig : sigByName.values()) {
-      alloy.addSteps(sig, filedTypeByField);
+      ExprVar s = ExprVar.make(null, "s", sig.type());
+      alloy.addSteps(s, sig, filedTypeByField);
       alloy.addConstraint(sig, filedTypeByField);
     }
     alloy.addOnlyConstraint(mainSig);
