@@ -43,6 +43,8 @@ public class Alloy {
   protected static Func funcFiltered;
   protected static Func inverseFunctionFiltered;
 
+  protected ExprList uniqueFact;
+  protected Expr templateFact;
   protected Expr overallFact;
   protected List<Sig> allSigs;
   protected Expr _nameExpr;
@@ -68,10 +70,9 @@ public class Alloy {
       ignoredSigs.add(sig);
     }
     // add all facts from the occurrence module.
-    overallFact = templateModule.getAllReachableFacts();
     ignoredExprs = new HashSet<>();
 
-    ExprList exprList = (ExprList) overallFact;
+    ExprList exprList = (ExprList) templateModule.getAllReachableFacts();
     for (Expr expr : exprList.args) {
       ignoredExprs.add(expr);
     }
@@ -129,14 +130,18 @@ public class Alloy {
   }
 
   public Expr getOverAllFact() {
-    return this.overallFact;
+	  if(overallFact == null) {
+		  return templateModule.getAllReachableFacts();
+	  }
+	  
+    return this.overallFact.and(templateModule.getAllReachableFacts());
   }
 
   public List<Sig> getAllSigs() {
     return this.allSigs;
   }
 
-  protected Sig createSigAndAddToAllSigs(String label, PrimSig parent) {
+  public Sig createSigAndAddToAllSigs(String label, PrimSig parent) {
     // Sig s = new PrimSig("this/" + label, parent);
     Sig s = new PrimSig(label, parent);
     allSigs.add(s);
@@ -148,7 +153,12 @@ public class Alloy {
   }
 
   public void addToOverallFact(Expr expr) {
-    overallFact = expr.and(overallFact);
+    if(overallFact == null) {
+    	overallFact = expr;
+    }
+    else {
+    	overallFact = overallFact.and(expr);
+    }
   }
 
 
@@ -165,7 +175,6 @@ public class Alloy {
   public Set<Func> getIgnoredFuncs() {
     return ignoredFuncs;
   }
-
 
   /**
    * support when Expr original is ExprBinary(ie., p1 + p2) to add ExprVar s in both so returns s.p1
@@ -197,10 +206,52 @@ public class Alloy {
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(inverseFunctionFilteredExpr.forAll(decl));
   }
+  
+  /** Creates a inverseFunctionFiltered fact with happensBefore.
+   *  Use when "from" or "to" has a + sign.
+   *  fact f3 {all s: Loop | functionFiltered[happensBefore, s.p2, s.p2 + s.p3]}
+   *  ownerSig=Loop; from={p2}; to={p2, p3}
+   *  
+   *  In this example, "to" has a + sign.
+   */
+  public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(
+  Sig ownerSig, Expr[] from, Expr[] to) {
+	  
+	  assert from.length > 0 : "error: from.length must be greater than 0";
+	  assert to.length > 0 : "error: to.length must be greater than 0";
+	  
+	  ExprVar s = ExprVar.make(null,  "s", ownerSig.type());
+	  Expr _from = s.join(from[0]), _to = s.join(to[0]);
+	  
+	  for(int i = 1; i < from.length; i++) {
+		  _from = _from.plus(s.join(from[i]));
+	  }
+	  for(int i = 1; i < to.length; i++) {
+		  _to = _to.plus(s.join(to[i]));
+	  }
+	  
+	  Expr inverseFunctionFilteredExpression = inverseFunctionFiltered.call(
+	  happensBefore.call(), _from, _to);
+	  
+	  List<ExprHasName> names = List.of(s);
+	  Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+	  addToOverallFact(inverseFunctionFilteredExpression.forAll(decl));
+  }
 
-
-  public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
+  /** Creates a functionFiltered fact. Example Alloy fact:
+   *  fact f1 { all s: Loop | functionFiltered[happensBefore, s.p1, s.p2] }
+   *  ownerSig = Loop, from = p1, to = p2
+   * 
+   *  This function doesn't handle the case where "from" or "to" has
+   *  a plus sign in it. Example Alloy fact this function can't create:
+   *  fact f3 {all s: Loop | functionFiltered[happensBefore, s.p2, s.p2 + s.p3]}
+   *  
+   *  I wrote another function below to handle this case with + sign.
+   *  createFunctionFilteredHappensBeforeAndAllToOverAllFact(
+   *  Sig ownerSig, Expr[] from, Expr[] to)
+   */
+  public void createFunctionFilteredHappensBeforeAndAddToOverallFact(
+		  Sig ownerSig, Expr from, Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
 
     Expr funcFilteredExpr =
@@ -209,18 +260,99 @@ public class Alloy {
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
   }
-
-  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
+   
+  
+  /** Creates a functionFiltered fact with happensBefore.
+   *  Use when "from" or "to" has a + sign.
+   *  fact f3 {all s: Loop | functionFiltered[happensBefore, s.p2, s.p2 + s.p3]}
+   *  ownerSig=Loop; from={p2}; to={p2, p3}
+   *  
+   *  In this example, "to" has a + sign.
+   */
+  public void createFunctionFilteredHappensBeforeAndAddToOverallFact(
+  Sig ownerSig, Expr[] from, Expr[] to) {
+	  
+	  assert from.length > 0 : "error: from.length must be greater than 0";
+	  assert to.length > 0 : "error: to.length must be greater than 0";
+	  
+	  ExprVar s = ExprVar.make(null,  "s", ownerSig.type());
+	  Expr _from = s.join(from[0]), _to = s.join(to[0]);
+	  
+	  for(int i = 1; i < from.length; i++) {
+		  _from = _from.plus(s.join(from[i]));
+	  }
+	  for(int i = 1; i < to.length; i++) {
+		  _to = _to.plus(s.join(to[i]));
+	  }
+	  
+	  Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), _from, _to);
+	  List<ExprHasName> names = List.of(s);
+	  Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+	  addToOverallFact(funcFilteredExpr.forAll(decl));
+  }
+  
+  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from, Expr to) {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+
     Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(),
         addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
   }
+  
+  /**
+   * Example: 
+   * all s: FoodService | bijectionFiltered[happensBefore, s.order, s.serve]
+   * 
+   * @param ownerSig = FoodService
+   * @param var = s
+   * @param from = order
+   * @param to = serve
+   */
+  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(
+	  ExprVar var, Sig ownerSig, Expr from, Expr to) {
+	  
+	  Expr bijectionFilteredExpr = bijectionFiltered.call(
+		  happensBefore.call(), var.join(from), var.join(to));
 
+	  Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	  this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+  }
+
+  /** Returns nonZeroDurationOnly and suppressTransfers and suppressIO
+   * 
+   * @return nonZeroDurationOnly and suppressTransfers and suppressIO
+   */
+  public Expr getCommonCmdExprs() {
+	  Func nonZeroDurationOnlyFunction = 
+		  Helper.getFunction(transferModule, "o/nonZeroDurationOnly");
+	  
+	  Expr nonZeroDurationOnlyFunctionExpression = 
+		  nonZeroDurationOnlyFunction.call();
+
+	  Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+	  Expr suppressTransfersExpessionBody = transfer.no();
+	  Func suppressTransfersFunction = 
+		  new Func(null, "suppressTransfers", null, null, 
+		  suppressTransfersExpessionBody);
+	  
+	  Expr suppressTransfersExpression = suppressTransfersFunction.call();
+
+	  Func inputs = Helper.getFunction(transferModule, "o/inputs");
+	  Func outputs = Helper.getFunction(transferModule, "o/outputs");
+	  Expr suppressIOExpressionBody = inputs.call().no()
+		  .and(outputs.call().no());
+	  
+	  Func suppressIOFunction = 
+		  new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
+	  Expr suppressIOExpression = suppressIOFunction.call();
+	
+	  return nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression)
+	    .and(suppressIOExpression);
+  }
 
   public void addToNameExpr(Expr expr) {
     _nameExpr = _nameExpr.and(expr);
@@ -230,8 +362,15 @@ public class Alloy {
     ExprVar s = ExprVar.make(null, "s", ownerSig.type());
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-    this.addToOverallFact(s.join(ownerSig.domain(field)).cardinality()
+    this.addToOverallFact(s.join(field).cardinality()
         .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
+  }
+  
+  public void addOneConstraintToField(ExprVar var, Sig ownerSig,
+      Sig.Field field) {
+	  Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+	  this.addToOverallFact(var.join(field).cardinality()
+	      .equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
 
   public void addSteps(ExprVar var, Sig ownerSig, /* Map<String, Field> fieldByName, */
@@ -256,6 +395,7 @@ public class Alloy {
       this.addToOverallFact(var.join(ostepsExpr2).in(expr2).forAll(decl2));
   }
 
+<<<<<<< HEAD
   private Expr createStepExpr(ExprVar s, Sig ownerSig,
       /* Map<String, Field> fieldByName*, */ Map<Field, Sig> filedTypeByField) {
     Expr expr = null;
@@ -285,6 +425,7 @@ public class Alloy {
       fields.add(field);
     }
     return fieldsByFieldType;
+
   }
 
 
@@ -388,6 +529,19 @@ public class Alloy {
     Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq,
         _expects, _scope, _additionalExactSig, _formula, _parent);
     return command;
+  }
+  
+  public Command createRunCommand(String label, int overall) {
+	  Pos pos = null;
+	  boolean check = false;
+	  int bitwidth = -1;
+	  int maxseq = -1;
+	  int expects = -1;
+	  Iterable<CommandScope> scope = Arrays.asList(new CommandScope[] {});
+	  Iterable<Sig> additionalExactSig = Arrays.asList(new Sig[] {});
+	  Expr formula = _nameExpr.and(getOverAllFact());
+	  Command parent = null;
+	  return new Command(pos, _nameExpr, label, check, overall, bitwidth, maxseq, expects, scope, additionalExactSig, formula, parent);
   }
 
 }

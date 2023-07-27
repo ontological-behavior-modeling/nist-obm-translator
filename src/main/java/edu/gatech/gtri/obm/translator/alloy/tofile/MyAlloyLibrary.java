@@ -9,10 +9,9 @@ import edu.mit.csail.sdg.parser.CompUtil;
 public class MyAlloyLibrary {
 
 
-  public static CompModule importAlloyModule(File aFile) {
-    // String directory = "C:\\Users\\ashinjo3\\Documents\\Alloy\\obm\\";
-    // String path = directory + filename;
-    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, aFile.getAbsolutePath());
+
+  public static CompModule importAlloyModule(String filename) {
+    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, filename);
   }
 
   public static String removeSlash(String sig) {

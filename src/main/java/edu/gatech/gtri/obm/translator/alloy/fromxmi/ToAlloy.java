@@ -125,12 +125,11 @@ public class ToAlloy {
         mainSig.label.startsWith("this") ? mainSig.label.substring(5) : mainSig.label;
 
     // Run commands
-    Command command = alloy.createCommand(moduleName, 7);
-
-    // solving to find unique solution - not requires to write file
+    Command command = alloy.createCommand(moduleName);
+    Command[] commands = { command };
 
     AlloyModule alloyModule =
-        new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), command);
+        new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
