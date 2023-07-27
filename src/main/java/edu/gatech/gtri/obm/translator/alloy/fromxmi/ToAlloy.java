@@ -125,8 +125,8 @@ public class ToAlloy {
         mainSig.label.startsWith("this") ? mainSig.label.substring(5) : mainSig.label;
 
     // Run commands
-    Command command = alloy.createCommand(moduleName);
-    Command[] commands = { command };
+    Command command = alloy.createCommand(moduleName, 10);
+    Command[] commands = {command};
 
     AlloyModule alloyModule =
         new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);

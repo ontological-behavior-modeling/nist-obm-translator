@@ -10,8 +10,8 @@ public class MyAlloyLibrary {
 
 
 
-  public static CompModule importAlloyModule(String filename) {
-    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, filename);
+  public static CompModule importAlloyModule(File f) {
+    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, f.getAbsolutePath());
   }
 
   public static String removeSlash(String sig) {
