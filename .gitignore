@@ -1,2 +1,5 @@
 /.idea/
 target/
+src/main/resources/alloy4tmp40-mw107/*/*
+src/main/resources/*
+src/test/resources/*
