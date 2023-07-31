@@ -8,10 +8,13 @@ import edu.mit.csail.sdg.parser.CompUtil;
 
 public class MyAlloyLibrary {
 
+  public static CompModule importAlloyModule(String fName) {
+    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, fName);
+  }
 
 
   public static CompModule importAlloyModule(File f) {
-    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, f.getAbsolutePath());
+    return MyAlloyLibrary.importAlloyModule(f.getAbsolutePath());
   }
 
   public static String removeSlash(String sig) {
