@@ -17,17 +17,17 @@ sig Real extends Occurrence {}
 sig OFStart extends Occurrence {}
 sig OFEnd extends Occurrence {}
 sig OFOrder extends Order { orderedFoodItem: one FoodItem }
-sig OFCustomOrder extends OFOrder { orderAmount: one Real, orderDestination: one Location }
+sig OFCustomOrder extends OFOrder { orderDestination: one Location orderAmount: one Real }
 sig OFPrepare extends Prepare { preparedFoodItem: one FoodItem }
 sig OFCustomPrepare extends OFPrepare { prepareDestination: one Location }
 sig OFServe extends Serve { servedFoodItem: one FoodItem }
 sig OFCustomServe extends OFServe { serviceDestination: one Location }
 sig OFEat extends Eat { eatenItem: one FoodItem }
-sig OFPay extends Pay { paidAmount: one Real, paidFoodItem: one FoodItem }
-sig FoodService extends Occurrence { order: set Order, prepare: set Prepare, pay: set Pay, eat: set Eat, serve: set Serve }
-sig OFFoodService extends FoodService { transferPrepareServe: set TransferBefore, transferOrderServe: set TransferBefore, transferServeEat: set TransferBefore }
-sig OFSingleFoodService extends OFFoodService { transferOrderPrepare: set TransferBefore, transferOrderPay: set TransferBefore, transferPayEat: set TransferBefore }
-sig OFLoopFoodService extends OFFoodService { start: one OFStart, end: one OFEnd, transferOrderPrepare: set TransferBefore, transferOrderPay: set TransferBefore, transferPayEat: set TransferBefore }
+sig OFPay extends Pay { paidAmount: one Real paidFoodItem: one FoodItem }
+sig FoodService extends Occurrence { order: set Order pay: set Pay eat: set Eat serve: set Serve prepare: set Prepare }
+sig OFFoodService extends FoodService { disj transferPrepareServe, transferOrderServe, transferServeEat: set TransferBefore }
+sig OFSingleFoodService extends OFFoodService { disj transferOrderPrepare, transferOrderPay, transferPayEat: set TransferBefore }
+sig OFLoopFoodService extends OFFoodService { end: one OFEnd start: one OFStart disj transferOrderPrepare, transferOrderPay, transferPayEat: set TransferBefore }
 sig OFParallelFoodService extends OFFoodService {}
 
 // Facts:

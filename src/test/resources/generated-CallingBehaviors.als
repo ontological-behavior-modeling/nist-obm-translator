@@ -17,7 +17,7 @@ sig NestedBehavior extends Occurrence { p4: set P4, p5: set P5 }
 	p4 + p5 in this.steps
 	this.steps in p4 + p5
 }
-sig ComposedBehavior extends Occurrence { p1: set P1, p2: set NestedBehavior, p3: set P3 }
+sig ComposedBehavior extends Occurrence { p2: set NestedBehavior, p1: set P1, p3: set P3 }
 {
 	bijectionFiltered[happensBefore, p1, p2]
 	bijectionFiltered[happensBefore, p2, p3]

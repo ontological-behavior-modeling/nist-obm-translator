@@ -2,6 +2,7 @@ package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -275,19 +276,24 @@ public class ExprVisitor extends VisitQuery<String> {
         }
         String fields = "";
         StringBuilder sbb = new StringBuilder();
-        for (String type : fieldByType.keySet()) {
+
+        List<String> sortedType = new ArrayList<>(fieldByType.keySet());
+        Collections.sort(sortedType);
+        for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
 
           if (fs.size() == 1) {
-            fields = sbb.append(' ').append(MyAlloyLibrary.removeSlash(fs.get(0).label))
-                .append(": ").append(type).toString();
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+                .append(MyAlloyLibrary.removeSlash(fs.get(0).label)).append(": ").append(type)
+                .toString();
           } else { // have to be > 1
             sbb.append(" disj ");
             String[] labels = new String[fs.size()];
             for (int i = 0; i < fs.size(); i++) {
               labels[i] = MyAlloyLibrary.removeSlash(fs.get(i).label);
             }
-            fields = sbb.append(String.join(", ", labels)).append(": ").append(type).toString();
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+                .append(String.join(" , ", labels)).append(": ").append(type).toString();
           }
         }
 
