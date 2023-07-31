@@ -2,6 +2,7 @@ package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
@@ -52,8 +53,12 @@ public class ToAlloy {
     return alloy.getOverAllFact();
   }
 
+  public List<Sig> getAllSigs() {
+    return alloy.getAllSigs();
+  }
 
   public Map<String, Sig> getSigMap() {
+
     return sigByName;
   }
 

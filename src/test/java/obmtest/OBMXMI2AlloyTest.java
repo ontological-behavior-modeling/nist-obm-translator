@@ -39,6 +39,9 @@ class OBMXMI2AlloyTest {
   // })
   void sameAbstractSyntaxTreeTestAndSignatures(String fileName, String className)
       throws FileNotFoundException, UMLModelErrorException {
+    // PrintStream o = new PrintStream(new File("error.txt"));
+    // // PrintStream console = System.out;
+    // System.setErr(o);
 
     // System.setProperty(("java.io.tmpdir"),
     // "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");// find
@@ -55,7 +58,10 @@ class OBMXMI2AlloyTest {
     System.out.println(xmiFile.exists());
     test.createAlloyFile(xmiFile, className);
 
-    File testFile = new File(OBMXMI2AlloyTest.class.getResource("/" + fileName).getFile());
+    // File testFile = new File(OBMXMI2AlloyTest.class.getResource("/" + fileName).getFile());
+    File testFile = new File(
+        "C:\\Users\\mw107\\Documents\\Projects\\NIST OBM\\info\\obm-alloy-code_2023-05-26\\obm\\"
+            + fileName);
 
     // ========== Create Alloy model from Alloy file ==========
     CompModule importedModule = MyAlloyLibrary.importAlloyModule(testFile);
@@ -68,13 +74,16 @@ class OBMXMI2AlloyTest {
     Expr sysmlAbstractSyntaxTree = test.getOverallFacts();
     Expr alloyFileAbstractSyntaxTree = importedModule.getAllReachableFacts();
 
+    System.out.println(sysmlAbstractSyntaxTree);
+    System.out.println(alloyFileAbstractSyntaxTree);
+
     assertTrue(ec.compareTwoExpressions(sysmlAbstractSyntaxTree, alloyFileAbstractSyntaxTree));
 
     // ========== Set up signatures ==========
 
     List<Sig> alloyFileSignatures = importedModule.getAllReachableUserDefinedSigs();
 
-    Map<String, Sig> sysmlSigMap = test.getSigMap();
+    Map<String, Sig> sysmlSigMap = test.getAllReachableUserDefinedSigs();
     Map<String, Sig> alloyFileSigMap = new HashMap<>();
 
     for (Sig sig : alloyFileSignatures) {
@@ -82,15 +91,25 @@ class OBMXMI2AlloyTest {
     }
 
     // ========== Compare the number of signatures ==========
-
     assertTrue(sysmlSigMap.size() == alloyFileSigMap.size());
+
+    System.out.println(alloyFileSigMap);
+    System.out.println(sysmlSigMap);
 
     // ========== Compare each signature ==========
 
     for (String sigName : sysmlSigMap.keySet()) {
-      assertTrue(sysmlSigMap.containsKey(sigName));
-      assertTrue(ec.compareTwoExpressions(alloyFileSigMap.get(sigName), sysmlSigMap.get(sigName)));
+      System.out.println(alloyFileSigMap.get(sigName));
+      System.out.println(sysmlSigMap.get(sigName));
+      Sig alloyFileSig = alloyFileSigMap.get(sigName);
+      Sig sysmlSig = sysmlSigMap.get(sigName);
+      if (alloyFileSig == null)
+        alloyFileSig = alloyFileSigMap.get("this/" + sigName);// this/BehaviorFork
+
+      System.out.println(alloyFileSig);
+      assertTrue(ec.compareTwoExpressions(alloyFileSig, sysmlSig));
     }
   }
+
 
 }

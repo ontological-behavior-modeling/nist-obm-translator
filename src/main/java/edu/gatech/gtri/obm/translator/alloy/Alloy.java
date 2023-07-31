@@ -367,7 +367,7 @@ public class Alloy {
   }
 
   public void addSteps(ExprVar var, Sig ownerSig, /* Map<String, Field> fieldByName, */
-      Map<Field, Sig> filedTypeByField) {
+      Map<Field, Sig> fieldTypeByField) {
 
     // steps
     Func osteps = Helper.getFunction(transferModule, "o/steps");
@@ -376,14 +376,14 @@ public class Alloy {
 
 
     Decl decl1 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr1 = createStepExpr(var, ownerSig, filedTypeByField);
+    Expr expr1 = createStepExpr(var, ownerSig, fieldTypeByField);
     if (expr1 != null)
       addToOverallFact((expr1).in(var.join(ostepsExpr1)).forAll(decl1));
 
 
 
     Decl decl2 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr2 = createStepExpr(var, ownerSig, filedTypeByField);
+    Expr expr2 = createStepExpr(var, ownerSig, fieldTypeByField);
     if (expr2 != null)
       this.addToOverallFact(var.join(ostepsExpr2).in(expr2).forAll(decl2));
   }

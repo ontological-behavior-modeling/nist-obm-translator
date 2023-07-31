@@ -2,11 +2,11 @@ package edu.gatech.gtri.obm.translator.alloy.tofile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
-
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -23,331 +23,373 @@ import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
 
 public class ExprVisitor extends VisitQuery<String> {
-	
-	private final Set<Expr> ignoredExprs;
-	public boolean isRootSig = false;
-	private boolean isRootExprList = true;
-	private boolean fieldAfterSig = false;
-	private boolean isImplicitFact = false;
-	private boolean isSigFact = false;
-	private int factNumber = 1;
-	
-	public ExprVisitor(Set<Expr> ignoredExprs) {
-		this.ignoredExprs = ignoredExprs;
-	}
-		
-	@Override
-    public String visit(ExprBinary x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-		StringBuilder sb = new StringBuilder();
-    	
-		if(x.op == ExprBinary.Op.JOIN) {
-			String left = x.left.accept(this);
-			String right = x.right.accept(this);
-			
-			if(left.equals("this") && x.right instanceof Sig.Field) {
-				return right;
-			}
-			
-			
-			return sb.append(left).append(x.op.toString()).append(right).toString();
-		}
-		
-		String op = x.op.toString();
-		
-		if(x.op == ExprBinary.Op.NOT_IN) {
-			op = "not in";
-		}
-		
-    	return sb.append(x.left.accept(this)).append(' ').append(op).append(' ').append(x.right.accept(this)).toString();
-    }
-	
-	@Override
-	public String visit(ExprCall x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-		String funcName = MyAlloyLibrary.removeSlash(x.fun.label);
-		String[] args = new String[x.args.size()];
-		
-		for(int i = 0; i < x.args.size(); i++) {
-			args[i] = x.args.get(i).accept(this);
-		}
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append(funcName);
-		
-		if(!x.args.isEmpty()) {
-			sb.append('[').append(String.join(", ", args)).append(']');
-		}
-		
-		return sb.toString();
-	}
-	
-	@Override
-    public String visit(ExprConstant x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-        return x.toString();
-    }
-	
-	@Override
-    public String visit(ExprList x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-				
-		if(isRootExprList || isSigFact) {
-			
-			isRootExprList = false;
-			StringBuilder sb = new StringBuilder();
-	        for (Expr y : x.args) {
-	        	
-	        	if(ignoredExprs.contains(y)) {
-	        		continue;
-	        	}
-	        	
-	        	String fact = y.accept(this);
-	        	
-	        	if(!isImplicitFact) {
-        			sb.append("fact f").append(factNumber++).append(" {")
-        			  .append(fact).append('}').append('\n');	        		
-	        	}
-	        	else if(isImplicitFact) {
-	        		sb.append('\t').append(fact).append('\n');
-	        	}
-	        	
-	        }  
 
-	        return sb.toString();
-		}
-		
-		String[] args = new String[x.args.size()];
-		for(int i = 0; i < x.args.size(); i++) {
-			args[i] = x.args.get(i).accept(this);
-		}
-		
-		StringBuilder op = new StringBuilder();
-		op.append(' ').append(x.op.toString().toLowerCase()).append(' ');
-		
-		// Remove empty strings from array
-		args = Arrays.stream(args).filter(Predicate.isEqual("").negate()).toArray(String[]::new);
-		return String.join(op, args);
+  private final Set<Expr> ignoredExprs;
+  public boolean isRootSig = false;
+  private boolean isRootExprList = true;
+  private boolean fieldAfterSig = false;
+  private boolean isImplicitFact = false;
+  private boolean isSigFact = false;
+  private int factNumber = 1;
+
+  public ExprVisitor(Set<Expr> ignoredExprs) {
+    this.ignoredExprs = ignoredExprs;
+  }
+
+  @Override
+  public String visit(ExprBinary x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
     }
-	
-	@Override
-    public String visit(ExprQt x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-		String op = x.op.toString();
-		String names = "";
-		String sigType = "";
-		String sub = x.sub.accept(this);
-				
-		for(Decl decl : x.decls) {
-			names = getNamesFromDecl(decl);
-			String text = decl.expr.accept(this);
-			sigType = text.contains(" ") ? text.substring(text.indexOf(" ") + 1) : text;
-		}		
-		   	    	
-		StringBuilder sb = new StringBuilder();
-        return sb.append(op).append(' ').append(names).append(": ").append(MyAlloyLibrary.removeSlash(sigType)).append(" | ").append(sub).toString();
+
+    isRootSig = false;
+
+    StringBuilder sb = new StringBuilder();
+
+    if (x.op == ExprBinary.Op.JOIN) {
+      String left = x.left.accept(this);
+      String right = x.right.accept(this);
+
+      if (left.equals("this") && x.right instanceof Sig.Field) {
+        return right;
+      }
+
+
+      return sb.append(left).append(x.op.toString()).append(right).toString();
     }
-	
-	@Override
-    public String visit(ExprUnary x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-    	if(x.op == ExprUnary.Op.NOOP) {
-    		return visitThis(x.deNOP());
-    	}
-    	
-    	StringBuilder sb = new StringBuilder();
-		String out = x.sub.accept(this);
-		
-		if(x.sub instanceof ExprBinary) {
-			out = "(" + out + ")";
-		}
-		
-		if(x.op == ExprUnary.Op.CARDINALITY) {
-        	out = "#" + out;
-    	}
-		else if(x.op == ExprUnary.Op.SETOF) {
-    		out = "set " + out;
-    	}
-		else if(x.op == ExprUnary.Op.NOT) {
-    		out = "not " + out;
-    	}
-		else if(x.op == ExprUnary.Op.NO) {
-    		out = "no " + out;
-    	}
-		else if(x.op == ExprUnary.Op.CLOSURE) {
-    		out = sb.append('^').append(out).toString();
-    	}
-		else if(x.op == ExprUnary.Op.ONE || x.op == ExprUnary.Op.ONEOF) {
-    		out = "one " + out;
-    	}
-		else if(x.op == ExprUnary.Op.TRANSPOSE) {
-    		out = "~" + out;
-    	}
-    	
-    	return out;
+
+    String op = x.op.toString();
+
+    if (x.op == ExprBinary.Op.NOT_IN) {
+      op = "not in";
     }
-	
-	 @Override
-    public String visit(ExprVar x) throws Err {
-		 isRootSig = false;
-		 return ignoredExprs.contains(x) ? "" : x.label;
+
+    return sb.append(x.left.accept(this)).append(' ').append(op).append(' ')
+        .append(x.right.accept(this)).toString();
+  }
+
+  @Override
+  public String visit(ExprCall x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
     }
-	 
-	@Override
-	public String visit(Sig x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-				
-		if(isRootSig) {
-			
-			StringBuilder sb = new StringBuilder();
-			isRootSig = false;
-			
-			if(x.isOne != null) {
-				sb.append("one ");
-			}
-			else if(x.isLone != null) {
-				sb.append("lone ");
-			}
-			else if(x.isSome != null) {
-				sb.append("some ");
-			}
-			
-			if(x.isAbstract != null) {
-				sb.append("abstract ");
-			}
-			
-			sb.append("sig ").append(MyAlloyLibrary.removeSlash(x.label));
-			
-			if(x instanceof Sig.PrimSig) {
-				Sig.PrimSig ps = (Sig.PrimSig) x;
-				if(ps.parent != null) {
-					sb.append(" extends ");
-					sb.append(MyAlloyLibrary.removeSlash(ps.parent.label));
-				}
-			}
-			
-			// ========== Start: fields inside signature ==========
-			
-			sb.append(" {");
-			
-			int numberOfFields = x.getFields().size();
-			
-			if(numberOfFields > 0) {
-				
-				String[] fields = new String[numberOfFields];
-				fieldAfterSig = true;
-				
-				// Produce strings for each field
-				for(int i = 0; i < numberOfFields; i++) {
-					Sig.Field field = x.getFields().get(i);
-					fields[i] = field.accept(this);
-				}
-								
-				sb.append(String.join(",", fields)).append(' ');
-			}
-			
-			sb.append("}\n");
-			fieldAfterSig = false;
-			
-			// ========== End: signature fields ==========
-			
-			// ========== Start: implicit facts ==========
-			
-			int numberOfImplicitFacts = x.getFacts().size();
-			
-			if(numberOfImplicitFacts > 0) {
-								
-				String[] facts = new String[numberOfImplicitFacts];
-				
-				isImplicitFact = true;
-				isSigFact = true;
-				
-				for(int i = 0; i < numberOfImplicitFacts; i++) {
-					Expr fact = x.getFacts().get(i);
-					facts[i] = fact.accept(this); 
-				}
-				
-				isImplicitFact = false;
-				isSigFact = false;
-								
-				sb.append("{\n").append(String.join(" ", facts))
-				.append('}').append('\n');
-			}
-			
-			// ========== End: implicit facts ==========
-						
-			return sb.toString();
-		}
-		
-		return MyAlloyLibrary.removeSlash(x.label);
-	}
-	 
-	@Override
-    public String visit(Field x) throws Err {
-		
-		if(ignoredExprs.contains(x)) {
-    		return "";
-    	}
-		
-		isRootSig = false;
-		
-		if(fieldAfterSig) {
-			StringBuilder sb = new StringBuilder();
-			String output = sb.append(' ').append(MyAlloyLibrary.removeSlash(x.label))
-				.append(": ").append(x.decl().expr.accept(this)).toString();
-			return output;
-		}
-		
-    	return x.label; 
+
+    isRootSig = false;
+
+    String funcName = MyAlloyLibrary.removeSlash(x.fun.label);
+    String[] args = new String[x.args.size()];
+
+    for (int i = 0; i < x.args.size(); i++) {
+      args[i] = x.args.get(i).accept(this);
     }
-	 
-	 private String getNamesFromDecl(Decl decl) {
-		 
-		 isRootSig = false;
-		 
-		 List<String> names = new ArrayList<>();
-		 for(ExprHasName name : decl.names) {
-			 names.add(name.accept(this));
-		 }
-		 
-		 return String.join(",", names.toArray(new String[names.size()]));
-	 }
+
+    StringBuilder sb = new StringBuilder();
+    sb.append(funcName);
+
+    if (!x.args.isEmpty()) {
+      sb.append('[').append(String.join(", ", args)).append(']');
+    }
+
+    return sb.toString();
+  }
+
+  @Override
+  public String visit(ExprConstant x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    isRootSig = false;
+
+    return x.toString();
+  }
+
+  @Override
+  public String visit(ExprList x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    isRootSig = false;
+
+    if (isRootExprList || isSigFact) {
+
+      isRootExprList = false;
+      StringBuilder sb = new StringBuilder();
+      for (Expr y : x.args) {
+
+        if (ignoredExprs.contains(y)) {
+          continue;
+        }
+
+        String fact = y.accept(this);
+
+        if (!isImplicitFact) {
+          sb.append("fact f").append(factNumber++).append(" {").append(fact).append('}')
+              .append('\n');
+        } else if (isImplicitFact) {
+          sb.append('\t').append(fact).append('\n');
+        }
+
+      }
+
+      return sb.toString();
+    }
+
+    String[] args = new String[x.args.size()];
+    for (int i = 0; i < x.args.size(); i++) {
+      args[i] = x.args.get(i).accept(this);
+    }
+
+    StringBuilder op = new StringBuilder();
+    op.append(' ').append(x.op.toString().toLowerCase()).append(' ');
+
+    // Remove empty strings from array
+    args = Arrays.stream(args).filter(Predicate.isEqual("").negate()).toArray(String[]::new);
+    return String.join(op, args);
+  }
+
+  @Override
+  public String visit(ExprQt x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    isRootSig = false;
+
+    String op = x.op.toString();
+    String names = "";
+    String sigType = "";
+    String sub = x.sub.accept(this);
+
+    for (Decl decl : x.decls) {
+      names = getNamesFromDecl(decl);
+      String text = decl.expr.accept(this);
+      sigType = text.contains(" ") ? text.substring(text.indexOf(" ") + 1) : text;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    return sb.append(op).append(' ').append(names).append(": ")
+        .append(MyAlloyLibrary.removeSlash(sigType)).append(" | ").append(sub).toString();
+  }
+
+  @Override
+  public String visit(ExprUnary x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    isRootSig = false;
+
+    if (x.op == ExprUnary.Op.NOOP) {
+      return visitThis(x.deNOP());
+    }
+
+    StringBuilder sb = new StringBuilder();
+    String out = x.sub.accept(this);
+
+    if (x.sub instanceof ExprBinary) {
+      out = "(" + out + ")";
+    }
+
+    if (x.op == ExprUnary.Op.CARDINALITY) {
+      out = "#" + out;
+    } else if (x.op == ExprUnary.Op.SETOF) {
+      out = "set " + out;
+    } else if (x.op == ExprUnary.Op.NOT) {
+      out = "not " + out;
+    } else if (x.op == ExprUnary.Op.NO) {
+      out = "no " + out;
+    } else if (x.op == ExprUnary.Op.CLOSURE) {
+      out = sb.append('^').append(out).toString();
+    } else if (x.op == ExprUnary.Op.ONE || x.op == ExprUnary.Op.ONEOF) {
+      out = "one " + out;
+    } else if (x.op == ExprUnary.Op.TRANSPOSE) {
+      out = "~" + out;
+    }
+
+    return out;
+  }
+
+  @Override
+  public String visit(ExprVar x) throws Err {
+    isRootSig = false;
+    return ignoredExprs.contains(x) ? "" : x.label;
+  }
+
+  @Override
+  public String visit(Sig x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    if (isRootSig) {
+
+      StringBuilder sb = new StringBuilder();
+      isRootSig = false;
+
+      if (x.isOne != null) {
+        sb.append("one ");
+      } else if (x.isLone != null) {
+        sb.append("lone ");
+      } else if (x.isSome != null) {
+        sb.append("some ");
+      }
+
+      if (x.isAbstract != null) {
+        sb.append("abstract ");
+      }
+
+      sb.append("sig ").append(MyAlloyLibrary.removeSlash(x.label));
+
+      if (x instanceof Sig.PrimSig) {
+        Sig.PrimSig ps = (Sig.PrimSig) x;
+        if (ps.parent != null) {
+          sb.append(" extends ");
+          sb.append(MyAlloyLibrary.removeSlash(ps.parent.label));
+        }
+      }
+
+      // ========== Start: fields inside signature ==========
+
+      sb.append(" {");
+
+      int numberOfFields = x.getFields().size();
+
+      if (numberOfFields > 0) {
+
+        // String[] fields = new String[numberOfFields];
+        fieldAfterSig = true;
+
+
+        Map<String, List<Sig.Field>> fieldByType = new HashMap<>(); // x.decl().expr.accept(this)
+        for (Sig.Field f : x.getFields()) {
+          fieldByType = sortFields(f, fieldByType);
+        }
+        String fields = "";
+        StringBuilder sbb = new StringBuilder();
+        for (String type : fieldByType.keySet()) {
+          List<Sig.Field> fs = fieldByType.get(type);
+
+          if (fs.size() == 1) {
+            fields = sbb.append(' ').append(MyAlloyLibrary.removeSlash(fs.get(0).label))
+                .append(": ").append(type).toString();
+          } else { // have to be > 1
+            sbb.append(" disj ");
+            String[] labels = new String[fs.size()];
+            for (int i = 0; i < fs.size(); i++) {
+              labels[i] = MyAlloyLibrary.removeSlash(fs.get(i).label);
+            }
+            fields = sbb.append(String.join(", ", labels)).append(": ").append(type).toString();
+          }
+        }
+
+
+        // // Produce strings for each field
+        // for (int i = 0; i < numberOfFields; i++) {
+        // Sig.Field field = x.getFields().get(i);
+        // fields[i] = field.accept(this);
+        //
+        // }
+        // sb.append(String.join(",", fields)).append(' ');
+        sb.append(fields).append(' ');
+      }
+
+      sb.append("}\n");
+      fieldAfterSig = false;
+
+      // ========== End: signature fields ==========
+
+      // ========== Start: implicit facts ==========
+
+      int numberOfImplicitFacts = x.getFacts().size();
+
+      if (numberOfImplicitFacts > 0) {
+
+        String[] facts = new String[numberOfImplicitFacts];
+
+        isImplicitFact = true;
+        isSigFact = true;
+
+        for (int i = 0; i < numberOfImplicitFacts; i++) {
+          Expr fact = x.getFacts().get(i);
+          facts[i] = fact.accept(this);
+        }
+
+        isImplicitFact = false;
+        isSigFact = false;
+
+        sb.append("{\n").append(String.join(" ", facts)).append('}').append('\n');
+      }
+
+      // ========== End: implicit facts ==========
+
+      return sb.toString();
+    }
+
+    return MyAlloyLibrary.removeSlash(x.label);
+  }
+
+  public Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return map;
+    }
+
+    isRootSig = false;
+
+    if (fieldAfterSig) {
+      String type = x.decl().expr.accept(this);
+      List<Field> fs = null;
+      if (map.containsKey(type))
+        fs = map.get(type);
+      else {
+        fs = new ArrayList<>();
+        map.put(type, fs);
+      }
+      fs.add(x);
+    }
+
+    return map;
+  }
+
+
+  @Override
+  public String visit(Field x) throws Err {
+
+    if (ignoredExprs.contains(x)) {
+      return "";
+    }
+
+    isRootSig = false;
+
+    if (fieldAfterSig) {
+
+      StringBuilder sb = new StringBuilder();
+      String output = sb.append(' ').append(MyAlloyLibrary.removeSlash(x.label)).append(": ")
+          .append(x.decl().expr.accept(this)).toString();
+      return output;
+    }
+
+    return x.label;
+  }
+
+  private String getNamesFromDecl(Decl decl) {
+
+    isRootSig = false;
+
+    List<String> names = new ArrayList<>();
+    for (ExprHasName name : decl.names) {
+      names.add(name.accept(this));
+    }
+
+    return String.join(",", names.toArray(new String[names.size()]));
+  }
 }

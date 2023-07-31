@@ -46,7 +46,10 @@ public class OBMXMI2Alloy {
     System.setProperty(("java.io.tmpdir"),
         "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");
     OBMXMI2Alloy test = new OBMXMI2Alloy();
-    File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
+
+    File xmiFile = new File(
+        "C:/Users/mw107/Documents/Projects/NIST OBM/GIT/NIST-OBM-Translator.git/develop_mw/src/main/resources/OBMModel_MW.xmi");
+    // File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
 
     String className = "Model::Basic::BehaviorFork";
     // String className = "Model::Basic::BehaviorJoin";
@@ -63,14 +66,25 @@ public class OBMXMI2Alloy {
     return toAlloy.getOverallFacts();
   }
 
-  public Map<String, Sig> getSigMap() {
-    return toAlloy.getSigMap();
+  // public List<Sig> getAllSigs() {
+  // return toAlloy.getAllSigs();
+  // }
+
+  public Map<String, Sig> getAllReachableUserDefinedSigs() {
+    Map<String, Sig> all = toAlloy.getSigMap();
+    for (Sig sig : toAlloy.getAllSigs()) {
+      all.put(sig.label, sig);
+    }
+
+    return all;
   }
+
+  // public Map<String, Sig> getSigMap() {
+  // return toAlloy.getSigMap();
+  // }
 
   public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy();
-
-
   }
 
   public void createAlloyFile(File xmiFile, String className)
