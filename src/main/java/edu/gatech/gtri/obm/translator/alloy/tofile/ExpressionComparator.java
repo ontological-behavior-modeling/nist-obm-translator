@@ -731,23 +731,32 @@ public class ExpressionComparator {
         Expr expr2deNOP = expr2.args.get(j).deNOP();
         if (usedExpr2s.contains(expr2deNOP)) // already the expr2 is matched with previous expr1
           continue;
+
+
+
         System.out.println("expr2deNOPis? " + expr2deNOP + " " + expr2deNOP.getClass());
         // if (compareExpr(expr1.args.get(i), expr2.args.get(j))) {
         if (expr1deNOP.getClass() != expr2deNOP.getClass()) {
           continue;
-        } else if (compareExpr(expr1deNOP, expr2deNOP)) {
+        } else if (compareAsString(expr1deNOP, expr2deNOP)) {
           usedExpr2s.add(expr2deNOP);
           found = true;
-          System.out.println("Yes");
+          System.out.println("!!!!!!!!!Yes by string comparison");
           break;
-        }
-        if (!found) {
-          System.out.println("check sigField.....");
 
+          // } else if (compareExpr(expr1deNOP, expr2deNOP)) {
+          // usedExpr2s.add(expr2deNOP);
+          // found = true;
+          // System.out.println("!!!!!!!!!!!!!Yes");
+          // break;
         }
+        // if (!found) {
+        // System.out.println("check sigField.....");
+        //
+        // }
       }
       if (!found) {
-        System.out.println("No");
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!No");
         // if(!compareExpr(expr1.args.get(i), expr2.args.get(i))) {
         System.err.println("compareExprList: " + "expr1.args != expr2.args for i = " + i);
         System.err.println("expr1.args: " + expr1.args.get(i));
@@ -760,6 +769,21 @@ public class ExpressionComparator {
 
     return true;
   }
+
+  private boolean compareAsString(Expr expr1, Expr expr2) {
+    String s1 = expr1.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
+    String s2 = expr2.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
+    if (s1.equals(s2))
+      return true;
+    else {
+      // o/r/acyclic[o/items, o/Transfer]
+      // r/acyclic[o/items, o/Transfer]
+      System.out.println(s1);
+      System.out.println(s2);
+      return false;
+    }
+  }
+
 
   private boolean compareExprQt(ExprQt expr1, ExprQt expr2) {
 
