@@ -3,8 +3,10 @@ package edu.gatech.gtri.obm.translator.alloy;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,9 +55,9 @@ public class Alloy {
 
   public Alloy() {
 
-    File tFile = new File(Alloy.class.getResource("/Transfer.als").getFile());
-    System.out.println(tFile.getAbsolutePath());
-    // System.setProperty(("java.io.tmpdir"), tFile.getParent());// find
+    System.setProperty(("java.io.tmpdir"), "src/test/resources");
+    File tFile = new File("src/test/resources/Transfer.als");
+
 
 
     A4Reporter rep = new A4Reporter();
@@ -94,25 +96,26 @@ public class Alloy {
     inverseFunctionFiltered = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
 
 
-    // constraints
-    Func nonZeroDurationOnlyFunction = Helper.getFunction(transferModule, "o/nonZeroDurationOnly");
-    Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
-
-    Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
-    Expr suppressTransfersExpessionBody = transfer.no();
-    Func suppressTransfersFunction =
-        new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
-    Expr suppressTransfersExpression = suppressTransfersFunction.call();
-
-    Func inputs = Helper.getFunction(transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(transferModule, "o/outputs");
-    Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
-    Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
-    Expr suppressIOExpression = suppressIOFunction.call();
-
-
-    _nameExpr = nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression)
-        .and(suppressIOExpression);
+    // // constraints
+    // Func nonZeroDurationOnlyFunction = Helper.getFunction(transferModule,
+    // "o/nonZeroDurationOnly");
+    // Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
+    //
+    // Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+    // Expr suppressTransfersExpessionBody = transfer.no();
+    // Func suppressTransfersFunction =
+    // new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
+    // Expr suppressTransfersExpression = suppressTransfersFunction.call();
+    //
+    // Func inputs = Helper.getFunction(transferModule, "o/inputs");
+    // Func outputs = Helper.getFunction(transferModule, "o/outputs");
+    // Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
+    // Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
+    // Expr suppressIOExpression = suppressIOFunction.call();
+    //
+    //
+    // _nameExpr = nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression)
+    // .and(suppressIOExpression);
   }
 
 
@@ -367,7 +370,7 @@ public class Alloy {
   }
 
   public void addSteps(ExprVar var, Sig ownerSig, /* Map<String, Field> fieldByName, */
-      Map<Field, Sig> fieldTypeByField) {
+      LinkedHashMap<Field, Sig> fieldTypeByField) {
 
     // steps
     Func osteps = Helper.getFunction(transferModule, "o/steps");
@@ -389,18 +392,21 @@ public class Alloy {
   }
 
 
-  private Expr createStepExpr(ExprVar s, Sig ownerSig,
-      /* Map<String, Field> fieldByName*, */ Map<Field, Sig> filedTypeByField) {
+  private Expr createStepExpr(ExprVar s, Sig ownerSig, Map<Field, Sig> filedTypeByField) {
     Expr expr = null;
-    // for (Iterator<String> iter = fieldByName.keySet().iterator(); iter.hasNext();) {
-    // String fieldName = iter.next();
-    // Sig.Field field = fieldByName.get(fieldName);
+    List<String> sortedFieldLabel = new ArrayList<>();
     for (Field field : filedTypeByField.keySet()) {
+      sortedFieldLabel.add(field.label);
+    }
+    Collections.sort(sortedFieldLabel);
+
+    for (String fieldName : sortedFieldLabel) {
+      Field field =
+          filedTypeByField.keySet().stream().filter(f -> (f.label == fieldName)).findFirst().get();
       if (field.sig == ownerSig)
         expr = expr == null ? s.join(ownerSig.domain(field))
             : expr.plus(s.join(ownerSig.domain(field)));
     }
-
     return expr;
   }
 
@@ -514,7 +520,7 @@ public class Alloy {
     int _expects = -1;
     Iterable<CommandScope> _scope = Arrays.asList(new CommandScope[] {});
     Iterable<Sig> _additionalExactSig = Arrays.asList(new Sig[] {});
-    Expr _formula = _nameExpr.and(getOverAllFact());
+    Expr _formula = getOverAllFact(); // _nameExpr.and(getOverAllFact());
     Command _parent = null;
 
     // ========== Define command ==========

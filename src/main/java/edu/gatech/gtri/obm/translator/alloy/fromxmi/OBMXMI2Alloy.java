@@ -3,6 +3,7 @@ package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +44,13 @@ public class OBMXMI2Alloy {
 
     // using C:\Users\mw107\AppData\Local\Temp\Transfer.als
     // System.setProperty(("java.io.tmpdir"), System.getProperty("user.dir"));
-    System.setProperty(("java.io.tmpdir"),
-        "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");
+    System.setProperty(("java.io.tmpdir"), "src/test/resources");
     OBMXMI2Alloy test = new OBMXMI2Alloy();
 
-    File xmiFile = new File(
-        "C:/Users/mw107/Documents/Projects/NIST OBM/GIT/NIST-OBM-Translator.git/develop_mw/src/main/resources/OBMModel_MW.xmi");
+    File xmiFile = new File("src/test/resources/OBMModel.xmi");
     // File xmiFile = new File(OBMXMI2Alloy.class.getResource("/OBMModel_MW.xmi").getFile());
 
-    String className = "Model::Basic::BehaviorFork";
+    // String className = "Model::Basic::BehaviorFork";
     // String className = "Model::Basic::BehaviorJoin";
     // String className = "Model::Basic::ControlFlowBehavior";
     // String className = "Model::Basic::BehaviorDecision";
@@ -59,6 +58,7 @@ public class OBMXMI2Alloy {
     // String className = "Model::Basic::ComplexBehavior";
     // String className = "Model::Basic::ComplexBehavior_MW";
     // String className = "Model::Basic::ComposedBehavior";
+    String className = "Model::Basic::UnsatisfiableComposition2";
     test.createAlloyFile(xmiFile, className);
   }
 
@@ -109,6 +109,7 @@ public class OBMXMI2Alloy {
       List<Property> ps = null;
       if ((ps = propertiesByTheirType.get(eType)) == null) {
         ps = new ArrayList<>();
+        System.out.println(p.getName() + " " + eType);
         propertiesByTheirType.put((org.eclipse.uml2.uml.Class) eType, ps);
       }
       propertiesByTheirType.get(eType).add(p);
@@ -160,13 +161,16 @@ public class OBMXMI2Alloy {
       Map<org.eclipse.uml2.uml.Class, List<Property>> propertiesByType = propertiesByClass.get(c);
       for (org.eclipse.uml2.uml.Class propertyType : propertiesByType.keySet()) {
         List<Property> ps = propertiesByType.get(propertyType);
-        String[] fsa = new String[ps.size()];
+        List<String> fsa = new ArrayList<>();
         int i = 0;
         for (Property p : ps) {
-          fsa[i] = p.getName();
+          fsa.add(p.getName());
           ge.addNode(p.getName());
           i++;
         }
+
+        Collections.sort(fsa);
+
         Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, propertyType.getName(), c.getName());
         i = 0;
         for (Property p : ps) {
