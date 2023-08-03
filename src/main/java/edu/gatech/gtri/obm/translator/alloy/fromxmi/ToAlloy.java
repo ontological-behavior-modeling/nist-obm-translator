@@ -2,6 +2,7 @@ package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class ToAlloy {
   // private Map<String, Sig> fieldTypeByFieldName; // used for pred p1DuringExample {
   // AtomicBehavior
   // in BehaviorFork.p1 }
-  private Map<Field, Sig> filedTypeByField;
+  private LinkedHashMap<Field, Sig> filedTypeByField;
 
   private Sig mainSig;
 
@@ -33,7 +34,7 @@ public class ToAlloy {
     // fieldByName = new HashMap<>(); // assume field names are unique
     // among all sigs
     // fieldTypeByFieldName = new HashMap<>(); // assume field names are unique for one file
-    filedTypeByField = new HashMap<>();
+    filedTypeByField = new LinkedHashMap<>();
   }
 
 
@@ -79,8 +80,18 @@ public class ToAlloy {
     return p1;
   }
 
-  public Sig.Field[] addDisjAlloyFields(String[] fieldNames, String typeSigName,
+  public String[] toArray(List<String> o) {
+    String[] r = new String[o.size()];
+    int i = 0;
+    for (String s : o) {
+      r[i++] = s;
+    }
+    return r;
+  }
+
+  public Sig.Field[] addDisjAlloyFields(List<String> fieldNamesList, String typeSigName,
       String ownerSigName) {
+    String[] fieldNames = toArray(fieldNamesList);
     Sig.Field[] ps = FuncUtils.addTrickyField(fieldNames, sigByName.get(ownerSigName),
         sigByName.get(typeSigName));
     for (int i = 0; i < fieldNames.length; i++) {
@@ -118,9 +129,9 @@ public class ToAlloy {
     for (Sig sig : sigByName.values()) {
       ExprVar s = ExprVar.make(null, "s", sig.type());
       alloy.addSteps(s, sig, filedTypeByField);
-      alloy.addConstraint(sig, filedTypeByField);
+      // alloy.addConstraint(sig, filedTypeByField);
     }
-    alloy.addOnlyConstraint(mainSig);
+    // alloy.addOnlyConstraint(mainSig);
   }
 
 
