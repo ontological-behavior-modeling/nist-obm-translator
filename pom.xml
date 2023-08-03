@@ -24,6 +24,14 @@
       <version>5.9.2</version>
       <scope>test</scope>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params -->
+	<dependency>
+	    <groupId>org.junit.jupiter</groupId>
+	    <artifactId>junit-jupiter-params</artifactId>
+	    <version>5.9.2</version>
+	    <scope>test</scope>
+	</dependency>
+
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
@@ -52,10 +60,29 @@
       <groupId>edu.umd</groupId>
       <artifactId>omgutil3</artifactId>
       <version>${omgutil.version}</version>
-    </dependency>
+    </dependency> 
+    <!-- for graph -->
+    <dependency>
+		<groupId>com.github.graphstream</groupId>
+		<artifactId>gs-core</artifactId>
+		<version>$2.0</version>
+		<scope>system</scope>
+		<systemPath>${nistobmtranslator.home}/gs-core-2.0.jar</systemPath>
+	</dependency>
+	<dependency>
+		<groupId>com.github.graphstream</groupId>
+		<artifactId>gs-ui-swing</artifactId>
+		<version>$2.0</version>
+		<scope>system</scope>
+		<systemPath>${nistobmtranslator.home}/gs-ui-swing-2.0.jar</systemPath>
+	</dependency> 
   </dependencies>
 
   <repositories>
+ 	<!--<repository>  The jitpack 'repo' is an on-the-fly build service for Github (and other code repos). 
+	    <id>jitpack.io</id>
+	    <url>https://jitpack.io</url> 
+	</repository>-->
     <repository>
       <releases>
         <enabled>true</enabled>
@@ -80,7 +107,7 @@
       <name>GitHub Packages for omgutil</name>
       <url>https://maven.pkg.github.com/ontological-behavior-modeling/omgutil</url>
       <layout>default</layout>
-    </repository>
+    </repository> 
   </repositories>
 
   <build>
