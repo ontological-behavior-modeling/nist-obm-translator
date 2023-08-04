@@ -24,10 +24,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/omgutil3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
 		<attributes>
-			<attribute name="module" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
@@ -36,9 +34,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/mw107/Documents/Projects/NISTOBM/workspace/omgutil3-1.0.1-jar-just-dependencies.jar"/>
 	<classpathentry kind="lib" path="lib/gs-core-2.0.jar"/>
 	<classpathentry kind="lib" path="lib/gs-ui-swing-2.0.jar"/>
-	<classpathentry kind="lib" path="lib/org.alloytools.alloy.dist.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry kind="lib" path="C:/Users/mw107/.m2/repository/edu/umd/omgutil3/1.0.1/omgutil3-1.0.1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
