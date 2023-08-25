@@ -18,20 +18,21 @@ import edu.umd.omgutil.UMLModelErrorException;
 
 class OBMXMI2AlloyTest {
 
+  // OBMModel_modified.xmi
+  // ComposedBehavior NextedBehavior.p5 multiplicity -> 1 to undefined.
 
 
   @ParameterizedTest
-  @CsvSource({
-      // SimpleSequence
-      "generated-BehaviorFork.als, Model::Basic::BehaviorFork",
-  // "generated-BehaviorJoin.als, Model::Basic::BehaviorJoin",
-  // "generated-BehaviorDecision.als, Model::Basic::BehaviorDecision",
-  // "generated-BehaviorMerge.als, Model::Basic::BehaviorMerge",
-  // "generated-ComplexBehavior.als, Model::Basic::ComplexBehavior", // AllControl
-  // "generated-Loop.als, Model::Basic::Loop", //
-  // "generated-ComposedBehavior.als, Model::Basic::ComposedBehavior", // 4.1.3 CallingBehaviors
-  // "generated-ParameterBehavior.als, Model::Basic::ParameterBehavior, "// 4.1.4
-  // ParameterBehavior
+  @CsvSource({"4.1.1 Control Nodes1 - SimpleSequence_modified.als, Model::Basic::SimpleBehavior",
+      "4.1.1 Control Nodes2 - Fork_modified.als, Model::Basic::BehaviorFork",
+      "4.1.1 Control Nodes3 - Join_modified.als, Model::Basic::BehaviorJoin",
+      "4.1.1 Control Nodes4 - Decision_modified.als, Model::Basic::BehaviorDecision",
+      "4.1.1 Control Nodes5 - Merge_modified.als, Model::Basic::BehaviorMerge",
+      "4.1.1 Control Nodes6 - CombinedControlNodes_modified.als, Model::Basic::ComplexBehavior",
+      "4.1.2 LoopsExamples_modified.als, Model::Basic::Loop", //
+      "4.1.3 CallingBehaviors_modified.als, Model::Basic::ComposedBehavior",
+      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::ParticipantTransfer"//
+  // 4.1.4
   // "generated-UnsatisfiableMultiplicity.als, Model::Basic::UnsatisfiableMultiplicity", //
   // 4.1.6
   // "generated-UnsatisfiableAsymmetry.als, Model::Basic::UnsatisfiableAsymmetry",
@@ -68,7 +69,7 @@ class OBMXMI2AlloyTest {
     // ========== Create Alloy model from SysML ==========
 
     OBMXMI2Alloy test = new OBMXMI2Alloy();
-    File xmiFile = new File("src/test/resources/OBMModel.xmi");
+    File xmiFile = new File("src/test/resources/OBMModel_R.xmi");
 
     // File xmiFile = new File(
     // "C:/Users/mw107/Documents/Projects/NIST

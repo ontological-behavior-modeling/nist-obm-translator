@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -67,6 +68,10 @@ public class ToAlloy {
     return addAlloySig(name, not_used_parentName, false);
   }
 
+  public Sig getTransferSig() {
+    return alloy.getTransferSig();
+  }
+
   // sig <OwnerSigName>
   // <fieldName>: set <fieldTypeName>
   // sig SimpleSequence
@@ -80,34 +85,49 @@ public class ToAlloy {
     return p1;
   }
 
-  public String[] toArray(List<String> o) {
-    String[] r = new String[o.size()];
-    int i = 0;
-    for (String s : o) {
-      r[i++] = s;
-    }
-    return r;
+  public Field addAlloyField(String fieldName, String fieldTypeName, Sig ownerSig) {
+    Sig.Field p1 = FuncUtils.addField(fieldName, ownerSig, sigByName.get(fieldTypeName));
+    // fieldByName.put(fieldName, p1);
+    // fieldTypeByFieldName.put(fieldName, sigByName.get(fieldTypeName));
+    filedTypeByField.put(p1, sigByName.get(fieldTypeName));
+    return p1;
+  }
+
+
+
+  public Field addAlloyTransferField(String fieldName, Sig ownerSig) {
+    Sig transferSig = alloy.getTransferSig();
+    Sig.Field p1 = FuncUtils.addField(fieldName, ownerSig, transferSig);
+    filedTypeByField.put(p1, transferSig);
+    return p1;
   }
 
   public Sig.Field[] addDisjAlloyFields(List<String> fieldNamesList, String typeSigName,
       String ownerSigName) {
     String[] fieldNames = toArray(fieldNamesList);
-    Sig.Field[] ps = FuncUtils.addTrickyField(fieldNames, sigByName.get(ownerSigName),
-        sigByName.get(typeSigName));
-    for (int i = 0; i < fieldNames.length; i++) {
-      // fieldByName.put(fieldNames[i], ps[i]);
-      // fieldTypeByFieldName.put(fieldNames[i], typeSig);
-      filedTypeByField.put(ps[i], sigByName.get(typeSigName));
-    }
+    Sig.Field[] ps = null;
+    Sig sigType = sigByName.get(typeSigName);
+    if (sigType != null) {
+      ps = FuncUtils.addTrickyField(fieldNames, sigByName.get(ownerSigName), sigType);
+      for (int i = 0; i < fieldNames.length; i++) {
+        // fieldByName.put(fieldNames[i], ps[i]);
+        // fieldTypeByFieldName.put(fieldNames[i], typeSig);
+        filedTypeByField.put(ps[i], sigByName.get(typeSigName));
+      }
+    } else
+      System.out.println("sigType is null");
     return ps;
 
   }
 
 
+
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ownerSig, from, to);
+    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.happensBefore);
   }
+
+
 
   public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
@@ -119,23 +139,71 @@ public class ToAlloy {
     alloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, from, to);
   }
 
-  public void addOneConstraintToField(Sig.Field field, String ownerSigName) {
-    alloy.addOneConstraintToField(sigByName.get(ownerSigName), field);
+  public void addCardinalityEqualConstraintToField(Sig.Field field, String ownerSigName, int num) {
+    alloy.addCardinalityEqualConstraintToField(sigByName.get(ownerSigName), field, num);
   }
 
-  public void addRemainingFactAndPredicate() {
+  public void addCardinalityGreaterThanEqualConstraintToField(Sig.Field field, String ownerSigName,
+      int num) {
+    alloy.addCardinalityGreaterThanEqualConstraintToField(sigByName.get(ownerSigName), field, num);
+  }
 
+  public void createFnForTransferAndAddToOverallFact(Sig ownerSig, Expr transfer,
+      String sourceTypeName, String targetTypeName) {
 
-    for (Sig sig : sigByName.values()) {
-      ExprVar s = ExprVar.make(null, "s", sig.type());
-      alloy.addSteps(s, sig, filedTypeByField);
-      // alloy.addConstraint(sig, filedTypeByField);
+    Expr sourceFieldExpr = null;
+    Expr targetFieldExpr = null;
+    for (Entry<Field, Sig> entry : filedTypeByField.entrySet()) {
+      if (entry.getValue().label.compareTo(sourceTypeName) == 0 && entry.getKey().sig == ownerSig) {
+        sourceFieldExpr = ownerSig.domain(entry.getKey());
+      } else if (entry.getValue().label.compareTo(targetTypeName) == 0
+          && entry.getKey().sig == ownerSig) {
+        targetFieldExpr = ownerSig.domain(entry.getKey());
+      }
     }
-    // alloy.addOnlyConstraint(mainSig);
+
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceFieldExpr, Alloy.sources);
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetFieldExpr, Alloy.targets);
+    alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer);
+  }
+
+  public void noInputs(String sigName) {
+    Sig sig = sigByName.get(sigName);
+    alloy.noInputs(sig);
+  }
+
+  public void noOutputs(String sigName) {
+    Sig sig = sigByName.get(sigName);
+    alloy.noOutputs(sig);
+  }
+
+  public void addInputs(String sigName, String fieldName) {
+    Sig sig = sigByName.get(sigName);
+    ExprVar s = ExprVar.make(null, "x", sig.type());
+    Field f = getField2(fieldName);
+    if (f != null)
+      alloy.addInputs(s, sig, f);
+  }
+
+  public void addOutputs(String sigName, String fieldName) {
+    Sig sig = sigByName.get(sigName);
+    ExprVar s = ExprVar.make(null, "x", sig.type());
+    Field f = getField2(fieldName);
+    if (f != null)
+      alloy.addOutputs(s, sig, f);
+  }
+
+  public void addSteps(List<String> noStepSigs) {
+    for (Sig sig : sigByName.values()) {
+      if (!noStepSigs.contains(sig.label)) {
+        ExprVar s = ExprVar.make(null, "x", sig.type());
+        alloy.addSteps(s, sig, filedTypeByField);
+      }
+    }
   }
 
 
-  public String createAlloyFile() {
+  public String createAlloyFile(File outputFile) {
 
     String moduleName =
         mainSig.label.startsWith("this") ? mainSig.label.substring(5) : mainSig.label;
@@ -149,8 +217,7 @@ public class ToAlloy {
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
-    String outputFileName =
-        new File("generated-" + alloyModule.getModuleName() + ".als").getAbsolutePath();
+    String outputFileName = outputFile.getAbsolutePath();
     translator.generateAlsFileContents(alloyModule, outputFileName);
 
     // Utils.runX(mainSig, alloy.getAllSigs(), alloy.getOverAllFact(), command);
@@ -165,5 +232,25 @@ public class ToAlloy {
     return of.isPresent() ? of.get() : null;
   }
 
+  public Field getField2(String fieldName) {
+    Optional<Field> of =
+        filedTypeByField.keySet().stream().filter(f -> f.label.equals(fieldName)).findFirst();
+    return of.isPresent() ? of.get() : null;
+  }
+
+  public Field getField3(String fieldName) {
+    Optional<Field> of = filedTypeByField.keySet().stream()
+        .filter(f -> f.label.compareTo(fieldName) == 0).findFirst();
+    return of.isPresent() ? of.get() : null;
+  }
+
+  public String[] toArray(List<String> o) {
+    String[] r = new String[o.size()];
+    int i = 0;
+    for (String s : o) {
+      r[i++] = s;
+    }
+    return r;
+  }
 
 }

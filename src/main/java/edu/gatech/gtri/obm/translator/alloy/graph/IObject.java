@@ -6,4 +6,6 @@ public interface IObject {
   int numOneOf = 0;
 
   public List<String> toStringAlloy();
+
+  public abstract void sort();
 }

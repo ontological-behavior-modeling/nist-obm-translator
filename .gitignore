@@ -3,3 +3,6 @@
 /target/
 .classpath
 
+/*.als
+error.log
+src/test/resources/alloy_heredoc*.als

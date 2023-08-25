@@ -40,10 +40,21 @@ public class Alloy {
   protected static Set<Expr> ignoredExprs;
   protected static Set<Func> ignoredFuncs;
 
-  protected static Func happensBefore;
+  public static Func happensBefore;
+
+  public static Func sources;
+  public static Func targets;
+  public static Func subsettingItemRuleForSources;
+  public static Func subsettingItemRuleForTargets;
+
+
   protected static Func bijectionFiltered;
   protected static Func funcFiltered;
   protected static Func inverseFunctionFiltered;
+
+  protected static Func osteps;
+  protected static Func oinputs;
+  protected static Func ooutputs;
 
   protected ExprList uniqueFact;
   protected Expr templateFact;
@@ -95,6 +106,17 @@ public class Alloy {
     funcFiltered = Helper.getFunction(transferModule, "o/functionFiltered");
     inverseFunctionFiltered = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
 
+
+    sources = Helper.getFunction(transferModule, "o/sources");
+    targets = Helper.getFunction(transferModule, "o/targets");
+    subsettingItemRuleForSources =
+        Helper.getFunction(transferModule, "o/subsettingItemRuleForSources");
+    subsettingItemRuleForTargets =
+        Helper.getFunction(transferModule, "o/subsettingItemRuleForTargets");
+
+    osteps = Helper.getFunction(transferModule, "o/steps");
+    oinputs = Helper.getFunction(transferModule, "o/inputs");
+    ooutputs = Helper.getFunction(transferModule, "o/outputs");
 
     // // constraints
     // Func nonZeroDurationOnlyFunction = Helper.getFunction(transferModule,
@@ -200,7 +222,7 @@ public class Alloy {
 
   public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
     Expr inverseFunctionFilteredExpr = inverseFunctionFiltered.call(happensBefore.call(),
         addExprVarToExpr(s, from), addExprVarToExpr(s, to));
 
@@ -222,7 +244,7 @@ public class Alloy {
     assert from.length > 0 : "error: from.length must be greater than 0";
     assert to.length > 0 : "error: to.length must be greater than 0";
 
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
     Expr _from = s.join(from[0]), _to = s.join(to[0]);
 
     for (int i = 1; i < from.length; i++) {
@@ -253,7 +275,7 @@ public class Alloy {
    */
   public void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
 
     Expr funcFilteredExpr =
         funcFiltered.call(happensBefore.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
@@ -261,6 +283,7 @@ public class Alloy {
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
   }
+
 
 
   /**
@@ -276,7 +299,7 @@ public class Alloy {
     assert from.length > 0 : "error: from.length must be greater than 0";
     assert to.length > 0 : "error: to.length must be greater than 0";
 
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
     Expr _from = s.join(from[0]), _to = s.join(to[0]);
 
     for (int i = 1; i < from.length; i++) {
@@ -294,10 +317,31 @@ public class Alloy {
 
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
 
     Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(),
         addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+
+
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+  }
+
+  // transfer = x.tarnsferSupplierCustomer
+  public void createSubSettingItemRuleOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(subsettingItemRuleForSources.call(s.join(transfer)).forAll(decl));
+    this.addToOverallFact(subsettingItemRuleForTargets.call(s.join(transfer)).forAll(decl));
+
+  }
+
+  public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+
+    Expr bijectionFilteredExpr =
+        bijectionFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
 
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
@@ -355,13 +399,25 @@ public class Alloy {
     _nameExpr = _nameExpr.and(expr);
   }
 
-  public void addOneConstraintToField(Sig ownerSig, Sig.Field field) {
-    ExprVar s = ExprVar.make(null, "s", ownerSig.type());
+  public void addCardinalityEqualConstraintToField(Sig ownerSig, Sig.Field field, int num) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(
-        s.join(field).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl));
+
+        s.join(field).cardinality().equal(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
+
+  public void addCardinalityGreaterThanEqualConstraintToField(Sig ownerSig, Sig.Field field,
+      int num) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(
+
+        s.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
+  }
+
 
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
     Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
@@ -369,26 +425,60 @@ public class Alloy {
         var.join(field).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
 
-  public void addSteps(ExprVar var, Sig ownerSig, /* Map<String, Field> fieldByName, */
-      LinkedHashMap<Field, Sig> fieldTypeByField) {
+  public void noInputs(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
+  }
 
+  public void noOutputs(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
+  }
+
+  public void addInputs(ExprVar var, Sig ownerSig, Field field) {
+    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    Expr expr = var.join(ownerSig.domain(field));
+    if (expr != null) {
+      // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+      // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+      addBothToOverallFact(var, expr, oinputs.call(), decl);
+    }
+  }
+
+  public void addOutputs(ExprVar var, Sig ownerSig, Field field) {
+    // Expr ooutExpr1 = ooutputs.call();
+    // Expr oinputsExpr2 = ooutputs.call();
+
+    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    Expr expr = var.join(ownerSig.domain(field));
+    if (expr != null) {
+      // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+      // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+      addBothToOverallFact(var, expr, ooutputs.call(), decl);
+    }
+  }
+
+  public void addSteps(ExprVar var, Sig ownerSig, LinkedHashMap<Field, Sig> fieldTypeByField) {
+
+    // ?? do you need different call?
     // steps
-    Func osteps = Helper.getFunction(transferModule, "o/steps");
     Expr ostepsExpr1 = osteps.call();
-    Expr ostepsExpr2 = osteps.call();
+    // Expr ostepsExpr2 = osteps.call();
 
+    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    Expr expr = createStepExpr(var, ownerSig, fieldTypeByField);
+    if (expr != null) {
+      // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
+      // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
+      addBothToOverallFact(var, expr, ostepsExpr1, decl);
+    }
+  }
 
-    Decl decl1 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr1 = createStepExpr(var, ownerSig, fieldTypeByField);
-    if (expr1 != null)
-      addToOverallFact((expr1).in(var.join(ostepsExpr1)).forAll(decl1));
-
-
-
-    Decl decl2 = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr2 = createStepExpr(var, ownerSig, fieldTypeByField);
-    if (expr2 != null)
-      this.addToOverallFact(var.join(ostepsExpr2).in(expr2).forAll(decl2));
+  private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
+    addToOverallFact((expr).in(var.join(varJoinExpr)).forAll(decl));
+    addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
 
@@ -542,6 +632,11 @@ public class Alloy {
     Command parent = null;
     return new Command(pos, _nameExpr, label, check, overall, bitwidth, maxseq, expects, scope,
         additionalExactSig, formula, parent);
+  }
+
+  public Sig getTransferSig() {
+    Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+    return transfer;
   }
 
 }

@@ -130,8 +130,10 @@ public class ExprVisitor extends VisitQuery<String> {
         String fact = y.accept(this);
 
         if (!isImplicitFact) {
-          sb.append("fact f").append(factNumber++).append(" {").append(fact).append('}')
-              .append('\n');
+          // sb.append("fact f").append(factNumber++).append(" {").append(fact).append('}')
+          // .append('\n');
+          // remove fact name
+          sb.append("fact ").append("{").append(fact).append('}').append('\n');
         } else if (isImplicitFact) {
           sb.append('\t').append(fact).append('\n');
         }
@@ -279,21 +281,21 @@ public class ExprVisitor extends VisitQuery<String> {
 
         List<String> sortedType = new ArrayList<>(fieldByType.keySet());
         Collections.sort(sortedType);
+
         for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
-
           if (fs.size() == 1) {
             fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
                 .append(MyAlloyLibrary.removeSlash(fs.get(0).label)).append(": ").append(type)
                 .toString();
           } else { // have to be > 1
-            sbb.append(" disj ");
+
             String[] labels = new String[fs.size()];
             for (int i = 0; i < fs.size(); i++) {
               labels[i] = MyAlloyLibrary.removeSlash(fs.get(i).label);
             }
-            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
-                .append(String.join(" , ", labels)).append(": ").append(type).toString();
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
+                .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
 

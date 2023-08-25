@@ -61,5 +61,9 @@ public class ONode implements IObject {
     return l;
   }
 
+  // do nothing
+  public void sort() {
+    return;
+  }
 
 }
