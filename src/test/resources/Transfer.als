@@ -35,6 +35,12 @@ fact uniqueTransfers {all t, t': Transfer | t.items = t'.items and t.sources = t
 fact transferToFromContainerNotTransferBefore{
 	all t: Transfer | all src: t.sources | all tgt: t.targets | t in src.stepsAndSubsteps or t in tgt.stepsAndSubsteps => t not in TransferBefore}
 
+/** Potential "optional facts". */
+// Maybe include a single fact statement that calls all these that can be commented out. Or a single pred that can be called from other modules.
+pred transferOptionalFacts {noTransferingContainer and noTransferInputsOrOutputs[Transfer]}
+pred noTransferingContainer {all t: Transfer | t.~steps not in t.items}
+pred noTransferInputsOrOutputs [transfers: set Transfer]{no transfers.inputs and no transfers.outputs}
+
 // Needs to be a tighter constraint for physical applications. Test the below. 
 pred uniqueItemsFromSameSource [transfers: set Transfer] {all disj t, t': transfers | t.sources = t'.sources => t.items != t'.items}
 pred uniqueItemsToSameTarget [transfers: set Transfer] {all disj t, t': transfers | t.targets = t'.targets => t.items != t'.items}
@@ -125,10 +131,12 @@ fact occurrenceHappensDuringInputEqualsOutput {
 
 fact stepIsAsymmetric{all x,y: Occurrence | y in x.steps => not (x in y.steps)}
 fact stepIsAtransitive {all x,y,z : Occurrence | y in x.steps and z in y.^steps => z not in x.steps}
+fact stepHasOneSource{all x: Occurrence | #(x.~steps) <= 1} 
 fact occurrencesHappenDuringThemselves{all x: Occurrence | during[x,x]}
 fact beforeIsTransitive{all x,y,z: Occurrence | before[x,y] and before[y,z] => before[x,z]}
+fact beforeIsAcyclic{all x: Occurrence | not before[x,x]}
 fact duringIsTransitive{all x,y,z: Occurrence | during[x,y] and during[y,z] => during[x,z]}
-// before is symmetric only when x and y are zero duration and happen during each other
+// before is symmetric only when x and y are duration and happen during each other
 fact beforeSymmetry{all x,y: Occurrence | before[x,y] and before[y,x] <=> before[x,x] and before[y,y] and during[x,y] and during[y,x]}
 // If x happens before y and z happens during y, then x must also happen before z
 fact interrelationshipConstraint1{all x,y,z: Occurrence | before[x,y] and during[z,y] => before[x,z]}
@@ -168,7 +176,6 @@ pred intransitiveBefore [x,y: Occurrence] {x->y in happensBefore}
 pred intransitiveAfter [x,y: Occurrence] {y->x in happensBefore}
 pred intransitiveDuring [x,y: Occurrence] {x->y in happensDuring}
 
-pred isZeroDuration [x: Occurrence] {before[x,x]}
 pred isEqualDuration[x,y: Occurrence] {during[x,y] and during[y,x]} // this also implies that they start at the same time
 
 /** 		Binary Relations */
@@ -190,20 +197,18 @@ pred acyclicHappensDuring {no ^happensDuring & iden}
 pred reflexiveHasStep {all occ: Occurrence | r/reflexive[steps,occ]}
 pred irreflexiveHappensDuring {r/irreflexive[happensDuring]}
 pred asymmetricHappensDuring {r/asymmetric[happensDuring]}
-pred nonZeroDurationOnly {all occ: Occurrence | not isZeroDuration[occ]}
-pred zeroDurationOnly {all occ: Occurrence | isZeroDuration[occ]}
 pred beforeBecauseBeforeADuring {all x,y,z: Occurrence | before[x,y] and during[z,y] => before[x,z]}
 pred symmetricBefore {all x,y: Occurrence | before[x,y] and before[y,x]}
-pred symmetricNonZeroDurationBefore {nonZeroDurationOnly and symmetricBefore and #Occurrence > 0}
+//pred symmetricNonZeroDurationBefore {nonZeroDurationOnly and symmetricBefore and #Occurrence > 0}
 pred symmetricDuring { all x,y: Occurrence | during[x,y] and during[y,x]}
 //******************************************************************************************************
 /** Checks and Runs */
 //******************************************************************************************************
-run show {#HappensBefore > 0 and nonZeroDurationOnly and #OccurrenceSig.Input > 0 and 
+run show {#HappensBefore > 0 and #OccurrenceSig.Input > 0 and 
 		#OccurrenceSig.Output > 0} for 5
 // Checks for hasStep
 check stepCannotBeSubstepOfSelf {all x: Occurrence | not (x in x.stepsAndSubsteps)} for 20
-check substepCannotOccurBeforeSuperstepUnlessZeroDuration {all disj x,y: Occurrence | x in y.superSteps => not before[x,y] or isZeroDuration[y]} for 8
+//check substepCannotOccurBeforeSuperstepUnlessZeroDuration {all disj x,y: Occurrence | x in y.superSteps => not before[x,y] or isZeroDuration[y]} for 8
 check allSubstepsOccurDuringSupersteps {all x,y: Occurrence | y in x.stepsAndSubsteps => during[y,x]} for 8
 check hasStepIsAcyclic {all x: Occurrence | not (x in x.stepsAndSubsteps)} for 20
 check eachStepHasOneParent {all x: Occurrence | #(x.~steps) =< 1} for 25
