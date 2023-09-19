@@ -14,16 +14,15 @@ sig AtomicBehavior extends Occurrence{}
 //*****************************************************************
 /** 					SimpleSequence */
 //*****************************************************************
-sig SimpleBehavior extends Occurrence{
+sig SimpleSequence extends Occurrence{
 	disj p1,p2: set AtomicBehavior
 }
 
-fact {all x: SimpleBehavior | functionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: SimpleBehavior | inverseFunctionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: SimpleBehavior | #(x.p1) = 1}
-fact {all x: SimpleBehavior | #(x.p2) = 1}
-fact {all x: SimpleBehavior | x.p1 + x.p2 in x.steps}
-fact {all x: SimpleBehavior | x.steps in x.p1 + x.p2}
+fact {all x: SimpleSequence | bijectionFiltered[happensBefore, x.p1, x.p2]}
+fact {all x: SimpleSequence | #(x.p1) = 1}
+fact {all x: SimpleSequence | #(x.p2) = 1}
+fact {all x: SimpleSequence | x.p1 + x.p2 in x.steps}
+fact {all x: SimpleSequence | x.steps in x.p1 + x.p2}
 
 //*****************************************************************
 /** 			General Functions and Predicates */
@@ -44,8 +43,9 @@ fact {all x: SimpleBehavior | x.steps in x.p1 + x.p2}
 //mw modified
 //comment out red and run
 //#x.p1=1 to #(x.p1)=1
-//SimpleSequence is modified to "SimpleBehavior"
 
-//OBMModel.xmi
-//p2 multiplicity 0..* to 1
+//OBMModel.xmi 
+//copy SimpleBehavior as SimpleSequence
+//rename SimpleBehavior as SimpleBehavior_Original 
+//For SimpleSequence, change p2 multiplicity 0..* to 1 
 

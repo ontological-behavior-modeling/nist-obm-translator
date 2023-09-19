@@ -17,10 +17,8 @@ sig BehaviorFork extends Occurrence {
 	disj p1,p2,p3: set AtomicBehavior
 }
 
-fact {all x: BehaviorFork | functionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: BehaviorFork | functionFiltered[happensBefore, x.p1, x.p3]}
-fact {all x: BehaviorFork | inverseFunctionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: BehaviorFork | inverseFunctionFiltered[happensBefore, x.p1, x.p3]}
+fact {all x: BehaviorFork | bijectionFiltered[happensBefore, x.p1, x.p2]}
+fact {all x: BehaviorFork | bijectionFiltered[happensBefore, x.p1, x.p3]}
 fact {all x: BehaviorFork | #(x.p1) = 1}
 fact {all x: BehaviorFork | x.p1 + x.p2 + x.p3 in x.steps}
 fact {all x: BehaviorFork | x.steps in x.p1 + x.p2 + x.p3}

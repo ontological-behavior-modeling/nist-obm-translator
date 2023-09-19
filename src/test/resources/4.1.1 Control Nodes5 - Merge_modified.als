@@ -17,8 +17,7 @@ sig BehaviorMerge extends Occurrence {
 	disj p1,p2,p3: set AtomicBehavior
 }
 
-fact {all x: BehaviorMerge | functionFiltered[happensBefore, x.p1 + x.p2, x.p3]}
-fact {all x: BehaviorMerge | inverseFunctionFiltered[happensBefore, x.p1 + x.p2, x.p3]}
+fact {all x: BehaviorMerge | bijectionFiltered[happensBefore, x.p1 + x.p2, x.p3]}
 fact {all x: BehaviorMerge | #(x.p1) = 1}
 fact {all x: BehaviorMerge | #(x.p2) = 1}
 fact {all x: BehaviorMerge | x.p1 + x.p2 + x.p3 in x.steps}

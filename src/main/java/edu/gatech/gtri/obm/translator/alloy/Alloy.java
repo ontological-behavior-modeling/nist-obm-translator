@@ -41,11 +41,14 @@ public class Alloy {
   protected static Set<Func> ignoredFuncs;
 
   public static Func happensBefore;
+  public static Func happensDuring;
 
   public static Func sources;
   public static Func targets;
   public static Func subsettingItemRuleForSources;
   public static Func subsettingItemRuleForTargets;
+  public static Func isAfterSource;
+  public static Func isBeforeTarget;
 
 
   protected static Func bijectionFiltered;
@@ -102,10 +105,10 @@ public class Alloy {
     }
 
     happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
+    happensDuring = Helper.getFunction(transferModule, "o/happensDuring");
     bijectionFiltered = Helper.getFunction(transferModule, "o/bijectionFiltered");
     funcFiltered = Helper.getFunction(transferModule, "o/functionFiltered");
     inverseFunctionFiltered = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
-
 
     sources = Helper.getFunction(transferModule, "o/sources");
     targets = Helper.getFunction(transferModule, "o/targets");
@@ -113,6 +116,10 @@ public class Alloy {
         Helper.getFunction(transferModule, "o/subsettingItemRuleForSources");
     subsettingItemRuleForTargets =
         Helper.getFunction(transferModule, "o/subsettingItemRuleForTargets");
+
+    isAfterSource = Helper.getFunction(transferModule, "o/isAfterSource");
+    isBeforeTarget = Helper.getFunction(transferModule, "o/isBeforeTarget");
+
 
     osteps = Helper.getFunction(transferModule, "o/steps");
     oinputs = Helper.getFunction(transferModule, "o/inputs");
@@ -166,15 +173,19 @@ public class Alloy {
     return this.allSigs;
   }
 
-  public Sig createSigAndAddToAllSigs(String label, PrimSig parent) {
+  public PrimSig createSigAndAddToAllSigs(String label, PrimSig parent) {
     // Sig s = new PrimSig("this/" + label, parent);
-    Sig s = new PrimSig(label, parent);
+    PrimSig s = new PrimSig(label, parent);
     allSigs.add(s);
     return s;
   }
 
-  public Sig createSigAsChildOfOccSigAndAddToAllSigs(String label) {
+  public PrimSig createSigAsChildOfOccSigAndAddToAllSigs(String label) {
     return createSigAndAddToAllSigs(label, Alloy.occSig);
+  }
+
+  public PrimSig createSigAsChildOfParentSigAddToAllSigs(String label, PrimSig parentSig) {
+    return createSigAndAddToAllSigs(label, parentSig);
   }
 
   public void addToOverallFact(Expr expr) {
@@ -202,7 +213,8 @@ public class Alloy {
 
   /**
    * support when Expr original is ExprBinary(ie., p1 + p2) to add ExprVar s in both so returns s.p1
-   * and s.p2.
+   * and s.p2. if original is like "BuffetService <: (FoodService <: eat)" -> ((ExprBinary)
+   * original).op = "<:", in this case just return s.join(original) =
    * 
    * @param s
    * @param original
@@ -215,9 +227,14 @@ public class Alloy {
       if (((ExprBinary) original).op == ExprBinary.Op.PLUS)
         return left.plus(right);
       else
-        return null;// not supported yet
-    } else
-      return s.join(original);
+        return s.join(original); // x . BuffetService <: (FoodService <: eat) where original =
+                                 // "BuffetService <: (FoodService <: eat)" with ((ExprBinary)
+                                 // original).op = "<:"
+    } else {
+      System.err.println(s);
+      System.err.println(original);
+      return s.join(original); // x.BuffetService
+    }
   }
 
   public void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
@@ -285,6 +302,31 @@ public class Alloy {
   }
 
 
+  // public void createFunctionFilteredBeforeAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
+  // String funcName) {
+  // ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+  //
+  // Expr func = null;
+  // switch (funcName) {
+  // case "happensBefore":
+  // func = happensBefore.call();
+  // break;
+  // case "sources":
+  // func = sources.call();
+  // break;
+  // case "targets":
+  // func = targets.call();
+  // break;
+  // }
+  //
+  // Expr funcFilteredExpr =
+  // funcFiltered.call(func, addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+  // List<ExprHasName> names = new ArrayList<>(List.of(s));
+  // Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+  // this.addToOverallFact(funcFilteredExpr.forAll(decl));
+  // }
+
+
 
   /**
    * Creates a functionFiltered fact with happensBefore. Use when "from" or "to" has a + sign. fact
@@ -334,15 +376,70 @@ public class Alloy {
     Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
     this.addToOverallFact(subsettingItemRuleForSources.call(s.join(transfer)).forAll(decl));
     this.addToOverallFact(subsettingItemRuleForTargets.call(s.join(transfer)).forAll(decl));
-
   }
 
+  public void createIsAfterSourceIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(isAfterSource.call(s.join(transfer)).forAll(decl));
+    this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
+  }
+
+  public void createInverseFunctionFilteredAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
+      Func func) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+
+    Expr funcFilteredExpr = inverseFunctionFiltered.call(func.call(), addExprVarToExpr(s, from),
+        addExprVarToExpr(s, to));
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(funcFilteredExpr.forAll(decl));
+  }
+
+  /* if from or to is null, use ExprVar x */
+  public void createFunctionFilteredAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
+      Func func) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+
+    to = to == null ? s : to;
+    from = from == null ? s : from;
+
+    Expr funcFilteredExpr =
+        funcFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(funcFilteredExpr.forAll(decl));
+  }
+
+  /* if from or to is null, use ExprVar x */
   public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
 
-    Expr bijectionFilteredExpr =
-        bijectionFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+    to = to == null ? s : to;
+    from = from == null ? s : from;
 
+    Expr fromExpr = addExprVarToExpr(s, from);
+    Expr toExpr = addExprVarToExpr(s, to);
+
+    // keep Field as Field
+    // if (from == null) {
+    // fromExpr = s;
+    // if (from instanceof Field)
+    // fromExpr = from;
+    // } else {
+    // fromExpr = addExprVarToExpr(s, from);
+    // }
+    //
+    // if (to == null)
+    // toExpr = s;
+    // else if (to instanceof Field) {
+    // toExpr = to;
+    // } else {
+    // toExpr = addExprVarToExpr(s, to);
+    // }
+
+    Expr funcCall = func.call();
+    Expr bijectionFilteredExpr = bijectionFiltered.call(funcCall, fromExpr, toExpr);
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
@@ -404,7 +501,6 @@ public class Alloy {
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(
-
         s.join(field).cardinality().equal(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
@@ -414,7 +510,6 @@ public class Alloy {
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(
-
         s.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
@@ -636,6 +731,11 @@ public class Alloy {
 
   public Sig getTransferSig() {
     Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+    return transfer;
+  }
+
+  public Sig getTransferBeforeSig() {
+    Sig transfer = Helper.getReachableSig(transferModule, "o/TransferBefore");
     return transfer;
   }
 

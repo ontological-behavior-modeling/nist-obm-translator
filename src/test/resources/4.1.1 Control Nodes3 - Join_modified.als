@@ -17,10 +17,8 @@ sig BehaviorJoin extends Occurrence {
 	disj p1,p2,p3: set AtomicBehavior
 }
 
-fact {all x: BehaviorJoin | functionFiltered[happensBefore, x.p1, x.p3]}
-fact {all x: BehaviorJoin | functionFiltered[happensBefore, x.p2, x.p3]}
-fact {all x: BehaviorJoin | inverseFunctionFiltered[happensBefore, x.p1, x.p3]}
-fact {all x: BehaviorJoin | inverseFunctionFiltered[happensBefore, x.p2, x.p3]}
+fact {all x: BehaviorJoin | bijectionFiltered[happensBefore, x.p1, x.p3]}
+fact {all x: BehaviorJoin | bijectionFiltered[happensBefore, x.p2, x.p3]}
 fact {all x: BehaviorJoin | #(x.p1) = 1}
 fact {all x: BehaviorJoin | #(x.p2) = 1}
 fact {all x: BehaviorJoin | x.p1 + x.p2 + x.p3 in x.steps}

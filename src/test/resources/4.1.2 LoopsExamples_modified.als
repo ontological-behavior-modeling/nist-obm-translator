@@ -17,10 +17,8 @@ sig Loop extends Occurrence {
 	disj p1,p2,p3: set AtomicBehavior
 }
 
-fact {all x: Loop | functionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: Loop | inverseFunctionFiltered[happensBefore, x.p1 + x.p2, x.p2]}
-fact {all x: Loop | functionFiltered[happensBefore, x.p2, x.p2 + x.p3]}
-fact {all x: Loop | inverseFunctionFiltered[happensBefore, x.p2, x.p3]}
+fact {all x: Loop | bijectionFiltered[happensBefore, x.p1, x.p2]}
+fact {all x: Loop | bijectionFiltered[happensBefore, x.p2, x.p2 + x.p3]}
 fact {all x: Loop | #(x.p1) = 1}
 fact {all x: Loop | #(x.p2) >= 2}
 fact {all x: Loop | #(x.p3) = 1}
@@ -42,3 +40,7 @@ fact {all x: Loop | x.steps in x.p1 + x.p2 + x.p3}
 //mw modified to pass the test
 //commented out General Functions and Predicates & Checks and Runs
 //cardinary constraint to add () and spaces (ie., "#x.p1=1" to "#(x.p1) = 1"
+
+//OBMModel_R.xmi
+//copy original to Loop_original
+//modify Loop's p3 multiplicity to 1..* to 1

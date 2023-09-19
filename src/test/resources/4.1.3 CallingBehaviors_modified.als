@@ -16,9 +16,9 @@ sig AtomicBehavior extends Occurrence{}
 sig NestedBehavior extends Occurrence {
 	disj p4,p5: set AtomicBehavior
 }
-fact {all x: NestedBehavior | functionFiltered[happensBefore, x.p4, x.p5]}
-fact {all x: NestedBehavior | inverseFunctionFiltered[happensBefore, x.p4, x.p5]}
+fact {all x: NestedBehavior | bijectionFiltered[happensBefore, x.p4, x.p5]}
 fact {all x: NestedBehavior | #(x.p4) = 1}
+fact {all x: NestedBehavior | #(x.p5) = 1}
 fact {all x: NestedBehavior | x.p4 + x.p5 in x.steps}
 fact {all x: NestedBehavior | x.steps in x.p4 + x.p5}
 
@@ -30,11 +30,11 @@ sig ComposedBehavior extends Occurrence{
 	p2: set NestedBehavior
 }
 
-fact {all x: ComposedBehavior | functionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: ComposedBehavior | functionFiltered[happensBefore, x.p2, x.p3]}
-fact {all x: ComposedBehavior | inverseFunctionFiltered[happensBefore, x.p1, x.p2]}
-fact {all x: ComposedBehavior | inverseFunctionFiltered[happensBefore, x.p2, x.p3]}
+fact {all x: ComposedBehavior | bijectionFiltered[happensBefore, x.p1, x.p2]}
+fact {all x: ComposedBehavior | bijectionFiltered[happensBefore, x.p2, x.p3]}
 fact {all x: ComposedBehavior | #(x.p1) = 1}
+fact {all x: ComposedBehavior | #(x.p2) = 1}
+fact {all x: ComposedBehavior | #(x.p3) = 1}
 fact {all x: ComposedBehavior | x.p1 + x.p2 + x.p3 in x.steps}
 fact {all x: ComposedBehavior | x.steps in x.p1 + x.p2 + x.p3}
 
@@ -59,8 +59,9 @@ fact {all x: ComposedBehavior | x.steps in x.p1 + x.p2 + x.p3}
 //Sig AllControl is changed to ComplexBehavior
 //binjection is modified to functionFiltered & inverseFunctionFiltered
 //NestedBehavior is changed to ComposedBehavior
-//!!!!!!!!!! ComposedBehavior p2 is modified to be NestedBehavior
+//ComposedBehavior p2 is modified to be NestedBehavior
+//added below facts
+//fact {all x: ComposedBehavior | #(x.p2) = 1}
+//fact {all x: ComposedBehavior | #(x.p3) = 1}
+//fact {all x: NestedBehavior | #(x.p5) = 1}
 
-//OBMModel.xmi is modified
-//x.p5 multiplicity from 1 to 0..*
-//p2 and p3 multiplicity from 1 to 0..*

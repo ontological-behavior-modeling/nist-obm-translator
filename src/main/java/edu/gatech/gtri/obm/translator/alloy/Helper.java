@@ -17,6 +17,42 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
 public class Helper {
 
+
+  public static boolean validParent(String parentName) {
+    if (parentName == null || parentName.equals("BehaviorOccurrence")
+        || parentName.equals("Occurrence") || parentName.equals("Anything"))
+      return false;
+    else
+      return true;
+  }
+
+  /**
+   * Find Field from sig by fieldName. If not find in the sig, try to find in its parent
+   * recursively.
+   * 
+   * @param fieldName field's name looking for
+   * @param sig PrimSig sig supposed to having the field
+   * @return Field if found, otherwise return null
+   */
+  public static Sig.Field getFieldFromSig(String fieldName, PrimSig sig) {
+    for (Sig.Field field : sig.getFields()) {
+      if (field.label.equals(fieldName))
+        return field;
+    }
+    while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
+                                 // null
+      System.out.println(sig.parent);
+      Field field = getFieldFromSig(fieldName, sig.parent);
+      if (field != null)
+        return field;
+      else {
+        sig = sig.parent; // reset
+      }
+    }
+    return null;
+  }
+
+
   public static void printAllFunc(Module m) {
     System.out.println("===========allFunc====================");
     for (Func f : m.getAllFunc()) {

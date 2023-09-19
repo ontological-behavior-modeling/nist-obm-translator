@@ -31,10 +31,10 @@ public class FuncUtils {
   public static Sig.Field addField(String label, Sig sig, Sig sigType) {
     return sig.addField(label, sigType.setOf());
   }
-  
+
   // orderedFoodItem: one FoodItem
   public static Sig.Field addOneField(String label, Sig sig, Sig sigType) {
-	  return sig.addField(label,  sigType.oneOf());
+    return sig.addField(label, sigType.oneOf());
   }
 
   public static Sig.Field[] addTrickyField(java.lang.String[] labels, Sig sig, Sig sigType) {
@@ -227,4 +227,6 @@ public class FuncUtils {
 
     return FuncUtils.addExprs(Arrays.asList(e1, e2, e3, e4));
   }
+
+
 }
