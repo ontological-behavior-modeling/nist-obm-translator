@@ -20,17 +20,9 @@ class OBMXMI2AlloyTest {
 
   @ParameterizedTest
 
-  // @CsvSource({
-  //
-  //
-  // "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als,
-  // Model::Realistic::IFFoodService"
-  //
-  // })
-
-
   @CsvSource({
-
+      "4.1.5 Multiple Execution Steps - Multiple Object Flow_mw.als, Model::Basic::ObjectFlowBehavior",
+      "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als, Model::Realistic::IFFoodService",
       "4.1.1 Control Nodes1 - SimpleSequence_modified.als,Model::Basic::SimpleSequence",
       "4.1.1 Control Nodes2 - Fork_modified.als, Model::Basic::BehaviorFork",
       "4.1.1 Control Nodes3 - Join_modified.als, Model::Basic::BehaviorJoin",
@@ -56,11 +48,11 @@ class OBMXMI2AlloyTest {
       "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService",
       "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als, Model::Realistic::UnsatisfiableService",
   //
+  // TransferBefore
   // // wip waiting Jeremy's update obm file
   // // "4.1.4 Transfers and Parameters2 -
   // // ParameterBehavior.als,Model::Basic::ParameterBehavior",
-  // // "4.1.5 Multiple Execution Steps - Multiple Object
-  // // Flow.als,Model::Basic::ObjectFlowBehavior",
+
   // // //
   })
 
@@ -85,7 +77,8 @@ class OBMXMI2AlloyTest {
     System.out.println("fileName = " + manualFileName);
     System.out.println("className = " + className);
 
-    // ========== Create Alloy model from SysML ==========
+
+    // ========== Create Alloy model from OBM XMI file & write as a file ==========
 
     OBMXMI2Alloy test = new OBMXMI2Alloy();
     File xmiFile = new File("src/test/resources/OBMModel_R.xmi");
@@ -100,53 +93,49 @@ class OBMXMI2AlloyTest {
     test.createAlloyFile(xmiFile, className, apiFile);
 
 
-
-    File testFile = new File("src/test/resources/" + manualFileName);
-    // File testFile = new File(
-    // "C:\\Users\\mw107\\Documents\\Projects\\NIST OBM\\info\\obm-alloy-code_2023-05-26\\obm\\"
-    // + fileName);
-    System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
-
-
-    // ========== Create Alloy model from Alloy file ==========
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(testFile);
-    CompModule apiModule = MyAlloyLibrary.importAlloyModule(apiFile);
-
-    // ========== Compare abstract syntax trees ==========
-
     ExpressionComparator ec = new ExpressionComparator();
 
-    Expr sysmlAbstractSyntaxTree = apiModule.getAllReachableFacts();// test.getOverallFacts();
-    Expr alloyFileAbstractSyntaxTree = importedModule.getAllReachableFacts();
+    ////////////////////// Set up (Importing Modules) /////////////////////////////////////////
+    // API
+    CompModule apiModule = MyAlloyLibrary.importAlloyModule(apiFile);
+    // TEST
+    File testFile = new File("src/test/resources/" + manualFileName);
+    System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
+    CompModule testModule = MyAlloyLibrary.importAlloyModule(testFile);
 
-    System.out.println(sysmlAbstractSyntaxTree);
-    System.out.println(alloyFileAbstractSyntaxTree);
 
-    assertTrue(ec.compareTwoExpressions(sysmlAbstractSyntaxTree, alloyFileAbstractSyntaxTree));
+    //////////////////////// Comparing Reachable Facts ////////////////////////////////
+    // API
+    Expr api_reachableFacts = apiModule.getAllReachableFacts();// test.getOverallFacts();
+    System.out.println(api_reachableFacts);
+    // Test
+    Expr test_reachableFacts = testModule.getAllReachableFacts();
+    System.out.println(test_reachableFacts);
+    // Compare
+    assertTrue(ec.compareTwoExpressions(api_reachableFacts, test_reachableFacts));
 
-    // ========== Set up signatures ==========
-
-    List<Sig> alloyFileSignatures = importedModule.getAllReachableUserDefinedSigs();
-    List<Sig> apiFileSignatures = apiModule.getAllReachableUserDefinedSigs();
-
-    Map<String, Sig> apiFileSigMap = new HashMap<>();// test.getAllReachableUserDefinedSigs();
-    for (Sig sig : apiFileSignatures) {
-      apiFileSigMap.put(sig.label, sig);
+    ///////////////////////// Comparing Sigs ////////////////////
+    // ========== Set up Sigs ==========
+    // API
+    List<Sig> api_reachableDefinedSigs = apiModule.getAllReachableUserDefinedSigs();
+    Map<String, Sig> api_SigByName = new HashMap<>();// test.getAllReachableUserDefinedSigs();
+    for (Sig sig : api_reachableDefinedSigs) {
+      api_SigByName.put(sig.label, sig);
     }
-    Map<String, Sig> alloyFileSigMap = new HashMap<>();
-    for (Sig sig : alloyFileSignatures) {
-      alloyFileSigMap.put(sig.label, sig);
+    // TEST
+    List<Sig> test_reachableDefinedSigs = testModule.getAllReachableUserDefinedSigs();
+    Map<String, Sig> test_SigByName = new HashMap<>();
+    for (Sig sig : test_reachableDefinedSigs) {
+      test_SigByName.put(sig.label, sig);
     }
 
-    // ========== Compare the number of signatures ==========
-    assertTrue(apiFileSigMap.size() == alloyFileSigMap.size());
+    // Compare - Size
+    assertTrue(api_SigByName.size() == test_SigByName.size());
 
-
-    // ========== Compare each signature ==========
-
-    for (String sigName : apiFileSigMap.keySet()) {
-      Sig alloyFileSig = alloyFileSigMap.get(sigName);
-      Sig apiSig = apiFileSigMap.get(sigName);
+    // Compare - each sig
+    for (String sigName : api_SigByName.keySet()) {
+      Sig alloyFileSig = test_SigByName.get(sigName);
+      Sig apiSig = api_SigByName.get(sigName);
       assertTrue(ec.compareTwoExpressions(alloyFileSig, apiSig));
     }
   }

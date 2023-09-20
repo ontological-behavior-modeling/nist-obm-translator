@@ -231,8 +231,6 @@ public class Alloy {
                                  // "BuffetService <: (FoodService <: eat)" with ((ExprBinary)
                                  // original).op = "<:"
     } else {
-      System.err.println(s);
-      System.err.println(original);
       return s.join(original); // x.BuffetService
     }
   }
@@ -420,23 +418,6 @@ public class Alloy {
 
     Expr fromExpr = addExprVarToExpr(s, from);
     Expr toExpr = addExprVarToExpr(s, to);
-
-    // keep Field as Field
-    // if (from == null) {
-    // fromExpr = s;
-    // if (from instanceof Field)
-    // fromExpr = from;
-    // } else {
-    // fromExpr = addExprVarToExpr(s, from);
-    // }
-    //
-    // if (to == null)
-    // toExpr = s;
-    // else if (to instanceof Field) {
-    // toExpr = to;
-    // } else {
-    // toExpr = addExprVarToExpr(s, to);
-    // }
 
     Expr funcCall = func.call();
     Expr bijectionFilteredExpr = bijectionFiltered.call(funcCall, fromExpr, toExpr);

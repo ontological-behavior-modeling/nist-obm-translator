@@ -97,7 +97,7 @@ public class OBMXMI2Alloy {
 
     try {
       while (!r.isLoaded()) {
-        System.out.println("not loaded yet wait 1 sec...");
+        System.out.println("not loaded yet wait 1 milli sec...");
         Thread.sleep(1000);
       }
 
@@ -108,8 +108,7 @@ public class OBMXMI2Alloy {
 
     // Graph2AlloyExpr graph2alloyExpr = new Graph2AlloyExpr();
     // key = class, value = (key = type, value =property>)
-    Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass =
-        new HashMap<>();
+    Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass = new HashMap<>();
     // List<Map.Entry<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>> list =
     // new LinkedList<>(propertiesByClass.entrySet());
 
@@ -129,7 +128,7 @@ public class OBMXMI2Alloy {
 
     if (mainClass == null)
       return;
-    else if (mainClass instanceof org.eclipse.uml2.uml.Class) {
+    else if (mainClass instanceof Class) {
       // EList<Classifier> parents = ((org.eclipse.uml2.uml.Class) mainClass).getGenerals();
       // // Only one parent is allowed in Alloy
       // String parentName = parents.get(0).getName();
@@ -174,8 +173,8 @@ public class OBMXMI2Alloy {
     // }
     // }
 
-
-    Set<NamedElement> allClasses = propertiesByClass.keySet();
+    // properties in sigs
+    Set<Class> allClasses = propertiesByClass.keySet();
     List<Class> classInHierarchy = MDUtils.getClassInHierarchy((Class) mainClass);
     for (Class ne : classInHierarchy) {
       Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
@@ -188,18 +187,20 @@ public class OBMXMI2Alloy {
       processSig((Class) ne, propertiesByType, sysMLUtil);
     }
 
+    // connectors
     List<String> noStepSigs = new ArrayList<>();
     Set<String> inputs = new HashSet<>(); // collect field type Sig having a transfer connector
                                           // with transferTarget "Customer"
     Set<String> outputs = new HashSet<>(); // collect field type Sig having a transfer connector
 
-
     allClasses = propertiesByClass.keySet();// Suppler, Customer
     for (Class ne : classInHierarchy) {// ParticipantTransfer
+      System.out.println(ne.getLabel());
       processConnector((Class) ne, noStepSigs, inputs, outputs, sysMLUtil);
       allClasses.remove(ne);
     }
     for (NamedElement ne : allClasses) {
+      System.out.println(ne.getLabel());
       processConnector((Class) ne, noStepSigs, inputs, outputs, sysMLUtil);
     }
 
@@ -379,12 +380,18 @@ public class OBMXMI2Alloy {
           // edge.setAttribute("oneof", true);
           // }
           else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
-            // else if (source != null && target != null) {
-            handleTransferConnector(cn, sigOfNamedElement, source, target, sourceTypeName,
-                targetTypeName);
+            Association type = cn.getType();
+            if (type.getName().equals("Transfer")) {
+              handleTransferConnector(cn, sigOfNamedElement, source, target, sourceTypeName,
+                  targetTypeName);
 
-            inputs.add(targetTypeName);
-            outputs.add(sourceTypeName);
+              inputs.add(targetTypeName);
+              outputs.add(sourceTypeName);
+            } else if (type.getName().equals("TransferBefore")) {
+              handleTransferBeforeConnector(cn, sigOfNamedElement, source, target, sourceTypeName,
+                  targetTypeName);
+
+            }
           }
 
         } // end of connectorEnd
@@ -450,9 +457,9 @@ public class OBMXMI2Alloy {
     }
   }
 
-  private Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> addClasses(
+  private Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> addClasses(
       NamedElement umlElement, SysMLUtil sysMLUtil,
-      Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass) {
+      Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass) {
 
     if (umlElement instanceof org.eclipse.uml2.uml.Class) {
       org.eclipse.uml2.uml.Class umlClass = (org.eclipse.uml2.uml.Class) umlElement;
@@ -482,7 +489,7 @@ public class OBMXMI2Alloy {
           // PaticipantTransfer.Product has no parent
           toAlloy.createAlloySig(eType.getName(),
               parents == null || parents.size() == 0 ? null : parents.get(0).getName());
-          addClasses((org.eclipse.uml2.uml.NamedElement) eType, sysMLUtil, propertiesByClass);
+          addClasses(eType, sysMLUtil, propertiesByClass);
         }
         propertiesByClass.put(umlClass, propertiesByTheirType);
       }
@@ -640,8 +647,8 @@ public class OBMXMI2Alloy {
   }
 
 
-  private void handleTransferConnector(org.eclipse.uml2.uml.Connector cn, Sig sig, String source,
-      String target, String sourceTypeName, String targetTypeName) {
+  private void handleTransferConnector(org.eclipse.uml2.uml.Connector cn, PrimSig sig,
+      String source, String target, String sourceTypeName, String targetTypeName) {
 
     String[] stTagNames = {"sourceOutputProperty", "targetInputProperty"};// , "itemType"}; this
                                                                           // property value is class
@@ -668,42 +675,36 @@ public class OBMXMI2Alloy {
       }
     }
 
-    Association type = cn.getType();
-    if (type.getName().compareTo("Transfer") == 0) {
-      Sig.Field transferField = toAlloy.addAlloyTransferField(
-          type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
-      toAlloy.createFnForTransferAndAddToOverallFact(sig, /* sig.domain( */transferField/* ) */,
-          sourceTypeName, targetTypeName);
+    Sig.Field transferField = toAlloy
+        .addAlloyTransferField("transfer" + firstCharUpper(source) + firstCharUpper(target), sig);
+    toAlloy.createFnForTransferAndAddToOverallFact(sig, /* sig.domain( */transferField/* ) */,
+        sourceTypeName, targetTypeName);
+  }
 
-    } else if (type.getName().compareTo("TransferBefore") == 0) {
+  private void handleTransferBeforeConnector(org.eclipse.uml2.uml.Connector cn, PrimSig sig,
+      String source, String target, String sourceTypeName, String targetTypeName) {
 
-      // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeAB, x.a]}
-      // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeAB, x.b]}
-      // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeAB]}
-      // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeAB]}
+    // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeAB, x.a]}
+    // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeAB, x.b]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeAB]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeAB]}
 
-      // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeBC, x.b]}
-      // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeBC, x.c]}
-      // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeBC]}
-      // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeBC]}
-
-      // wip - this is when source has no incoming or target has no outgoing
-      Sig.Field transferField = toAlloy.addAlloyTransferBeforeField(
-          type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
-      toAlloy.createFnForTransferBeforeAndAddToOverallFact(sig,
-          /* sig.domain( */transferField/* ) */, sourceTypeName, targetTypeName);
-      // Sig.Field start = toAlloy.addAlloyTransferField(
-      // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(source), sig);
-      // Sig.Field middle = toAlloy.addAlloyTransferField(
-      // type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
-      // Sig.Field end = toAlloy.addAlloyTransferField(
-      // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(target), sig);
-      // toAlloy.createFnForTransferBeforeAndAddToOverallFact(sig, sig.domain(start),
-      // sig.domain(middle), sig.domain(end), sourceTypeName, targetTypeName);
-    }
-
-
-
+    // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeBC, x.b]}
+    // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeBC, x.c]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeBC]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeBC]}
+    Sig.Field transferField = toAlloy.addAlloyTransferBeforeField(
+        "transferbefore" + firstCharUpper(source) + firstCharUpper(target), sig);
+    toAlloy.createFnForTransferAndAddToOverallFact(sig, /* sig.domain( */transferField/* ) */,
+        source, target);
+    // Sig.Field start = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(source), sig);
+    // Sig.Field middle = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
+    // Sig.Field end = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(target), sig);
+    // toAlloy.createFnForTransferBeforeAndAddToOverallFact(sig, sig.domain(start),
+    // sig.domain(middle), sig.domain(end), sourceTypeName, targetTypeName);
   }
 
   /**

@@ -320,19 +320,22 @@ public class ToAlloy {
   }
 
 
-  public void createFnForTransferAndAddToOverallFact(Sig ownerSig, Expr transfer,
-      String sourceTypeName, String targetTypeName) {
+  public void createFnForTransferAndAddToOverallFact(PrimSig ownerSig, Expr transfer,
+      String sourceName, String targetName) {
 
-    Expr sourceFieldExpr = null;
-    Expr targetFieldExpr = null;
-    for (Entry<Field, Sig> entry : fieldTypeByField.entrySet()) {
-      if (entry.getValue().label.compareTo(sourceTypeName) == 0 && entry.getKey().sig == ownerSig) {
-        sourceFieldExpr = ownerSig.domain(entry.getKey());
-      } else if (entry.getValue().label.compareTo(targetTypeName) == 0
-          && entry.getKey().sig == ownerSig) {
-        targetFieldExpr = ownerSig.domain(entry.getKey());
-      }
-    }
+    Expr sourceField = Helper.getFieldFromSig(sourceName, ownerSig);
+    Expr targetField = Helper.getFieldFromSig(targetName, ownerSig);
+    // Expr sourceFieldExpr = null;
+    // Expr targetFieldExpr = null;
+    // for (Entry<Field, Sig> entry : fieldTypeByField.entrySet()) {
+    // if (entry.getValue().label.compareTo(sourceTypeName) == 0 && entry.getKey().sig == ownerSig)
+    // {
+    // sourceFieldExpr = /* ownerSig.domain( */entry.getKey()/* ) */;
+    // } else if (entry.getValue().label.compareTo(targetTypeName) == 0
+    // && entry.getKey().sig == ownerSig) {
+    // targetFieldExpr = /* ownerSig.domain( */entry.getKey()/* ) */;
+    // }
+    // }
 
     // fact {all x: ParticipantTransfer | bijectionFiltered[sources, x.transferSupplierCustomer,
     // x.supplier]}
@@ -341,8 +344,8 @@ public class ToAlloy {
     // fact {all x: ParticipantTransfer | subsettingItemRuleForSources[x.transferSupplierCustomer]}
     // fact {all x: ParticipantTransfer | subsettingItemRuleForTargets[x.transferSupplierCustomer]}
 
-    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceFieldExpr, Alloy.sources);
-    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetFieldExpr, Alloy.targets);
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceField, Alloy.sources);
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetField, Alloy.targets);
     alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer);
   }
 
