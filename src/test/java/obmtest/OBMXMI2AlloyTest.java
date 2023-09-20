@@ -21,6 +21,7 @@ class OBMXMI2AlloyTest {
   @ParameterizedTest
 
   @CsvSource({
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior.als,Model::Basic::ParameterBehavior",
       "4.1.5 Multiple Execution Steps - Multiple Object Flow_mw.als, Model::Basic::ObjectFlowBehavior",
       "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als, Model::Realistic::IFFoodService",
       "4.1.1 Control Nodes1 - SimpleSequence_modified.als,Model::Basic::SimpleSequence",
@@ -50,8 +51,7 @@ class OBMXMI2AlloyTest {
   //
   // TransferBefore
   // // wip waiting Jeremy's update obm file
-  // // "4.1.4 Transfers and Parameters2 -
-  // // ParameterBehavior.als,Model::Basic::ParameterBehavior",
+
 
   // // //
   })

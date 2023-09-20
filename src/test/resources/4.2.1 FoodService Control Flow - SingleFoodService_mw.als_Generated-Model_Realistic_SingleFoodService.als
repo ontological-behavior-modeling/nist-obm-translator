@@ -16,10 +16,10 @@ sig SingleFoodService extends FoodService {}
 
 // Facts:
 fact {all x: SingleFoodService | #(x.serve) = 1}
-fact {all x: SingleFoodService | #(x.eat) = 1}
 fact {all x: SingleFoodService | #(x.order) = 1}
-fact {all x: SingleFoodService | #(x.pay) = 1}
 fact {all x: SingleFoodService | #(x.prepare) = 1}
+fact {all x: SingleFoodService | #(x.pay) = 1}
+fact {all x: SingleFoodService | #(x.eat) = 1}
 fact {all x: FoodService | bijectionFiltered[happensBefore, x.prepare, x.serve]}
 fact {all x: FoodService | bijectionFiltered[happensBefore, x.order, x.serve]}
 fact {all x: FoodService | bijectionFiltered[happensBefore, x.serve, x.eat]}

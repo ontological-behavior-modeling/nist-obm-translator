@@ -22,11 +22,11 @@ sig Real extends Occurrence {}
 sig IFOrder extends Order { orderedFoodItem: set FoodItem }
 
 // Facts:
-fact {all x: IFPrepare | #(x.preparedFoodItem) = 1}
 fact {all x: IFServe | #(x.servedFoodItem) = 1}
 fact {all x: IFOrder | #(x.orderedFoodItem) = 1}
-fact {all x: IFPay | #(x.paidAmount) = 1}
 fact {all x: IFPay | #(x.paidFoodItem) = 1}
+fact {all x: IFPay | #(x.paidAmount) = 1}
+fact {all x: IFPrepare | #(x.preparedFoodItem) = 1}
 fact {all x: IFEat | #(x.eatenItem) = 1}
 fact {all x: FoodService | bijectionFiltered[happensBefore, x.prepare, x.serve]}
 fact {all x: FoodService | bijectionFiltered[happensBefore, x.order, x.serve]}

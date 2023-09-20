@@ -11,8 +11,8 @@ sig AtomicBehavior extends Occurrence {}
 
 // Facts:
 fact {all x: ComplexBehavior | #(x.p1) = 1}
-fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p5 + x.p6, x.p7]}
 fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p4, x.p5 + x.p6]}
+fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p5 + x.p6, x.p7]}
 fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p1, x.p2]}
 fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p1, x.p3]}
 fact {all x: ComplexBehavior | bijectionFiltered[happensBefore, x.p3, x.p4]}

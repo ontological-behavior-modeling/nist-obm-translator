@@ -11,9 +11,9 @@ sig AtomicBehavior extends Occurrence {}
 sig NestedBehavior extends Occurrence { disj p4, p5: set AtomicBehavior }
 
 // Facts:
-fact {all x: ComposedBehavior | #(x.p2) = 1}
 fact {all x: ComposedBehavior | #(x.p1) = 1}
 fact {all x: ComposedBehavior | #(x.p3) = 1}
+fact {all x: ComposedBehavior | #(x.p2) = 1}
 fact {all x: NestedBehavior | #(x.p4) = 1}
 fact {all x: NestedBehavior | #(x.p5) = 1}
 fact {all x: ComposedBehavior | bijectionFiltered[happensBefore, x.p1, x.p2]}
