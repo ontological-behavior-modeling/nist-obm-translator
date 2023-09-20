@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -536,7 +535,7 @@ public class Alloy {
     }
   }
 
-  public void addSteps(ExprVar var, Sig ownerSig, LinkedHashMap<Field, Sig> fieldTypeByField) {
+  public void addSteps(ExprVar var, Sig ownerSig) {
 
     // ?? do you need different call?
     // steps
@@ -544,7 +543,7 @@ public class Alloy {
     // Expr ostepsExpr2 = osteps.call();
 
     Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr = createStepExpr(var, ownerSig, fieldTypeByField);
+    Expr expr = createStepExpr(var, ownerSig);
     if (expr != null) {
       // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
       // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
@@ -557,22 +556,28 @@ public class Alloy {
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
+  // comparing two files but step order need to be the same
+  private Expr createStepExpr(ExprVar s, Sig ownerSig) {
 
-  private Expr createStepExpr(ExprVar s, Sig ownerSig, Map<Field, Sig> filedTypeByField) {
-    Expr expr = null;
     List<String> sortedFieldLabel = new ArrayList<>();
-    for (Field field : filedTypeByField.keySet()) {
+    for (Field field : ownerSig.getFields()) {
       sortedFieldLabel.add(field.label);
     }
     Collections.sort(sortedFieldLabel);
 
+    Expr expr = null;
+
     for (String fieldName : sortedFieldLabel) {
-      Field field =
-          filedTypeByField.keySet().stream().filter(f -> (f.label == fieldName)).findFirst().get();
-      if (field.sig == ownerSig)
-        expr = expr == null ? s.join(ownerSig.domain(field))
-            : expr.plus(s.join(ownerSig.domain(field)));
+      for (Field field : ownerSig.getFields()) {
+        if (field.label.equals(fieldName)) {
+          expr = expr == null ? s.join(ownerSig.domain(field))
+              : expr.plus(s.join(ownerSig.domain(field)));
+          break;
+        }
+      }
     }
+
+
     return expr;
   }
 

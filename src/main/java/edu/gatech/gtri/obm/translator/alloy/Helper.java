@@ -52,6 +52,21 @@ public class Helper {
     return null;
   }
 
+  // Assume only one field with the same type
+  // not searching through inherited fields
+  public static Sig.Field getFieldFromSigByFieldType(String fieldTypeName, PrimSig sig) {
+    // 4.1.4 Transfers and Parameters1 - TransferProduct_modified
+    // Sig =PatifipantTransfer, String fieldType = Supplier
+    for (Sig.Field field : sig.getFields()) {
+      java.util.List<java.util.List<Sig.PrimSig>> folds = field.type().fold();
+      for (java.util.List<Sig.PrimSig> fold : folds) {
+        // fold = [PaticipantTransfer, Custome]
+        if (fold.get(fold.size() - 1).label.equals(fieldTypeName)) // last one
+          return field;
+      }
+    }
+    return null;
+  }
 
   public static void printAllFunc(Module m) {
     System.out.println("===========allFunc====================");

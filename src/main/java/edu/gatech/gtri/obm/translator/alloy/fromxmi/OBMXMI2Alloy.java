@@ -219,16 +219,16 @@ public class OBMXMI2Alloy {
     if (propertiesByType != null) {
       for (org.eclipse.uml2.uml.Type propertyType : propertiesByType.keySet()) {
         // find property by type (ie., propetyType = Order, List<Property> = [order]);
-        List<Property> ps = propertiesByType.get(propertyType);
+        List<Property> propertiesSortedByType = propertiesByType.get(propertyType);
 
         // sort property in alphabetical order, also remove redefined properties from the sorted
         // list.
-        List<String> nonRedefinedPropertyInAlphabeticalOrder = new ArrayList<>();
+        List<String> nonRedefinedPropertyInAlphabeticalOrderPerType = new ArrayList<>();
         int i = 0;
-        for (Property p : ps) {
+        for (Property p : propertiesSortedByType) {
           if (p.getName() != null) { // Since MD allow having no name.
             if (p.getRedefinedProperties().size() == 0) {
-              nonRedefinedPropertyInAlphabeticalOrder.add(p.getName());
+              nonRedefinedPropertyInAlphabeticalOrderPerType.add(p.getName());
               // graph2alloyExpr.addNode(p.getName());
               i++;
             }
@@ -237,15 +237,16 @@ public class OBMXMI2Alloy {
                 + "has no name, so ignored.  Please defined the name to be included");
           }
         }
-        Collections.sort(nonRedefinedPropertyInAlphabeticalOrder);
+        Collections.sort(nonRedefinedPropertyInAlphabeticalOrderPerType);
 
-        if (nonRedefinedPropertyInAlphabeticalOrder.size() > 0) {
-          Sig.Field[] fields = toAlloy.addDisjAlloyFields(nonRedefinedPropertyInAlphabeticalOrder,
-              propertyType.getName(), sigOfNamedElement);
+        if (nonRedefinedPropertyInAlphabeticalOrderPerType.size() > 0) {
+          Sig.Field[] fields =
+              toAlloy.addDisjAlloyFields(nonRedefinedPropertyInAlphabeticalOrderPerType,
+                  propertyType.getName(), sigOfNamedElement);
           // server, Serve, SinglFooeService
           if (fields != null) {
             i = 0;
-            for (Property p : ps) {
+            for (Property p : propertiesSortedByType) {
               if (p.getLower() == p.getUpper())
                 toAlloy.addCardinalityEqualConstraintToField(fields[i], sigOfNamedElement,
                     p.getLower());
@@ -257,7 +258,7 @@ public class OBMXMI2Alloy {
             }
           }
         } else {
-          for (Property p : ps) {
+          for (Property p : propertiesSortedByType) {
             if (p.getLower() == p.getUpper())
               toAlloy.addCardinalityEqualConstraintToField(p.getName(), sigOfNamedElement,
                   p.getLower());
@@ -531,7 +532,7 @@ public class OBMXMI2Alloy {
 
   }
 
-  private void handleOneOfConnectors(Sig ownerSig, Set<Connector> connectors,
+  private void handleOneOfConnectors(PrimSig ownerSig, Set<Connector> connectors,
       List<Element> oneOfSet, Set<Connector> processedConnectors) {
 
     List<String> sourceNames = new ArrayList<>(); // for each connector
@@ -568,17 +569,22 @@ public class OBMXMI2Alloy {
     Expr afterExpr = null;
     if (isSourceSideOneOf) { // sourceSide need to be combined
       for (String sourceName : sourceNames) {
-        beforeExpr = beforeExpr == null ? /* ownerSig.domain( */toAlloy.getField(sourceName)// )
-            : beforeExpr.plus(/* ownerSig.domain( */toAlloy.getField(sourceName))/* ) */;
+        beforeExpr =
+            beforeExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+                : beforeExpr.plus(
+                    /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
       }
-      afterExpr = /* ownerSig.domain( */toAlloy.getField(targetNames.get(0))/* ) */;
+      afterExpr = /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
     } else {
       afterExpr = null;
       for (String targetName : targetNames) {
-        afterExpr = afterExpr == null ? /* ownerSig.domain( */toAlloy.getField(targetName)// )
-            : afterExpr.plus(/* ownerSig.domain( */toAlloy.getField(targetName))/* ) */;
+        afterExpr =
+            afterExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+                : afterExpr.plus(
+                    /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
       }
-      beforeExpr = /* ownerSig.domain( */toAlloy.getField(sourceNames.get(0))/* ) */;
+      beforeExpr =
+          /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
     }
     // toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
     // afterExpr);
