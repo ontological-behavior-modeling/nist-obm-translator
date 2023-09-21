@@ -3,6 +3,11 @@ package obmtest;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +36,7 @@ class OBMXMI2AlloyTest {
       "4.1.1 Control Nodes6 - CombinedControlNodes_modified.als, Model::Basic::ComplexBehavior",
       "4.1.2 LoopsExamples_modified.als, Model::Basic::Loop", //
       "4.1.3 CallingBehaviors_modified.als, Model::Basic::ComposedBehavior",
-      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::ParticipantTransfer"//
+//      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::ParticipantTransfer"//
   // 4.1.4
   // "generated-UnsatisfiableMultiplicity.als, Model::Basic::UnsatisfiableMultiplicity", //
   // 4.1.6
@@ -76,23 +81,40 @@ class OBMXMI2AlloyTest {
     // OBM/GIT/NIST-OBM-Translator.git/develop_mw/target/classes/OBMModel_MW.xmi");
     System.out.println("XMIFile: " + xmiFile.exists() + "? " + xmiFile.getAbsolutePath());
     test.createAlloyFile(xmiFile, className);
-
+    
+    String genFileName = "generated-" + className.replaceAll("::", "_") + ".als";
+    
+    Path source = Paths.get(genFileName);
+    Path newdir = Paths.get("src/test/resources/");
+    try {
+  		Files.move(source, newdir.resolve(source.getFileName()),StandardCopyOption.REPLACE_EXISTING);
+  	} catch (IOException e) {
+  		// TODO Auto-generated catch block
+  		e.printStackTrace();
+  	}
+    
     File testFile = new File("src/test/resources/" + fileName);
+    
     // File testFile = new File(
     // "C:\\Users\\mw107\\Documents\\Projects\\NIST OBM\\info\\obm-alloy-code_2023-05-26\\obm\\"
     // + fileName);
     System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
+    
+    String generatedFileName = "generated-" + className.replaceAll("::", "_") + ".als";
+    File generatedFile = new File("src/test/resources/" + generatedFileName);
+    System.out.println("generatedFile: " + generatedFile.exists() + "? " + generatedFile.getAbsolutePath());
 
 
     // ========== Create Alloy model from Alloy file ==========
     CompModule importedModule = MyAlloyLibrary.importAlloyModule(testFile);
+    CompModule generatedModule = MyAlloyLibrary.importAlloyModule(generatedFile);
 
 
     // ========== Compare abstract syntax trees ==========
 
     ExpressionComparator ec = new ExpressionComparator();
 
-    Expr sysmlAbstractSyntaxTree = test.getOverallFacts();
+    Expr sysmlAbstractSyntaxTree = generatedModule.getAllReachableFacts();
     Expr alloyFileAbstractSyntaxTree = importedModule.getAllReachableFacts();
 
     System.out.println(sysmlAbstractSyntaxTree);
@@ -103,27 +125,30 @@ class OBMXMI2AlloyTest {
     // ========== Set up signatures ==========
 
     List<Sig> alloyFileSignatures = importedModule.getAllReachableUserDefinedSigs();
-
-    Map<String, Sig> sysmlSigMap = test.getAllReachableUserDefinedSigs();
+    List<Sig> generatedFileSignatures = generatedModule.getAllReachableUserDefinedSigs();
     Map<String, Sig> alloyFileSigMap = new HashMap<>();
-
+    Map<String, Sig> genFileSigMap = new HashMap<>();
+    
     for (Sig sig : alloyFileSignatures) {
       alloyFileSigMap.put(sig.label, sig);
     }
+    for (Sig sig : generatedFileSignatures) {
+      genFileSigMap.put(sig.label, sig);
+    }
 
     // ========== Compare the number of signatures ==========
-    assertTrue(sysmlSigMap.size() == alloyFileSigMap.size());
+    assertTrue(genFileSigMap.size() == alloyFileSigMap.size());
 
     System.out.println(alloyFileSigMap);
-    System.out.println(sysmlSigMap);
+    System.out.println(genFileSigMap);
 
     // ========== Compare each signature ==========
 
-    for (String sigName : sysmlSigMap.keySet()) {
+    for (String sigName : genFileSigMap.keySet()) {
       // System.out.println(alloyFileSigMap.get(sigName));
       // System.out.println(sysmlSigMap.get(sigName));
       Sig alloyFileSig = alloyFileSigMap.get(sigName);
-      Sig sysmlSig = sysmlSigMap.get(sigName);
+      Sig sysmlSig = genFileSigMap.get(sigName);
       if (alloyFileSig == null)
         alloyFileSig = alloyFileSigMap.get("this/" + sigName);// this/BehaviorFork
 

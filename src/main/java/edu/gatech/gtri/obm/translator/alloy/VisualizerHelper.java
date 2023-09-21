@@ -156,235 +156,235 @@ public class VisualizerHelper {
     }
   }
 
-  public static void generateVisualizerY(Iterable<Sig> sigs, Command cmd) {
-    viz = null; // reassign viz b/c it's static it needs to be reset to null here just to be sure.
-    A4Options options = new A4Options();
-    options.tempDirectory = "out";
-    options.solverDirectory = "out";
-    options.recordKodkod = true;// RecordKodkod.get();
-    options.noOverflow = true;// NoOverflow.get();
-    options.unrolls = -1;// Version.experimental ? Unrolls.get() : (-1);
-    options.skolemDepth = 4;// SkolemDepth.get();
-    options.coreMinimization = 2;// CoreMinimization.get();
-    options.inferPartialInstance = false;// InferPartialInstance.get();
-    options.coreGranularity = 0;// CoreGranularity.get();
-    options.solver = A4Options.SatSolver.SAT4J;
-    A4Solution ans = TranslateAlloyToKodkod.execute_command(null, sigs, cmd, options);
-    int counter = 0;
-    int scCounter = 0;
-    FileWriter fw = null;
-    FileWriter fprojected = null;
-    Set<String> ansToString = new LinkedHashSet<String>();
-    Set<String> ansModifiedToString = new LinkedHashSet<String>();
-    Set<AlloyInstance> ainstances = new HashSet<AlloyInstance>();
-    Set<AlloyModel> amodels = new HashSet<AlloyModel>();
-
-    Set<String> projectedOverInstances = new HashSet<String>();
-    // AlloyInstance.toString(), value = index
-    HashMap<String, Set<Integer>> projectedCounter = new HashMap<String, Set<Integer>>();
-    HashMap<String, Set<Integer>> a4solutionCounter = new HashMap<String, Set<Integer>>();
-
-    System.out.println(System.currentTimeMillis());
-    long uniqueTime = System.currentTimeMillis();
-
-    try {
-
-      fw = new FileWriter("lib/a4solution_out/coutSS" + uniqueTime + ".txt", true);
-      fprojected =
-          new FileWriter("lib/a4solution_out/projectedInstances" + uniqueTime + ".txt", true);
-    } catch (IOException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
-    }
-    while (ans.satisfiable()) {
-      boolean unique = ansToString.add(ans.toString());
-      System.out.println("[Solution" + ++counter + "]: unique? " + unique);
-      // System.out.println("maxseq: " + ans.getMaxSeq() + " bitwidth: " + ans.getBitwidth());
-      // System.out.println("original cmd: " + ans.getOriginalCommand());
-      // System.out.println("reachable sig: " + ans.getAllReachableSigs());
-      // System.out.println("============atoms");
-      for (Iterator<ExprVar> iter = ans.getAllAtoms().iterator(); iter.hasNext();) {
-        ExprVar ev = iter.next();
-        if (ev.toString().startsWith("SimpleSequence"))
-          scCounter++;
-      }
-
-      try {
-
-
-
-        String ms = ans.toString().replaceAll("\\{o/BinaryLinkSig\\$0\\}", "{}")
-            .replaceAll("\\{o/TransferSig\\$0\\}", "{}")
-            .replaceAll("\\{o/TransferBeforeSig\\$0\\}", "{}");
-
-        ms = ms.replaceAll("o/BinaryLinkSig", "X").replaceAll("o/TransferSig", "X")
-            .replaceAll("o/TransferBeforeSig", "X");
-
-        boolean uniqueModified = ansModifiedToString.add(ms);
-
-
-        FileWriter ff = new FileWriter("lib/a4solution_out/a4s" + counter + ".txt", false);
-        FileWriter ff2 = new FileWriter(
-            "lib/a4solution_out/a4s_modified" + counter + "- " + uniqueModified + ".txt", false);
-
-        ff.write(ans.toString());
-        ff2.write(ms);
-        ff.close();
-        fw.write(counter + " " + unique + " " + uniqueModified + " " + ans.getAllAtoms() + "\n");
-        ff2.close();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-
-      // System.out.println("============getAllSkolems");
-      // for (Iterator<ExprVar> iter = ans.getAllSkolems().iterator(); iter.hasNext();) {
-      // System.out.println(iter.next());
-      // }
-
-
-      // System.out.println(ans.toString());
-      ans.writeXML("out/alloy_example_output_" + counter + ".xml");
-
-      // read
-      File f = new File("out/alloy_example_output_" + counter + ".xml");
-      AlloyInstance myInstance = StaticInstanceReader.parseInstance(f);
-      ainstances.add(myInstance);
-      amodels.add(myInstance.model);
-
-      VizState myState = null;
-      if (myState == null)
-        myState = new VizState(myInstance);
-
-      System.out.println("==========AlloyTypes===========");
-      System.out.println(myState.getOriginalModel().getTypes().size() + " "
-          + myState.getOriginalModel().getTypes());
-      for (final AlloyType type : myState.getOriginalModel().getTypes())
-        if (myState.canProject(type)) {
-
-          System.out.println("can project: " + type.getName());
-          myState.project(type);
-          List<AlloyAtom> latoms = myState.getOriginalInstance().type2atoms(type); // o/BinaryLinkSig$0
-          System.out.println("ListOfAtoms: " + latoms);
-          Map<AlloyType, AlloyAtom> map = new LinkedHashMap<AlloyType, AlloyAtom>();
-          if (type.getName().equals("o/OccurrenceSig")) { // latoms = [o/BinaryLinkSig]
-            // // TypePanel tp = new TypePanel(type, atoms, null);
-            List<AlloyAtom> atoms = new ArrayList<AlloyAtom>(latoms);
-            Collections.sort(atoms);
-            List<AlloyAtom> sortedatoms = ConstList.make(atoms);
-            map.put(type, latoms.get(0)); // not sure VuzGraogPanel atomCombo.getSelectedIndex();
-            AlloyProjection currentProjection = new AlloyProjection(map);
-
-            JPanel graph = myState.getGraph(currentProjection);
-            // JPanel ans = StaticGraphMaker.produceGraph(myInstance, this, currentProjection);
-
-            try {
-              fprojected.write("=========================a4solution: \n");
-              fprojected.write(ans.toString());
-
-              fprojected.write("-------------------------originalInstance: ");
-              fprojected.write("mw-original-instance: " + myInstance.hashCode());
-              fprojected.write("mw-original-model: " + myInstance.model.hashCode() + "\n");
-              fprojected.write(myInstance.toString());
-
-
-              fprojected.write("-----------------------projectedInstance: \n");
-              AlloyInstance projectedinstance =
-                  StaticProjector.project(myInstance, currentProjection);
-              fprojected.write("mw-instance: " + projectedinstance.hashCode());
-              AlloyModel projectedmodel = projectedinstance.model;
-              fprojected.write("mw-model: " + projectedmodel.hashCode() + "\n");
-              fprojected.write(projectedinstance.toString());
-
-
-
-              boolean up = projectedOverInstances.add(projectedinstance.toString());
-              System.out.println("-----------------------projectedAlloyInstance: unique?" + up);
-
-              Set<Integer> sint = projectedCounter.get(projectedinstance.toString());
-              if (sint == null) {
-                sint = new HashSet<Integer>();
-                sint.add(Integer.valueOf(counter));
-                projectedCounter.put(projectedinstance.toString(), sint);
-              } else
-                sint.add(Integer.valueOf(counter));
-
-
-              Set<Integer> sinta = a4solutionCounter.get(ans.toString());
-              if (sinta == null) {
-                sinta = new HashSet<Integer>();
-                sinta.add(Integer.valueOf(counter));
-                a4solutionCounter.put(ans.toString().toString(), sinta);
-              } else
-                sinta.add(Integer.valueOf(counter));
-
-
-
-            } catch (Exception e) {
-              e.printStackTrace();
-
-            }
-          }
-        }
-
-      ans = ans.next();
-    }
-    if (counter == 0)
-      System.out.println("no solution found.");
-    try
-
-    {
-      fw.write("# of unique ansToString = " + ansToString.size());
-      fw.close();
-      fprojected.close();
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    System.out.println("# of a4 solution: " + counter);
-    System.out.println("# of unique a4 solution: " + ansToString.size());
-    System.out.println("# of unique modified a4 soltuion: " + ansModifiedToString.size());
-    System.out.println("# of unique AlloyInstances: " + ainstances.size());
-    System.out.println("# of unique AlloyModels: " + amodels.size());
-    System.out.println("# of unique projectedOver: " + projectedOverInstances.size());
-    FileWriter fprojectedSummary = null;
-    FileWriter fa4SolutionSummary = null;
-    try {
-      fprojectedSummary =
-          new FileWriter("lib/a4solution_out/projectedsummary_" + uniqueTime + ".txt", false);
-      int c = 1;
-      for (Iterator<String> iter = projectedCounter.keySet().iterator(); iter.hasNext();) {
-        String s = iter.next();
-        fprojectedSummary
-            .write(c++ + ": " + projectedCounter.get(s) + "================================\n");
-        fprojectedSummary.write(s + "\n");
-      }
-      c = 1;
-      fa4SolutionSummary =
-          new FileWriter("lib/a4solution_out/a4solutionsummary_" + uniqueTime + ".txt", false);
-      for (Iterator<String> iter = a4solutionCounter.keySet().iterator(); iter.hasNext();) {
-        String s = iter.next();
-        fa4SolutionSummary
-            .write(c++ + ": " + a4solutionCounter.get(s) + "================================\n");
-        fa4SolutionSummary.write(s + "\n");
-
-
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        fprojectedSummary.close();
-        fa4SolutionSummary.close();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-    }
-
-
-
-  }
+//  public static void generateVisualizerY(Iterable<Sig> sigs, Command cmd) {
+//    viz = null; // reassign viz b/c it's static it needs to be reset to null here just to be sure.
+//    A4Options options = new A4Options();
+//    options.tempDirectory = "out";
+//    options.solverDirectory = "out";
+//    options.recordKodkod = true;// RecordKodkod.get();
+//    options.noOverflow = true;// NoOverflow.get();
+//    options.unrolls = -1;// Version.experimental ? Unrolls.get() : (-1);
+//    options.skolemDepth = 4;// SkolemDepth.get();
+//    options.coreMinimization = 2;// CoreMinimization.get();
+//    options.inferPartialInstance = false;// InferPartialInstance.get();
+//    options.coreGranularity = 0;// CoreGranularity.get();
+//    options.solver = A4Options.SatSolver.SAT4J;
+//    A4Solution ans = TranslateAlloyToKodkod.execute_command(null, sigs, cmd, options);
+//    int counter = 0;
+//    int scCounter = 0;
+//    FileWriter fw = null;
+//    FileWriter fprojected = null;
+//    Set<String> ansToString = new LinkedHashSet<String>();
+//    Set<String> ansModifiedToString = new LinkedHashSet<String>();
+//    Set<AlloyInstance> ainstances = new HashSet<AlloyInstance>();
+//    Set<AlloyModel> amodels = new HashSet<AlloyModel>();
+//
+//    Set<String> projectedOverInstances = new HashSet<String>();
+//    // AlloyInstance.toString(), value = index
+//    HashMap<String, Set<Integer>> projectedCounter = new HashMap<String, Set<Integer>>();
+//    HashMap<String, Set<Integer>> a4solutionCounter = new HashMap<String, Set<Integer>>();
+//
+//    System.out.println(System.currentTimeMillis());
+//    long uniqueTime = System.currentTimeMillis();
+//
+//    try {
+//
+//      fw = new FileWriter("lib/a4solution_out/coutSS" + uniqueTime + ".txt", true);
+//      fprojected =
+//          new FileWriter("lib/a4solution_out/projectedInstances" + uniqueTime + ".txt", true);
+//    } catch (IOException e1) {
+//      // TODO Auto-generated catch block
+//      e1.printStackTrace();
+//    }
+//    while (ans.satisfiable()) {
+//      boolean unique = ansToString.add(ans.toString());
+//      System.out.println("[Solution" + ++counter + "]: unique? " + unique);
+//      // System.out.println("maxseq: " + ans.getMaxSeq() + " bitwidth: " + ans.getBitwidth());
+//      // System.out.println("original cmd: " + ans.getOriginalCommand());
+//      // System.out.println("reachable sig: " + ans.getAllReachableSigs());
+//      // System.out.println("============atoms");
+//      for (Iterator<ExprVar> iter = ans.getAllAtoms().iterator(); iter.hasNext();) {
+//        ExprVar ev = iter.next();
+//        if (ev.toString().startsWith("SimpleSequence"))
+//          scCounter++;
+//      }
+//
+//      try {
+//
+//
+//
+//        String ms = ans.toString().replaceAll("\\{o/BinaryLinkSig\\$0\\}", "{}")
+//            .replaceAll("\\{o/TransferSig\\$0\\}", "{}")
+//            .replaceAll("\\{o/TransferBeforeSig\\$0\\}", "{}");
+//
+//        ms = ms.replaceAll("o/BinaryLinkSig", "X").replaceAll("o/TransferSig", "X")
+//            .replaceAll("o/TransferBeforeSig", "X");
+//
+//        boolean uniqueModified = ansModifiedToString.add(ms);
+//
+//
+//        FileWriter ff = new FileWriter("lib/a4solution_out/a4s" + counter + ".txt", false);
+//        FileWriter ff2 = new FileWriter(
+//            "lib/a4solution_out/a4s_modified" + counter + "- " + uniqueModified + ".txt", false);
+//
+//        ff.write(ans.toString());
+//        ff2.write(ms);
+//        ff.close();
+//        fw.write(counter + " " + unique + " " + uniqueModified + " " + ans.getAllAtoms() + "\n");
+//        ff2.close();
+//      } catch (IOException e) {
+//        // TODO Auto-generated catch block
+//        e.printStackTrace();
+//      }
+//
+//      // System.out.println("============getAllSkolems");
+//      // for (Iterator<ExprVar> iter = ans.getAllSkolems().iterator(); iter.hasNext();) {
+//      // System.out.println(iter.next());
+//      // }
+//
+//
+//      // System.out.println(ans.toString());
+//      ans.writeXML("out/alloy_example_output_" + counter + ".xml");
+//
+//      // read
+//      File f = new File("out/alloy_example_output_" + counter + ".xml");
+//      AlloyInstance myInstance = StaticInstanceReader.parseInstance(f);
+//      ainstances.add(myInstance);
+//      amodels.add(myInstance.model);
+//
+//      VizState myState = null;
+//      if (myState == null)
+//        myState = new VizState(myInstance);
+//
+//      System.out.println("==========AlloyTypes===========");
+//      System.out.println(myState.getOriginalModel().getTypes().size() + " "
+//          + myState.getOriginalModel().getTypes());
+//      for (final AlloyType type : myState.getOriginalModel().getTypes())
+//        if (myState.canProject(type)) {
+//
+//          System.out.println("can project: " + type.getName());
+//          myState.project(type);
+//          List<AlloyAtom> latoms = myState.getOriginalInstance().type2atoms(type); // o/BinaryLinkSig$0
+//          System.out.println("ListOfAtoms: " + latoms);
+//          Map<AlloyType, AlloyAtom> map = new LinkedHashMap<AlloyType, AlloyAtom>();
+//          if (type.getName().equals("o/OccurrenceSig")) { // latoms = [o/BinaryLinkSig]
+//            // // TypePanel tp = new TypePanel(type, atoms, null);
+//            List<AlloyAtom> atoms = new ArrayList<AlloyAtom>(latoms);
+//            Collections.sort(atoms);
+//            List<AlloyAtom> sortedatoms = ConstList.make(atoms);
+//            map.put(type, latoms.get(0)); // not sure VuzGraogPanel atomCombo.getSelectedIndex();
+//            AlloyProjection currentProjection = new AlloyProjection(map);
+//
+//            JPanel graph = myState.getGraph(currentProjection);
+//            // JPanel ans = StaticGraphMaker.produceGraph(myInstance, this, currentProjection);
+//
+//            try {
+//              fprojected.write("=========================a4solution: \n");
+//              fprojected.write(ans.toString());
+//
+//              fprojected.write("-------------------------originalInstance: ");
+//              fprojected.write("mw-original-instance: " + myInstance.hashCode());
+//              fprojected.write("mw-original-model: " + myInstance.model.hashCode() + "\n");
+//              fprojected.write(myInstance.toString());
+//
+//
+//              fprojected.write("-----------------------projectedInstance: \n");
+//              AlloyInstance projectedinstance =
+//                  StaticProjector.project(myInstance, currentProjection);
+//              fprojected.write("mw-instance: " + projectedinstance.hashCode());
+//              AlloyModel projectedmodel = projectedinstance.model;
+//              fprojected.write("mw-model: " + projectedmodel.hashCode() + "\n");
+//              fprojected.write(projectedinstance.toString());
+//
+//
+//
+//              boolean up = projectedOverInstances.add(projectedinstance.toString());
+//              System.out.println("-----------------------projectedAlloyInstance: unique?" + up);
+//
+//              Set<Integer> sint = projectedCounter.get(projectedinstance.toString());
+//              if (sint == null) {
+//                sint = new HashSet<Integer>();
+//                sint.add(Integer.valueOf(counter));
+//                projectedCounter.put(projectedinstance.toString(), sint);
+//              } else
+//                sint.add(Integer.valueOf(counter));
+//
+//
+//              Set<Integer> sinta = a4solutionCounter.get(ans.toString());
+//              if (sinta == null) {
+//                sinta = new HashSet<Integer>();
+//                sinta.add(Integer.valueOf(counter));
+//                a4solutionCounter.put(ans.toString().toString(), sinta);
+//              } else
+//                sinta.add(Integer.valueOf(counter));
+//
+//
+//
+//            } catch (Exception e) {
+//              e.printStackTrace();
+//
+//            }
+//          }
+//        }
+//
+//      ans = ans.next();
+//    }
+//    if (counter == 0)
+//      System.out.println("no solution found.");
+//    try
+//
+//    {
+//      fw.write("# of unique ansToString = " + ansToString.size());
+//      fw.close();
+//      fprojected.close();
+//    } catch (IOException e) {
+//      // TODO Auto-generated catch block
+//      e.printStackTrace();
+//    }
+//    System.out.println("# of a4 solution: " + counter);
+//    System.out.println("# of unique a4 solution: " + ansToString.size());
+//    System.out.println("# of unique modified a4 soltuion: " + ansModifiedToString.size());
+//    System.out.println("# of unique AlloyInstances: " + ainstances.size());
+//    System.out.println("# of unique AlloyModels: " + amodels.size());
+//    System.out.println("# of unique projectedOver: " + projectedOverInstances.size());
+//    FileWriter fprojectedSummary = null;
+//    FileWriter fa4SolutionSummary = null;
+//    try {
+//      fprojectedSummary =
+//          new FileWriter("lib/a4solution_out/projectedsummary_" + uniqueTime + ".txt", false);
+//      int c = 1;
+//      for (Iterator<String> iter = projectedCounter.keySet().iterator(); iter.hasNext();) {
+//        String s = iter.next();
+//        fprojectedSummary
+//            .write(c++ + ": " + projectedCounter.get(s) + "================================\n");
+//        fprojectedSummary.write(s + "\n");
+//      }
+//      c = 1;
+//      fa4SolutionSummary =
+//          new FileWriter("lib/a4solution_out/a4solutionsummary_" + uniqueTime + ".txt", false);
+//      for (Iterator<String> iter = a4solutionCounter.keySet().iterator(); iter.hasNext();) {
+//        String s = iter.next();
+//        fa4SolutionSummary
+//            .write(c++ + ": " + a4solutionCounter.get(s) + "================================\n");
+//        fa4SolutionSummary.write(s + "\n");
+//
+//
+//      }
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } finally {
+//      try {
+//        fprojectedSummary.close();
+//        fa4SolutionSummary.close();
+//      } catch (IOException e) {
+//        // TODO Auto-generated catch block
+//        e.printStackTrace();
+//      }
+//    }
+//
+//
+//
+//  }
 
   public static void generateVisualizerX(Iterable<Sig> sigs, Command cmd) {
     viz = null; // reassign viz b/c it's static it needs to be reset to null here just to be sure.
