@@ -16,6 +16,24 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
 import edu.umd.omgutil.UMLModelErrorException;
 
+/*
+ * Testing set up ===============
+ * 
+ * als files
+ * 
+ * from:Box\NIST OBM Translator\Alloy Models\obm-alloy-code_2023-09-25. zip\obm\*
+ * 
+ * to:obm-alloy-code_2023-09-25\obm
+ * 
+ * xmi files
+ * 
+ * from:Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25.
+ * zip\obmsmttrans\samples\OBMModel.xmi Box\NIST OBM Translator\NIST UML-SysML OBM
+ * Models\obmsmttrans_2023-09-25. zip\obmsmttrans\samples\OBM.xmi
+ * 
+ * to:obm-alloy-code_2023-09-25\obm
+ */
+
 class OBMXMI2AlloyTest {
 
   @ParameterizedTest
