@@ -24,8 +24,8 @@ public class ToAlloy {
   private Map<String, PrimSig> sigByName;
   private Sig mainSig;
 
-  public ToAlloy() {
-    alloy = new Alloy();
+  public ToAlloy(String working_dir) {
+    alloy = new Alloy(working_dir);
     sigByName = new HashMap<>();
   }
 

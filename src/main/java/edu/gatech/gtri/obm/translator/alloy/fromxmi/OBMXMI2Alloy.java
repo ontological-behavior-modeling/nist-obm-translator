@@ -335,7 +335,7 @@ public class OBMXMI2Alloy {
           List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
               .map(f -> f.getName()).collect(Collectors.toList());
 
-          if (definingEndName.equals("happensBefore-1")) {
+          if (definingEndName.equals("happensAfter")) {
             connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
             source = endsFeatureNames.get(0);
             // sourceCN = ce;
@@ -425,8 +425,8 @@ public class OBMXMI2Alloy {
     return all;
   }
 
-  public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
-    toAlloy = new ToAlloy();
+  public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
+    toAlloy = new ToAlloy(working_dir);
   }
 
   public boolean createAlloyModel(File xmiFileInput, String className)
@@ -547,7 +547,7 @@ public class OBMXMI2Alloy {
           String[] names = getEndPropertyNames(cn, ce);
 
           String definingEndName = ce.getDefiningEnd().getName();
-          if (definingEndName.equals("happensBefore-1")) {
+          if (definingEndName.equals("happensAfter")) {
             isSourceSideOneOf = true; // source-sides have oneof
             sourceNames.add(names[0]);
             targetNames.add(names[1]);
@@ -565,34 +565,105 @@ public class OBMXMI2Alloy {
     Collections.sort(sourceNames);
     Collections.sort(targetNames);
 
-    Expr beforeExpr = null;
-    Expr afterExpr = null;
-    if (isSourceSideOneOf) { // sourceSide need to be combined
-      for (String sourceName : sourceNames) {
-        beforeExpr =
-            beforeExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
-                : beforeExpr.plus(
-                    /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
-      }
-      afterExpr = /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
-    } else {
-      afterExpr = null;
-      for (String targetName : targetNames) {
-        afterExpr =
-            afterExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
-                : afterExpr.plus(
-                    /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
-      }
-      beforeExpr =
-          /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
-    }
-    // toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-    // afterExpr);
-    // toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-    // afterExpr);
 
-    toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-        afterExpr);
+    // handling case of self-loop
+    List<String> sourceInTarget = getAsContainInBs(sourceNames, targetNames);
+    List<String> targetInSource = getAsContainInBs(targetNames, sourceNames);
+    if (sourceInTarget.size() > 0 && isSourceSideOneOf) { // sourceSide
+      Expr beforeExpr_filtered = null; // p1
+      Expr beforeExpr_all = null; // p1 plus p2
+
+      Expr afterExpr =
+          /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
+      for (String sourceName : sourceNames) {
+        if (!sourceInTarget.contains(sourceName)) {
+          beforeExpr_filtered = beforeExpr_filtered == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+              : beforeExpr_filtered
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+        }
+      }
+      for (String sourceName : sourceNames) {
+        beforeExpr_all = beforeExpr_all == null
+            ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+            : beforeExpr_all
+                .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+      }
+
+      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr_filtered,
+          afterExpr); // not include source in source
+      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
+          beforeExpr_all, afterExpr);
+    } else if (targetInSource.size() > 0 && !isSourceSideOneOf) {
+      Expr afterExpr_filtered = null; // p3
+      Expr afterExpr_all = null; // p2 + p3
+
+      Expr beforeExpr =
+          /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
+      for (String targetName : targetNames) {
+        if (!targetInSource.contains(targetName)) {
+          afterExpr_filtered = afterExpr_filtered == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+              : afterExpr_filtered
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+        }
+      }
+      for (String targetName : targetNames) {
+        afterExpr_all = afterExpr_all == null
+            ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+            : afterExpr_all
+                .plus(/* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+      }
+
+      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr_all); // not include target in source
+      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr_filtered);
+
+    } // non self-loop
+    else {
+      Expr beforeExpr = null;
+      Expr afterExpr = null;
+      if (isSourceSideOneOf) { // sourceSide need to be combined
+        afterExpr =
+            /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
+        for (String sourceName : sourceNames) {
+          beforeExpr = beforeExpr == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+              : beforeExpr
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+        }
+
+      } else {
+        for (String targetName : targetNames) {
+          afterExpr =
+              afterExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+                  : afterExpr.plus(
+                      /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+        }
+        beforeExpr =
+            /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
+      }
+
+      toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr);
+    }
+  }
+
+  /**
+   * Find any a contained in b as List of String
+   * 
+   * @param a
+   * @param b
+   * @return
+   */
+  private List<String> getAsContainInBs(List<String> a, List<String> b) {
+    List<String> contained = new ArrayList<String>();
+    for (String s : a) {
+      if (b.contains(s))
+        contained.add(s);
+    }
+    return contained;
   }
 
 
@@ -609,6 +680,7 @@ public class OBMXMI2Alloy {
       // Expr sexpr = sig.domain(sourceField);
       // Expr texpr = sig.domain(targetField);
       // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sexpr, texpr);
+
       toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sourceField,
           targetField);
     } else

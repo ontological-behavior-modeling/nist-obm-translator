@@ -65,11 +65,14 @@ public class Alloy {
   protected Expr _nameExpr;
 
 
+  // src/test/resources
+  public Alloy(String working_dir) {
 
-  public Alloy() {
+    // System.setProperty(("java.io.tmpdir"), "src/test/resources");
+    // File tFile = new File("src/test/resources/Transfer.als");
 
-    System.setProperty(("java.io.tmpdir"), "src/test/resources");
-    File tFile = new File("src/test/resources/Transfer.als");
+    System.setProperty(("java.io.tmpdir"), working_dir);
+    File tFile = new File(working_dir + File.separator + "Transfer.als");
 
 
 
