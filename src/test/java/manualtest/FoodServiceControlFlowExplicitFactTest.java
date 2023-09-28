@@ -29,7 +29,7 @@ class FoodServiceControlFlowExplicitFactTest {
 
   @Test
   void test() {
-    Alloy alloy = new Alloy();
+    Alloy alloy = new Alloy("src/test/resources/obm-alloy-code_2023-09-25/obm");
 
     // ========== Define list of signatures unique to the file ==========
 
