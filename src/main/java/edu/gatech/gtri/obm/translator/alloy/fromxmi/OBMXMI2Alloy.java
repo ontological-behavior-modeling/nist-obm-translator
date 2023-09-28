@@ -8,33 +8,32 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.uml2.uml.Association;
+import org.eclipse.uml2.uml.Class;
+import org.eclipse.uml2.uml.Classifier;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
 import org.eclipse.uml2.uml.Constraint;
 import org.eclipse.uml2.uml.Element;
+import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
 import org.eclipse.uml2.uml.Stereotype;
 import org.eclipse.uml2.uml.ValueSpecification;
 import org.eclipse.uml2.uml.internal.impl.OpaqueExpressionImpl;
-import org.graphstream.graph.Edge;
-import edu.gatech.gtri.obm.translator.alloy.Alloy;
-import edu.gatech.gtri.obm.translator.alloy.graph.Graph2AlloyExpr;
-import edu.gatech.gtri.obm.translator.alloy.graph.IObject;
-import edu.gatech.gtri.obm.translator.alloy.graph.OListAND;
-import edu.gatech.gtri.obm.translator.alloy.graph.OListOR;
-import edu.gatech.gtri.obm.translator.alloy.graph.ONode;
+import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.MDUtils;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.Field;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.UMLModelErrorException;
 import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
@@ -47,6 +46,10 @@ public class OBMXMI2Alloy {
 
   ToAlloy toAlloy;
   SysMLAdapter sysmladapter;
+
+  private enum CONNECTOR_TYPE {
+    HAPPENS_BEFORE, HAPPENS_DURING, TRANSFER;
+  }
 
   public static void main(String[] args) throws Exception {
 
@@ -73,29 +76,357 @@ public class OBMXMI2Alloy {
     // test.createAlloyFile(xmiFile, className);
   }
 
+
+  /**
+   * @xmiFile xmi file containing activity
+   * @param _className QualifiedName of Class containing activities
+   * @param startNodeName name of initial node.
+   * @throws FileNotFoundException
+   * @throws UMLModelErrorException
+   * @throws Exception
+   */
+  public void loadOBMAndCreateAlloy(File xmiFile, String _className)
+      throws FileNotFoundException, UMLModelErrorException {
+
+    ResourceSet rs = EMFUtil.createResourceSet();
+    Resource r = EMFUtil.loadResourceWithDependencies(rs,
+        URI.createFileURI(xmiFile.getAbsolutePath()), null);
+
+    SysMLUtil sysMLUtil = new SysMLUtil(rs);
+    sysmladapter = new SysMLAdapter(xmiFile, null);
+
+    try {
+      while (!r.isLoaded()) {
+        System.out.println("not loaded yet wait 1 milli sec...");
+        Thread.sleep(1000);
+      }
+
+    } catch (Exception e) {
+    }
+
+    org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, _className);
+
+    // Graph2AlloyExpr graph2alloyExpr = new Graph2AlloyExpr();
+    // key = class, value = (key = type, value =property>)
+    Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass = new HashMap<>();
+    // List<Map.Entry<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>> list =
+    // new LinkedList<>(propertiesByClass.entrySet());
+
+    // // sort the linked list using Collections.sort()
+    // Collections.sort(list,
+    // new Comparator<Map.Entry<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>>() {
+    // @Override
+    // public int compare(
+    // Map.Entry<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> m1,
+    // Map.Entry<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> m2) {
+    // toAlloy.getSig(m1.getKey().getName());
+    //
+    // return m1.getValue().compareTo(m2.getValue());
+    // }
+    // });
+    // list.forEach(System.out::println);
+
+    if (mainClass == null)
+      return;
+    else if (mainClass instanceof Class) {
+      // EList<Classifier> parents = ((org.eclipse.uml2.uml.Class) mainClass).getGenerals();
+      // // Only one parent is allowed in Alloy
+      // String parentName = parents.get(0).getName();
+      // if (parents.size() > 0) {
+      // System.err.println("Only one parent is allowed. One parent \"" + parentName
+      // + "\" is included as sig \"" + mainClass.getName() + "\"'s parent");
+      // }
+      //
+      // if (parentName.equals("BehaviorOccurrence")) {
+      // // create main sig
+      // toAlloy.createAlloySig(mainClass.getName(), null, true);
+      // } else {
+
+      List<Class> classInHierarchy = MDUtils.getClassInHierarchy((Class) mainClass);
+      PrimSig parentSig = null;
+      for (Class aClass : classInHierarchy) {
+        boolean isMainSig = (aClass == mainClass) ? true : false;
+        if (parentSig == null) { // create 1st parentSig
+          parentSig = toAlloy.createAlloySig(aClass.getName(), null, isMainSig);
+          propertiesByClass = addClasses(aClass, sysMLUtil, propertiesByClass);
+        } else {
+          PrimSig sig = toAlloy.createAlloySig(aClass.getName(), parentSig, isMainSig);
+          propertiesByClass.putAll(addClasses(aClass, sysMLUtil, propertiesByClass));
+          parentSig = sig;
+        }
+
+      }
+    }
+
+
+
+    // create process class in hiearchy order because to child class may not need creating
+    // attributes if they are redefined
+    // List<PrimSig> sigsInhiearchyOrder = toAlloy.getHierarchySigs(); // this contains sigs not in
+    // for (PrimSig sig : sigsInhiearchyOrder) {
+    // Optional<NamedElement> one = propertiesByClass.keySet().stream()
+    // .filter(n -> n.getName().equals(sig.label)).findFirst();
+    // if (one.isPresent()) {
+    // NamedElement ne = one.get();
+    // Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
+    // processSig(ne, sig, propertiesByType, noStepSigs, inputs, outputs, sysMLUtil);
+    // }
+    // }
+
+    // properties in sigs
+    Set<Class> allClasses = propertiesByClass.keySet();
+    List<Class> classInHierarchy = MDUtils.getClassInHierarchy((Class) mainClass);
+    for (Class ne : classInHierarchy) {
+      Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
+      processSig(ne, propertiesByType, sysMLUtil);
+      allClasses.remove(ne);
+    }
+    for (NamedElement ne : allClasses) {
+      System.out.println(ne.getName());
+      Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
+      processSig((Class) ne, propertiesByType, sysMLUtil);
+    }
+
+    // connectors
+    List<String> noStepSigs = new ArrayList<>();
+    Set<String> inputs = new HashSet<>(); // collect field type Sig having a transfer connector
+                                          // with transferTarget "Customer"
+    Set<String> outputs = new HashSet<>(); // collect field type Sig having a transfer connector
+
+    allClasses = propertiesByClass.keySet();// Suppler, Customer
+    for (Class ne : classInHierarchy) {// ParticipantTransfer
+      System.out.println(ne.getLabel());
+      processConnector((Class) ne, noStepSigs, inputs, outputs, sysMLUtil);
+      allClasses.remove(ne);
+    }
+    for (NamedElement ne : allClasses) {
+      System.out.println(ne.getLabel());
+      processConnector((Class) ne, noStepSigs, inputs, outputs, sysMLUtil);
+    }
+
+    toAlloy.addSteps(noStepSigs);
+
+    handleNoInputsOutputs(inputs, outputs);
+
+  }
+
+  private void processSig(Class ne, /* PrimSig sigOfNamedElement, */
+      Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType, SysMLUtil sysMLUtil) {
+
+    PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
+    System.out.println("Processing: " + ne.getName() + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+    if (propertiesByType != null) {
+      for (org.eclipse.uml2.uml.Type propertyType : propertiesByType.keySet()) {
+        // find property by type (ie., propetyType = Order, List<Property> = [order]);
+        List<Property> propertiesSortedByType = propertiesByType.get(propertyType);
+
+        // sort property in alphabetical order, also remove redefined properties from the sorted
+        // list.
+        List<String> nonRedefinedPropertyInAlphabeticalOrderPerType = new ArrayList<>();
+        int i = 0;
+        for (Property p : propertiesSortedByType) {
+          if (p.getName() != null) { // Since MD allow having no name.
+            if (p.getRedefinedProperties().size() == 0) {
+              nonRedefinedPropertyInAlphabeticalOrderPerType.add(p.getName());
+              // graph2alloyExpr.addNode(p.getName());
+              i++;
+            }
+          } else {
+            System.err.println(p.getQualifiedName()
+                + "has no name, so ignored.  Please defined the name to be included");
+          }
+        }
+        Collections.sort(nonRedefinedPropertyInAlphabeticalOrderPerType);
+
+        if (nonRedefinedPropertyInAlphabeticalOrderPerType.size() > 0) {
+          Sig.Field[] fields =
+              toAlloy.addDisjAlloyFields(nonRedefinedPropertyInAlphabeticalOrderPerType,
+                  propertyType.getName(), sigOfNamedElement);
+          // server, Serve, SinglFooeService
+          if (fields != null) {
+            i = 0;
+            for (Property p : propertiesSortedByType) {
+              if (p.getLower() == p.getUpper())
+                toAlloy.addCardinalityEqualConstraintToField(fields[i], sigOfNamedElement,
+                    p.getLower());
+              else if (p.getUpper() == -1 && p.getLower() >= 1) {
+                toAlloy.addCardinalityGreaterThanEqualConstraintToField(fields[i],
+                    sigOfNamedElement, p.getLower());
+              }
+              i++;
+            }
+          }
+        } else {
+          for (Property p : propertiesSortedByType) {
+            if (p.getLower() == p.getUpper())
+              toAlloy.addCardinalityEqualConstraintToField(p.getName(), sigOfNamedElement,
+                  p.getLower());
+            else if (p.getUpper() == -1 && p.getLower() >= 1) {
+              toAlloy.addCardinalityGreaterThanEqualConstraintToField(p.getName(),
+                  sigOfNamedElement, p.getLower());
+            }
+          }
+        }
+
+        ///
+      }
+    } // end processing property
+
+  }
+
+  private void processConnector(Class ne, /* PrimSig sigOfNamedElement, */
+      List<String> noStepSigs, Set<String> inputs, Set<String> outputs, SysMLUtil sysMLUtil) {
+
+    System.out.println("Process Connector: " + ne.getName());
+    PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
+
+    Set<Constraint> constraints = sysMLUtil.getAllRules(ne);
+    Set<EList<Element>> oneOfSets = getOneOfRules(constraints);
+    Set<org.eclipse.uml2.uml.Connector> connectors = sysMLUtil.getAllConnectors(ne);
+    System.out.println("connectors.size = " + connectors.size());
+
+    // process connectors with oneof first
+    Set<Connector> processedConnectors = new HashSet<>();
+    for (EList<Element> oneOfSet : oneOfSets) {
+      handleOneOfConnectors(sigOfNamedElement, connectors, oneOfSet, processedConnectors);
+    }
+
+    // process remaining of connectors
+    for (org.eclipse.uml2.uml.Connector cn : connectors) {
+      if (processedConnectors.contains(cn))
+        continue; // oneof connectors so not need to process
+      if (ne.getInheritedMembers().contains(cn))
+        continue;// ignore inherited
+
+
+      CONNECTOR_TYPE connector_type = null;
+      edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(cn);
+      if (omgE instanceof edu.umd.omgutil.uml.Connector) {
+        edu.umd.omgutil.uml.Connector omgConnector = (edu.umd.omgutil.uml.Connector) omgE;
+
+        edu.umd.omgutil.uml.Type owner = omgConnector.getFeaturingType();
+        String source = null;
+        String target = null;
+        // ConnectorEnd sourceCN = null;
+        // ConnectorEnd targetCN = null;
+
+        String sourceTypeName = null; // used in Transfer
+        String targetTypeName = null;// used in Transfer
+        for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
+
+          if (ce.getRole() != null) {
+            System.out.println(ce.getRole());
+          }
+
+          if (ce.getDefiningEnd() == null) {
+            System.out.println(ce.getRole().getLabel()); // suppliedProduct, receivedProduct
+            Element roleOwner = ce.getRole().getOwner();
+            if (roleOwner instanceof org.eclipse.uml2.uml.Class) {
+              System.out.println(((org.eclipse.uml2.uml.Class) roleOwner).getName());// Supplier,
+              // Customer
+            }
+            continue;
+          }
+          System.out.println(ce.getDefiningEnd().getName());
+          String definingEndName = ce.getDefiningEnd().getName();
+          edu.umd.omgutil.uml.ConnectorEnd end =
+              (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
+          List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
+              .map(f -> f.getName()).collect(Collectors.toList());
+
+          if (definingEndName.equals("happensAfter")) {
+            connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
+            source = endsFeatureNames.get(0);
+            // sourceCN = ce;
+          } else if (definingEndName.equals("happensBefore")) {
+            connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
+            target = endsFeatureNames.get(0);
+            // targetCN = ce;
+          } else if (definingEndName.equals("happensDuring-1")) {
+            connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
+            source = endsFeatureNames.get(0);
+          } else if (definingEndName.equals("happensDuring")) {
+            connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
+            target = endsFeatureNames.get(0);
+          } else if (definingEndName.equals("transferSource")) {
+            connector_type = CONNECTOR_TYPE.TRANSFER;
+            source = endsFeatureNames.get(0);
+            System.out.println("s: " + source + ce.getRole().getType().getName());
+            sourceTypeName = ce.getRole().getType().getName();
+            noStepSigs.add(sourceTypeName);
+
+            List<Property> ps = sysMLUtil.getPropertyPath(ce);
+            System.out.println(ps);
+
+          } else if (definingEndName.equals("transferTarget")) {
+            connector_type = CONNECTOR_TYPE.TRANSFER;
+            target = endsFeatureNames.get(0);
+            System.out.println("t: " + target + " " + ce.getRole().getType().getName());
+            targetTypeName = ce.getRole().getType().getName();
+            noStepSigs.add(targetTypeName);
+          }
+
+          if (source == null || target == null)
+            continue;
+          if (connector_type == CONNECTOR_TYPE.HAPPENS_BEFORE) {
+            handleHappensBefore(sigOfNamedElement, source, target);
+          } else if (connector_type == CONNECTOR_TYPE.HAPPENS_DURING)
+            handleHappensDuring(sigOfNamedElement, source, target);
+
+          // using graph to find out what is one of
+          // if (sourceCN != null && targetCN != null) {
+          // Edge edge = ge.addEdge(source + target, source, target);
+          // if (isOneof(constraints, sourceCN, targetCN)) {
+          // edge.setAttribute("oneof", true);
+          // }
+          else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
+            Association type = cn.getType();
+            if (type.getName().equals("Transfer")) {
+              handleTransferConnector(cn, sigOfNamedElement, source, target, sourceTypeName,
+                  targetTypeName);
+
+              inputs.add(targetTypeName);
+              outputs.add(sourceTypeName);
+            } else if (type.getName().equals("TransferBefore")) {
+              handleTransferBeforeConnector(cn, sigOfNamedElement, source, target, sourceTypeName,
+                  targetTypeName);
+
+            }
+          }
+
+        } // end of connectorEnd
+
+      } // end of Connector
+
+    } // org.eclipse.uml2.uml.Connector
+    // handleHappensBefore(ge, thisSig); //getting happens before using graph
+
+
+  }
+
+
+
   public Expr getOverallFacts() {
     return toAlloy.getOverallFacts();
   }
 
-  // public List<Sig> getAllSigs() {
-  // return toAlloy.getAllSigs();
-  // }
-
   public Map<String, Sig> getAllReachableUserDefinedSigs() {
-    Map<String, Sig> all = toAlloy.getSigMap();
+    Map<String, PrimSig> pall = toAlloy.getSigMap();
+
+    // convert pall value PrimSig to Sig
+    Map<String, Sig> all = new HashMap<>();
+    for (String key : pall.keySet())
+      all.put(key, pall.get(key));
+
     for (Sig sig : toAlloy.getAllSigs()) {
       all.put(sig.label, sig);
     }
-
     return all;
   }
 
-  // public Map<String, Sig> getSigMap() {
-  // return toAlloy.getSigMap();
-  // }
-
-  public OBMXMI2Alloy() throws FileNotFoundException, UMLModelErrorException {
-    toAlloy = new ToAlloy();
+  public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
+    toAlloy = new ToAlloy(working_dir);
   }
 
   public boolean createAlloyModel(File xmiFileInput, String className)
@@ -127,29 +458,39 @@ public class OBMXMI2Alloy {
     }
   }
 
-  private Map<org.eclipse.uml2.uml.NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> addClasses(
-      org.eclipse.uml2.uml.NamedElement umlElement, SysMLUtil sysMLUtil,
-      Map<org.eclipse.uml2.uml.NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass) {
+  private Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> addClasses(
+      NamedElement umlElement, SysMLUtil sysMLUtil,
+      Map<Class, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass) {
 
     if (umlElement instanceof org.eclipse.uml2.uml.Class) {
       org.eclipse.uml2.uml.Class umlClass = (org.eclipse.uml2.uml.Class) umlElement;
-      Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getAllCorrectedAttributes(umlClass);
+
+      Set<org.eclipse.uml2.uml.Property> atts = sysMLUtil.getOwnedAttributes(umlClass);
       // find property having the same type
       Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByTheirType = new HashMap<>();
       for (Property p : atts) {
+
+        System.out.println(p.getLabel());
+
         org.eclipse.uml2.uml.Type eType = p.getType();
         List<Property> ps = null;
         if ((ps = propertiesByTheirType.get(eType)) == null) {
           ps = new ArrayList<>();
-          System.out.println("property: " + p.getName() + " " + eType);
           propertiesByTheirType.put(eType, ps);
         }
         propertiesByTheirType.get(eType).add(p);
 
         if (eType instanceof org.eclipse.uml2.uml.Class
             || eType instanceof org.eclipse.uml2.uml.PrimitiveType) {
-          toAlloy.addAlloySig(eType.getName(), "parent not used for now");
-          addClasses((org.eclipse.uml2.uml.NamedElement) eType, sysMLUtil, propertiesByClass);
+
+          EList<Classifier> parents = null;
+          if (eType instanceof org.eclipse.uml2.uml.Class) {
+            parents = ((org.eclipse.uml2.uml.Class) eType).getGenerals();
+          }
+          // PaticipantTransfer.Product has no parent
+          toAlloy.createAlloySig(eType.getName(),
+              parents == null || parents.size() == 0 ? null : parents.get(0).getName());
+          addClasses(eType, sysMLUtil, propertiesByClass);
         }
         propertiesByClass.put(umlClass, propertiesByTheirType);
       }
@@ -157,169 +498,214 @@ public class OBMXMI2Alloy {
     return propertiesByClass;
   }
 
+
   /**
-   * @xmiFile xmi file containing activity
-   * @param _className QualifiedName of Class containing activities
-   * @param startNodeName name of initial node.
-   * @throws FileNotFoundException
-   * @throws UMLModelErrorException
-   * @throws Exception
+   * Find property names for connector ends. One connector has two connector end. return string with
+   * index = 0
+   * 
+   * @param cn
+   * @param ce
+   * @return
    */
-  public void loadOBMAndCreateAlloy(File xmiFile, String _className)
-      throws FileNotFoundException, UMLModelErrorException {
 
-    ResourceSet rs = EMFUtil.createResourceSet();
-    Resource r = EMFUtil.loadResourceWithDependencies(rs,
-        URI.createFileURI(xmiFile.getAbsolutePath()), null);
-    SysMLUtil sysMLUtil = new SysMLUtil(rs);
-    // soneof =
-    // com.engisis.xmiutil.SysMLUtil.loadStereotype(OBMXMI2Alloy.class.getResource("/OBM.xmi"),
-    // URI.createURI("http://www.nist.gov/sid/obm"), "OneOf");
+  private String[] getEndPropertyNames(Connector cn, ConnectorEnd ce) {
+    String[] names = new String[2];
+    edu.umd.omgutil.uml.Connector omgE = (edu.umd.omgutil.uml.Connector) sysmladapter.mapObject(cn);
+    edu.umd.omgutil.uml.Type owner = omgE.getFeaturingType();
+    names[0] = getConnecterEndPropertyName(ce, owner);
 
-
-    sysmladapter = new SysMLAdapter(xmiFile, null);
-    org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, _className);
-
-    Graph2AlloyExpr ge = new Graph2AlloyExpr();
-    // key = class, value = (key = type, value =property>)
-    Map<org.eclipse.uml2.uml.NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass =
-        new HashMap<>();
-
-    if (mainClass == null)
-      return;
-    else if (mainClass instanceof org.eclipse.uml2.uml.Class) {
-      Sig mainSig = toAlloy.addAlloySig(mainClass.getName(), "parent not used for now", true);
-      propertiesByClass = addClasses(mainClass, sysMLUtil, propertiesByClass);
-    }
-
-    List<String> noStepSigs = new ArrayList<>();
-    Set<String> inputs = new HashSet<>(); // collect field type Sig having a transfer connector
-                                          // with transferTarget "Customer"
-    Set<String> outputs = new HashSet<>(); // collect field type Sig having a transfer connector
-                                           // with transferSource "Supplier"
-    for (org.eclipse.uml2.uml.NamedElement ne : propertiesByClass.keySet()) {
-      Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
-      for (org.eclipse.uml2.uml.Type propertyType : propertiesByType.keySet()) {
-        List<Property> ps = propertiesByType.get(propertyType);
-        List<String> fsa = new ArrayList<>();
-        int i = 0;
-        for (Property p : ps) {
-          if (p.getName() != null) { // TODO: add to validation?
-            fsa.add(p.getName());
-            ge.addNode(p.getName());
-            i++;
-          }
-        }
-        Collections.sort(fsa);
-
-        Sig.Field[] fields = toAlloy.addDisjAlloyFields(fsa, propertyType.getName(), ne.getName());
-        if (fields != null) {
-          i = 0;
-          for (Property p : ps) {
-            if (p.getLower() == 1 && p.getUpper() == 1)
-              toAlloy.addCardinalityEqualConstraintToField(fields[i], ne.getName(), 1);
-            else if (p.getUpper() == -1 && p.getLower() >= 1) {
-              toAlloy.addCardinalityGreaterThanEqualConstraintToField(fields[i], ne.getName(),
-                  p.getLower());
-            }
-            i++;
-          }
-        }
-
+    for (ConnectorEnd ce1 : cn.getEnds())
+      if (ce1 != ce) {
+        names[1] = getConnecterEndPropertyName(ce1, owner);
+        break;
       }
-      Sig thisSig = toAlloy.getSigMap().get(ne.getName());
-      // }//end of class
+    return names;
+  }
 
-
-      if (ne instanceof org.eclipse.uml2.uml.Class) {
-        org.eclipse.uml2.uml.Class c = (org.eclipse.uml2.uml.Class) ne;
-        Set<Constraint> constraints = sysMLUtil.getAllRules(c);
-        Set<org.eclipse.uml2.uml.Connector> connectors = sysMLUtil.getAllConnectors(c);
-
-        for (org.eclipse.uml2.uml.Connector cn : connectors) {
-
-          edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(cn);
-          if (omgE instanceof edu.umd.omgutil.uml.Connector) {
-            edu.umd.omgutil.uml.Connector omgConnector = (edu.umd.omgutil.uml.Connector) omgE;
-
-            edu.umd.omgutil.uml.Type owner = omgConnector.getFeaturingType();
-            String source = null;
-            String target = null;
-            ConnectorEnd sourceCN = null;
-            ConnectorEnd targetCN = null;
-            String sourceTypeName = null; // used in Transfer
-            String targetTypeName = null;// used in Transfer
-            for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
-
-
-
-              if (ce.getDefiningEnd() == null) {
-                System.out.println(ce.getRole().getLabel()); // suppliedProduct, receivedProduct
-                Element roleOwner = ce.getRole().getOwner();
-                if (roleOwner instanceof org.eclipse.uml2.uml.Class) {
-                  System.out.println(((org.eclipse.uml2.uml.Class) roleOwner).getName());// Supplier,
-                                                                                         // Customer
-                }
-                continue;
-              }
-              // System.out.println(ce.getDefiningEnd().getName());
-              String definingEndName = ce.getDefiningEnd().getName();
-              edu.umd.omgutil.uml.ConnectorEnd end =
-                  (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
-              List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
-                  .map(f -> f.getName()).collect(Collectors.toList());
-
-              if (definingEndName.equals("happensBefore-1")) {
-                source = endsFeatureNames.get(0);
-                sourceCN = ce;
-              } else if (definingEndName.equals("happensBefore")) {
-                target = endsFeatureNames.get(0);
-                targetCN = ce;
-              } else if (definingEndName.equals("transferSource")) {
-                source = endsFeatureNames.get(0);
-                System.out.println("s: " + source + ce.getRole().getType().getName());
-                sourceTypeName = ce.getRole().getType().getName();
-                noStepSigs.add(sourceTypeName);
-
-                List<Property> ps = sysMLUtil.getPropertyPath(ce);
-                System.out.println(ps);
-
-              } else if (definingEndName.equals("transferTarget")) {
-                target = endsFeatureNames.get(0);
-                System.out.println("t: " + target + " " + ce.getRole().getType().getName());
-                targetTypeName = ce.getRole().getType().getName();
-                noStepSigs.add(targetTypeName);
-              }
-
-
-
-              if (sourceCN != null && targetCN != null) {
-                Edge edge = ge.addEdge(source + target, source, target);
-                if (isOneof(constraints, sourceCN, targetCN)) {
-                  edge.setAttribute("oneof", true);
-                }
-              } else if (source != null && target != null) {
-                handleTransferConnector(cn, thisSig, source, target, sourceTypeName,
-                    targetTypeName);
-
-                inputs.add(targetTypeName);
-                outputs.add(sourceTypeName);
-              }
-            } // end of connectorEnd
-
-          } // end of Connector
-
-        } // org.eclipse.uml2.uml.Connector
-        handleHappensBefore(ge, thisSig);
-
-      } // end of class
-    }
-    toAlloy.addSteps(noStepSigs);
-    handleNoInputsOutputs(inputs, outputs);
-
-    // ge.display();
+  private String getConnecterEndPropertyName(ConnectorEnd ce, edu.umd.omgutil.uml.Type owner) {
+    edu.umd.omgutil.uml.ConnectorEnd end =
+        (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
+    List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
+        .map(f -> f.getName()).collect(Collectors.toList());
+    String name = endsFeatureNames.get(0);
+    return name;
 
   }
+
+  private void handleOneOfConnectors(PrimSig ownerSig, Set<Connector> connectors,
+      List<Element> oneOfSet, Set<Connector> processedConnectors) {
+
+    List<String> sourceNames = new ArrayList<>(); // for each connector
+    List<String> targetNames = new ArrayList<>();
+    boolean isSourceSideOneOf = false;
+    for (org.eclipse.uml2.uml.Connector cn : connectors) {
+      for (ConnectorEnd ce : cn.getEnds()) {
+
+        Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
+        if (!found.isEmpty()) {
+          processedConnectors.add(cn);
+          String[] names = getEndPropertyNames(cn, ce);
+
+          String definingEndName = ce.getDefiningEnd().getName();
+          if (definingEndName.equals("happensAfter")) {
+            isSourceSideOneOf = true; // source-sides have oneof
+            sourceNames.add(names[0]);
+            targetNames.add(names[1]);
+          } else if (definingEndName.equals("happensBefore")) {
+            isSourceSideOneOf = false; // target-side have oneof
+            targetNames.add(names[0]);
+            sourceNames.add(names[1]);
+          }
+        }
+      }
+
+    }
+
+    // sort so not x.p2 + x.p1 but be x.p1 + x.p2
+    Collections.sort(sourceNames);
+    Collections.sort(targetNames);
+
+
+    // handling case of self-loop
+    List<String> sourceInTarget = getAsContainInBs(sourceNames, targetNames);
+    List<String> targetInSource = getAsContainInBs(targetNames, sourceNames);
+    if (sourceInTarget.size() > 0 && isSourceSideOneOf) { // sourceSide
+      Expr beforeExpr_filtered = null; // p1
+      Expr beforeExpr_all = null; // p1 plus p2
+
+      Expr afterExpr =
+          /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
+      for (String sourceName : sourceNames) {
+        if (!sourceInTarget.contains(sourceName)) {
+          beforeExpr_filtered = beforeExpr_filtered == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+              : beforeExpr_filtered
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+        }
+      }
+      for (String sourceName : sourceNames) {
+        beforeExpr_all = beforeExpr_all == null
+            ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+            : beforeExpr_all
+                .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+      }
+
+      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr_filtered,
+          afterExpr); // not include source in source
+      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
+          beforeExpr_all, afterExpr);
+    } else if (targetInSource.size() > 0 && !isSourceSideOneOf) {
+      Expr afterExpr_filtered = null; // p3
+      Expr afterExpr_all = null; // p2 + p3
+
+      Expr beforeExpr =
+          /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
+      for (String targetName : targetNames) {
+        if (!targetInSource.contains(targetName)) {
+          afterExpr_filtered = afterExpr_filtered == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+              : afterExpr_filtered
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+        }
+      }
+      for (String targetName : targetNames) {
+        afterExpr_all = afterExpr_all == null
+            ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+            : afterExpr_all
+                .plus(/* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+      }
+
+      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr_all); // not include target in source
+      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr_filtered);
+
+    } // non self-loop
+    else {
+      Expr beforeExpr = null;
+      Expr afterExpr = null;
+      if (isSourceSideOneOf) { // sourceSide need to be combined
+        afterExpr =
+            /* ownerSig.domain( */Helper.getFieldFromSig(targetNames.get(0), ownerSig)/* ) */;
+        for (String sourceName : sourceNames) {
+          beforeExpr = beforeExpr == null
+              ? /* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig)// )
+              : beforeExpr
+                  .plus(/* ownerSig.domain( */Helper.getFieldFromSig(sourceName, ownerSig))/* ) */;
+        }
+
+      } else {
+        for (String targetName : targetNames) {
+          afterExpr =
+              afterExpr == null ? /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig)// )
+                  : afterExpr.plus(
+                      /* ownerSig.domain( */Helper.getFieldFromSig(targetName, ownerSig))/* ) */;
+        }
+        beforeExpr =
+            /* ownerSig.domain( */Helper.getFieldFromSig(sourceNames.get(0), ownerSig)/* ) */;
+      }
+
+      toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
+          afterExpr);
+    }
+  }
+
+  /**
+   * Find any a contained in b as List of String
+   * 
+   * @param a
+   * @param b
+   * @return
+   */
+  private List<String> getAsContainInBs(List<String> a, List<String> b) {
+    List<String> contained = new ArrayList<String>();
+    for (String s : a) {
+      if (b.contains(s))
+        contained.add(s);
+    }
+    return contained;
+  }
+
+
+  // sig BuffetService
+  private void handleHappensBefore(PrimSig sig, String source, String target) {
+
+    System.out.println("looking for source" + source + " in " + sig.label);
+    System.out.println("looking for target" + target + " in " + sig.label);
+
+    Field sourceField = Helper.getFieldFromSig(source, sig); // FoodService <: prepare
+    Field targetField = Helper.getFieldFromSig(target, sig);
+
+    if (sourceField != null && targetField != null) {
+      // Expr sexpr = sig.domain(sourceField);
+      // Expr texpr = sig.domain(targetField);
+      // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sexpr, texpr);
+
+      toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sourceField,
+          targetField);
+    } else
+      System.err.println("source or target for HappensBefore not in " + sig.label);
+  }
+
+  private void handleHappensDuring(PrimSig sig, String source, String target) {
+
+    System.out.println("looking for source" + source + " in " + sig.label);
+    System.out.println("looking for target" + target + " in " + sig.label);
+
+    Field sourceField = Helper.getFieldFromSig(source, sig);
+    Field targetField = Helper.getFieldFromSig(target, sig);
+
+    if (sourceField != null && targetField != null) {
+      // Expr sexpr = sig.domain(sourceField);
+      // Expr texpr = sig.domain(targetField);
+      // toAlloy.createBijectionFilteredHappensDuringAndAddToOverallFact(sig, sexpr, texpr);
+      toAlloy.createBijectionFilteredHappensDuringAndAddToOverallFact(sig, sourceField,
+          targetField);
+    } else
+      System.err.println("source or target for handleHappensDuring not in " + sig.label);
+
+  }
+
 
   /**
    * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
@@ -339,8 +725,8 @@ public class OBMXMI2Alloy {
   }
 
 
-  private void handleTransferConnector(org.eclipse.uml2.uml.Connector cn, Sig sig, String source,
-      String target, String sourceTypeName, String targetTypeName) {
+  private void handleTransferConnector(org.eclipse.uml2.uml.Connector cn, PrimSig sig,
+      String source, String target, String sourceTypeName, String targetTypeName) {
 
     String[] stTagNames = {"sourceOutputProperty", "targetInputProperty"};// , "itemType"}; this
                                                                           // property value is class
@@ -351,28 +737,52 @@ public class OBMXMI2Alloy {
       List<Property> sos = stTagValues.get(stTagNames[0]);
       List<Property> tis = stTagValues.get(stTagNames[1]); // name is "receivedProduct"
 
+      System.out.println("sourceOutputProperty: " + sos.size());
+      System.out.println("targetInputProperty: " + tis.size());
       for (Property p : sos) {
         String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
         toAlloy.addOutputs(owner, /* "Supplier" */ p.getName() /* "suppliedProduct" */);
+        System.out.println("adding outputs to " + p.getName());
         break; // assumption is having only one
       }
       for (Property p : tis) {
         String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
         toAlloy.addInputs(owner, /* "Customer" */p.getName() /* "receivedProduct" */);
+        System.out.println("adding input to " + p.getName());
         break; // assumption is having only one
       }
     }
 
-    Association type = cn.getType();
-    if (type.getName().compareTo("Transfer") == 0) {
-      Sig.Field transferField = toAlloy.addAlloyTransferField(
-          type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
-      toAlloy.createFnForTransferAndAddToOverallFact(sig, sig.domain(transferField), sourceTypeName,
-          targetTypeName);
-    }
+    Sig.Field transferField = toAlloy
+        .addAlloyTransferField("transfer" + firstCharUpper(source) + firstCharUpper(target), sig);
+    toAlloy.createFnForTransferAndAddToOverallFact(sig, /* sig.domain( */transferField/* ) */,
+        sourceTypeName, targetTypeName);
+  }
 
+  private void handleTransferBeforeConnector(org.eclipse.uml2.uml.Connector cn, PrimSig sig,
+      String source, String target, String sourceTypeName, String targetTypeName) {
 
+    // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeAB, x.a]}
+    // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeAB, x.b]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeAB]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeAB]}
 
+    // fact {all x: ParameterBehavior | bijectionFiltered[sources, x.transferbeforeBC, x.b]}
+    // fact {all x: ParameterBehavior | bijectionFiltered[targets, x.transferbeforeBC, x.c]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForSources[x.transferbeforeBC]}
+    // fact {all x: ParameterBehavior | subsettingItemRuleForTargets[x.transferbeforeBC]}
+    Sig.Field transferField = toAlloy.addAlloyTransferBeforeField(
+        "transferbefore" + firstCharUpper(source) + firstCharUpper(target), sig);
+    toAlloy.createFnForTransferAndAddToOverallFact(sig, /* sig.domain( */transferField/* ) */,
+        source, target);
+    // Sig.Field start = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(source), sig);
+    // Sig.Field middle = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(source) + firstCharUpper(target), sig);
+    // Sig.Field end = toAlloy.addAlloyTransferField(
+    // type.getName().toLowerCase() + firstCharUpper(sig.label) + firstCharUpper(target), sig);
+    // toAlloy.createFnForTransferBeforeAndAddToOverallFact(sig, sig.domain(start),
+    // sig.domain(middle), sig.domain(end), sourceTypeName, targetTypeName);
   }
 
   /**
@@ -406,6 +816,36 @@ public class OBMXMI2Alloy {
     return null;
   }
 
+
+
+  /**
+   * Get two rules (ConnectorEnds) of each oneof constraint and return as set.
+   * 
+   * @param cs a set of Constraints
+   * @return set of oneof constraint's two rules (ConnectorEnd)
+   */
+  private Set<EList<Element>> getOneOfRules(Set<Constraint> cs) {
+    Set<EList<Element>> oneOfSet = new HashSet<>();
+    for (Constraint c : cs) {
+      ValueSpecification vs = c.getSpecification();
+      if (vs instanceof OpaqueExpressionImpl) {
+        edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
+        if (omgE.getBodies().contains("OneOf")) {
+          EList<Element> es = c.getConstrainedElements(); // list of connectorEnds
+          oneOfSet.add(es);
+        }
+      }
+    }
+    return oneOfSet;
+  }
+
+
+
+  private static String firstCharUpper(String o) {
+    return o.substring(0, 1).toUpperCase() + o.substring(1).toLowerCase();
+  }
+
+
   /**
    * 
    * @param element (ie., Connector)
@@ -413,169 +853,89 @@ public class OBMXMI2Alloy {
    * @param propertyName (ie., sourceOutputProperty)
    * @return null if no Stereotype is applied to element or List<Property>
    */
-  private List<Property> getStreotypePropertyValues(Element element, String streotypeName,
-      String propertyName) {
-    List<Property> results = new ArrayList<>();
-    Stereotype st = null;
-    if ((st = element.getAppliedStereotype(streotypeName)) != null) {
-      List<Object> properties = (List<Object>) (element.getValue(st, propertyName));
-      for (Object property : properties)
-        results.add((Property) property);
-      return results;
-    }
-    return null;
-  }
+  // private List<Property> getStreotypePropertyValues(Element element, String streotypeName,
+  // String propertyName) {
+  // List<Property> results = new ArrayList<>();
+  // Stereotype st = null;
+  // if ((st = element.getAppliedStereotype(streotypeName)) != null) {
+  // List<Object> properties = (List<Object>) (element.getValue(st, propertyName));
+  // for (Object property : properties)
+  // results.add((Property) property);
+  // return results;
+  // }
+  // return null;
+  // }
 
+  // commented out getting happens before using graph
 
-  private String firstCharUpper(String o) {
-    return o.substring(0, 1).toUpperCase() + o.substring(1).toLowerCase();
-  }
-
-
-
-  private void handleHappensBefore(Graph2AlloyExpr ge, Sig thisSig) {
-    System.out.println("HB Function: ");
-    Map<IObject, IObject> happensBeforeFnInfo = ge.getHappensBeforeFunction(); // before, after
-    Graph2AlloyExpr.print(happensBeforeFnInfo);
-    for (IObject before : happensBeforeFnInfo.keySet()) {
-      before.sort();
-      List<Expr> lbefore = toExprs(before, thisSig);
-      IObject after = happensBeforeFnInfo.get(before);
-      after.sort();
-      List<Expr> lafter = toExprs(after, thisSig);
-
-      for (int i = 0; i < lbefore.size(); i++) {
-        Expr beforeExpr = lbefore.get(i);
-        for (int j = 0; j < lafter.size(); j++) {
-          Expr afterExpr = lafter.get(j);
-          toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig, beforeExpr,
-              afterExpr);
-        }
-      }
-    } // end iterator
-
-    System.out.println("HB Inverse Function: ");
-    Map<IObject, IObject> happensBeforeInvFnInfo = ge.getHappensBeforeInvFunction(); // before,
-    Graph2AlloyExpr.print(happensBeforeInvFnInfo); // after
-
-    for (IObject before : happensBeforeInvFnInfo.keySet()) {
-      before.sort();
-      List<Expr> lbefore = toExprs(before, thisSig);
-      IObject after = happensBeforeInvFnInfo.get(before);
-      after.sort();
-      List<Expr> lafter = toExprs(after, thisSig);
-
-      for (int i = 0; i < lbefore.size(); i++) {
-        Expr beforeExpr = lbefore.get(i);
-        for (int j = 0; j < lafter.size(); j++) {
-          Expr afterExpr = lafter.get(j);
-
-          // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(mainSig,
-          // beforeExpr,
-          // afterExpr);
-          toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig, beforeExpr,
-              afterExpr);
-        }
-      }
-    } // end iterator
-  }
-
-
-
-  private boolean isOneOf(Constraint c) {
-    ValueSpecification vs = c.getSpecification();
-    if (vs instanceof OpaqueExpressionImpl) {
-      edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
-      if (omgE.getBodies().contains("OneOf"))
-        return true;
-    }
-    return false;
-  }
+  // private boolean isOneOf(Constraint c) {
+  // ValueSpecification vs = c.getSpecification();
+  // if (vs instanceof OpaqueExpressionImpl) {
+  // edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
+  // if (omgE.getBodies().contains("OneOf"))
+  // return true;
+  // }
+  // return false;
+  // }
 
   // if any of connector end is startCN or endCN then specify connector is one of
-  private boolean isOneof(Set<Constraint> constraints, ConnectorEnd startCN, ConnectorEnd endCN) {
-    for (Constraint ct : constraints) {
-      if (isOneOf(ct)) {
-        EList<Element> constraintedElements = ct.getConstrainedElements();
-        if (constraintedElements.size() == 2) {
-          if (constraintedElements.get(0) == startCN || constraintedElements.get(0) == endCN
-              || constraintedElements.get(1) == startCN || constraintedElements.get(1) == endCN)
-            return true;
-        }
-      }
-    }
-    return false;
+  // private boolean isOneof(Set<Constraint> constraints, ConnectorEnd startCN, ConnectorEnd endCN)
+  // {
+  // for (Constraint ct : constraints) {
+  // if (isOneOf(ct)) {
+  // EList<Element> constraintedElements = ct.getConstrainedElements();
+  // if (constraintedElements.size() == 2) {
+  // if (constraintedElements.get(0) == startCN || constraintedElements.get(0) == endCN
+  // || constraintedElements.get(1) == startCN || constraintedElements.get(1) == endCN)
+  // return true;
+  // }
+  // }
+  // }
+  // return false;
+  // }
 
-
-  }
-
-  // assume if 1st list field in _aSig, all fields are also in _aSig
-  public List<Expr> toExprs(IObject _o, Sig _aSig) {
-    List<Expr> exprs = new ArrayList<>();
-    if (_o instanceof OListOR) {
-      ONode onode = (ONode) ((OListOR) _o).get(0);
-      Sig.Field f = toAlloy.getField(onode.getName());
-      if (f.sig == _aSig) {
-        Expr expr = _aSig.domain(f);
-        for (int i = 1; i < ((OListOR) _o).size(); i++) {
-          onode = (ONode) ((OListOR) _o).get(i);
-          expr = expr.plus(_aSig.domain(toAlloy.getField(onode.getName())));
-        }
-        exprs.add(expr);
-      }
-
-    } else if (_o instanceof OListAND) {
-      ONode onode = (ONode) ((OListAND) _o).get(0);
-      Sig.Field f = toAlloy.getField(onode.getName());
-      if (f.sig == _aSig) {
-        exprs.add(_aSig.domain(f));
-        for (int i = 1; i < ((OListAND) _o).size(); i++) {
-          onode = (ONode) ((OListAND) _o).get(i);
-          f = toAlloy.getField(onode.getName());
-          exprs.add(_aSig.domain(f));
-        }
-      }
-    } else {
-      ONode onode = (ONode) _o;
-      Sig.Field f = toAlloy.getField(onode.getName());
-      if (f.sig == _aSig)
-        exprs.add(_aSig.domain(f));
-    }
-    return exprs;
-  }
-
-
-
-  public static Object getObjectByName(Resource r, String lookingForName) {
-
-    TreeIterator<Object> iter = EcoreUtil.getAllContents(r, true);
-    while (iter.hasNext()) {
-      Object o = iter.next();
-      if (o instanceof org.eclipse.uml2.uml.NamedElement) {
-        String name = ((org.eclipse.uml2.uml.NamedElement) o).getName();
-        if (name != null && name.equals(lookingForName))
-          return o;
-      }
-    }
-    return null;
-  }
-
-  public static List<Alloy> getAllActivities(Resource r) {
-    List<Alloy> activities = new ArrayList<>();
-
-    TreeIterator<Object> iter = EcoreUtil.getAllContents(r, false);
-    while (iter.hasNext()) {
-      Object o = iter.next();
-      if (o instanceof Alloy) {
-        activities.add((Alloy) o);
-      }
-
-    }
-
-    return activities;
-  }
-
-
+  /*
+   * private void handleHappensBefore(Graph2AlloyExpr ge, Sig thisSig) {
+   * System.out.println("HB Function: "); Map<IObject, IObject> happensBeforeFnInfo =
+   * ge.getHappensBeforeFunction(); // before, after // Graph2AlloyExpr.print(happensBeforeFnInfo);
+   * for (IObject before : happensBeforeFnInfo.keySet()) { before.sort(); List<Expr> lbefore =
+   * toExprs(before, thisSig); IObject after = happensBeforeFnInfo.get(before); after.sort();
+   * List<Expr> lafter = toExprs(after, thisSig);
+   * 
+   * for (int i = 0; i < lbefore.size(); i++) { Expr beforeExpr = lbefore.get(i); for (int j = 0; j
+   * < lafter.size(); j++) { Expr afterExpr = lafter.get(j);
+   * toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig, beforeExpr, afterExpr);
+   * } } } // end iterator
+   * 
+   * System.out.println("HB Inverse Function: "); Map<IObject, IObject> happensBeforeInvFnInfo =
+   * ge.getHappensBeforeInvFunction(); // before, Graph2AlloyExpr.print(happensBeforeInvFnInfo); //
+   * after
+   * 
+   * for (IObject before : happensBeforeInvFnInfo.keySet()) { before.sort(); List<Expr> lbefore =
+   * toExprs(before, thisSig); IObject after = happensBeforeInvFnInfo.get(before); after.sort();
+   * List<Expr> lafter = toExprs(after, thisSig);
+   * 
+   * for (int i = 0; i < lbefore.size(); i++) { Expr beforeExpr = lbefore.get(i); for (int j = 0; j
+   * < lafter.size(); j++) { Expr afterExpr = lafter.get(j);
+   * 
+   * // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(mainSig, // beforeExpr, //
+   * afterExpr); toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig,
+   * beforeExpr, afterExpr); } } } // end iterator }
+   * 
+   * // assume if 1st list field in _aSig, all fields are also in _aSig public List<Expr>
+   * toExprs(IObject _o, Sig _aSig) { List<Expr> exprs = new ArrayList<>(); if (_o instanceof
+   * OListOR) { ONode onode = (ONode) ((OListOR) _o).get(0); Sig.Field f =
+   * toAlloy.getField(onode.getName()); if (f.sig == _aSig) { Expr expr = _aSig.domain(f); for (int
+   * i = 1; i < ((OListOR) _o).size(); i++) { onode = (ONode) ((OListOR) _o).get(i); expr =
+   * expr.plus(_aSig.domain(toAlloy.getField(onode.getName()))); } exprs.add(expr); }
+   * 
+   * } else if (_o instanceof OListAND) { ONode onode = (ONode) ((OListAND) _o).get(0); Sig.Field f
+   * = toAlloy.getField(onode.getName()); if (f.sig == _aSig) { exprs.add(_aSig.domain(f)); for (int
+   * i = 1; i < ((OListAND) _o).size(); i++) { onode = (ONode) ((OListAND) _o).get(i); f =
+   * toAlloy.getField(onode.getName()); exprs.add(_aSig.domain(f)); } } } else { ONode onode =
+   * (ONode) _o; Sig.Field f = toAlloy.getField(onode.getName()); if (f.sig == _aSig)
+   * exprs.add(_aSig.domain(f)); } return exprs; }
+   */
 
 }
 

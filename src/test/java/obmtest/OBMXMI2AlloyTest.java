@@ -3,11 +3,6 @@ package obmtest;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,45 +16,75 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
 import edu.umd.omgutil.UMLModelErrorException;
 
+/*
+ * Testing set up ===============
+ * 
+ * als files
+ * 
+ * from:Box\NIST OBM Translator\Alloy Models\obm-alloy-code_2023-09-25. zip\obm\*
+ * 
+ * to:obm-alloy-code_2023-09-25\obm
+ * 
+ * xmi files
+ * 
+ * from:Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25.
+ * zip\obmsmttrans\samples\OBMModel.xmi Box\NIST OBM Translator\NIST UML-SysML OBM
+ * Models\obmsmttrans_2023-09-25. zip\obmsmttrans\samples\OBM.xmi
+ * 
+ * to:obm-alloy-code_2023-09-25\obm
+ */
+
 class OBMXMI2AlloyTest {
 
-  // OBMModel_modified.xmi
-  // ComposedBehavior NextedBehavior.p5 multiplicity -> 1 to undefined.
-
-
   @ParameterizedTest
-  @CsvSource({"4.1.1 Control Nodes1 - SimpleSequence_modified.als, Model::Basic::SimpleBehavior",
-      "4.1.1 Control Nodes2 - Fork_modified.als, Model::Basic::BehaviorFork",
-      "4.1.1 Control Nodes3 - Join_modified.als, Model::Basic::BehaviorJoin",
-      "4.1.1 Control Nodes4 - Decision_modified.als, Model::Basic::BehaviorDecision",
-      "4.1.1 Control Nodes5 - Merge_modified.als, Model::Basic::BehaviorMerge",
-      "4.1.1 Control Nodes6 - CombinedControlNodes_modified.als, Model::Basic::ComplexBehavior",
-      "4.1.2 LoopsExamples_modified.als, Model::Basic::Loop", //
-      "4.1.3 CallingBehaviors_modified.als, Model::Basic::ComposedBehavior",
-//      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::ParticipantTransfer"//
-  // 4.1.4
-  // "generated-UnsatisfiableMultiplicity.als, Model::Basic::UnsatisfiableMultiplicity", //
-  // 4.1.6
-  // "generated-UnsatisfiableAsymmetry.als, Model::Basic::UnsatisfiableAsymmetry",
-  // "generated-UnsatisfiableTransitivity.als, Model::Basic::UnsatisfiableTransitivity",
-  // "generated-UnsatisfiableComposition1.als, Model::Basic::UnsatisfiableComposition1",
-  // "generated-UnsatisfiableComposition2.als, Model::Basic::UnsatisfiableComposition2",
+
+  @CsvSource({
+
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior.als,Model::Basic::ParameterBehavior",
+      "4.1.5 Multiple Execution Steps - Multiple Object Flow_mw.als, Model::Basic::ObjectFlowBehavior",
+
+      "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als, Model::Realistic::IFFoodService",
+      "4.1.1 Control Nodes1 - SimpleSequence_mw.als, Model::Basic::SimpleSequence",
+      "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork",
+      "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join",
+      "4.1.1 Control Nodes4 - Decision_mw.als, Model::Basic::Decision",
+      "4.1.1 Control Nodes5 - Merge_mw.als, Model::Basic::Merge",
+      "4.1.1 Control Nodes6 - CombinedControlNodes_mw.als, Model::Basic::AllControl",
+      "4.1.2 LoopsExamples.als, Model::Basic::Loop",
+      "4.1.3 CallingBehaviors.als, Model::Basic::ComposedBehavior",
+      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
+      "4.1.5 Multiple Execution Steps - Multiple Control Flow.als, Model::Basic::ControlFlowBehavior",
+      // 4.1.6
+      // fails because p2 multiplicity
+      "4.1.6 UnsatisfiableAsymmetry.als, Model::Basic::UnsatisfiableAsymmetry",
+      "4.1.6 UnsatisfiableTransitivity.als, Model::Basic::UnsatisfiableTransitivity",
+      "4.1.6 UnsatisfiableMultiplicity.als, Model::Basic::UnsatisfiableMultiplicity",
+      "4.1.6 UnsatisfiableComposition1.als, Model::Basic::UnsatisfiableComposition1",
+      "4.1.6 UnsatisfiableComposition2.als, Model::Basic::UnsatisfiableComposition2",
+      "4.2.1 FoodService Control Flow - FoodService.als, Model::Realistic::FoodService",
+      "4.2.1 FoodService Control Flow - SingleFoodService.als, Model::Realistic::SingleFoodService",
+      "4.2.1 FoodService Control Flow - BuffetService.als, Model::Realistic::BuffetService",
+      "4.2.1 FoodService Control Flow - ChurchSupperService.als, Model::Realistic::ChurchSupper",
+      "4.2.1 FoodService Control Flow - FastFoodService.als, Model::Realistic::FastFoodService",
+      "4.2.1 FoodService Control Flow - UsatisfiableFoodService.als, Model::Realistic::UnsatisfiableService",
+  //
+  // TransferBefore
+  // // wip waiting Jeremy's update obm file
 
 
-  // "fileName, className"
-  // "generated-ComplexBehavior_MW.als, Model::Basic::ComplexBehavior_MW",
-  // "generated-ControlFlowBehavior.als, Model::Basic::ControlFlowBehavior",
-
+  // // //
   })
 
-  // @CsvSource({"OriginalBehaviorFork.als, Model::Basic::BehaviorFork",
-  // "BehaviorJoinFileDoesNotExist.als, Model::Basic::BehaviorJoin",
-  // "ComplexBehaviorFileDoesNotExist.als, Model::Basic::ComplexBehavior",
-  // "ControlFlowBehaviorFileDoesNotExist.als, Model::Basic::ControlFlowBehavior",
-  // "BehaviorDecisionFileDoesNotExist.als, Model::Basic::BehaviorDecision"
-  //// "fileName, className"
-  // })
-  void sameAbstractSyntaxTreeTestAndSignatures(String fileName, String className)
+
+  /**
+   * 
+   * @param manualFileName
+   * @param className
+   * @param fileToBecreatedFromXmiFile null if not to create outputfile
+   * @throws FileNotFoundException
+   * @throws UMLModelErrorException
+   */
+  void sameAbstractSyntaxTreeTestAndSignatures(String manualFileName, String className)
       throws FileNotFoundException, UMLModelErrorException {
     // PrintStream o = new PrintStream(new File("error.txt"));
     // // PrintStream console = System.out;
@@ -68,92 +93,72 @@ class OBMXMI2AlloyTest {
     // System.setProperty(("java.io.tmpdir"),
     // "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");// find
     // transfer.als
-    System.out.println("fileName = " + fileName);
+    System.out.println("fileName = " + manualFileName);
     System.out.println("className = " + className);
 
-    // ========== Create Alloy model from SysML ==========
 
-    OBMXMI2Alloy test = new OBMXMI2Alloy();
-    File xmiFile = new File("src/test/resources/OBMModel_R.xmi");
+    // ========== Create Alloy model from OBM XMI file & write as a file ==========
+
+    String working_dir = "src/test/resources/obm-alloy-code_2023-09-25/obm";
+    OBMXMI2Alloy test = new OBMXMI2Alloy(working_dir);
+
+    File testing_dir = new File(working_dir);
+    File xmiFile = new File(testing_dir, "OBMModel.xmi");
 
     // File xmiFile = new File(
     // "C:/Users/mw107/Documents/Projects/NIST
     // OBM/GIT/NIST-OBM-Translator.git/develop_mw/target/classes/OBMModel_MW.xmi");
     System.out.println("XMIFile: " + xmiFile.exists() + "? " + xmiFile.getAbsolutePath());
-    test.createAlloyFile(xmiFile, className);
-    
-    String genFileName = "generated-" + className.replaceAll("::", "_") + ".als";
-    
-    Path source = Paths.get(genFileName);
-    Path newdir = Paths.get("src/test/resources/");
-    try {
-  		Files.move(source, newdir.resolve(source.getFileName()),StandardCopyOption.REPLACE_EXISTING);
-  	} catch (IOException e) {
-  		// TODO Auto-generated catch block
-  		e.printStackTrace();
-  	}
-    
-    File testFile = new File("src/test/resources/" + fileName);
-    
-    // File testFile = new File(
-    // "C:\\Users\\mw107\\Documents\\Projects\\NIST OBM\\info\\obm-alloy-code_2023-05-26\\obm\\"
-    // + fileName);
-    System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
-    
-    String generatedFileName = "generated-" + className.replaceAll("::", "_") + ".als";
-    File generatedFile = new File("src/test/resources/" + generatedFileName);
-    System.out.println("generatedFile: " + generatedFile.exists() + "? " + generatedFile.getAbsolutePath());
 
+    File apiFile = new File(testing_dir, manualFileName + "_Generated-"
+        + className.replaceAll("::", "_") /* alloyModule.getModuleName() */ + ".als");
+    test.createAlloyFile(xmiFile, className, apiFile);
 
-    // ========== Create Alloy model from Alloy file ==========
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(testFile);
-    CompModule generatedModule = MyAlloyLibrary.importAlloyModule(generatedFile);
-
-
-    // ========== Compare abstract syntax trees ==========
 
     ExpressionComparator ec = new ExpressionComparator();
 
-    Expr sysmlAbstractSyntaxTree = generatedModule.getAllReachableFacts();
-    Expr alloyFileAbstractSyntaxTree = importedModule.getAllReachableFacts();
+    ////////////////////// Set up (Importing Modules) /////////////////////////////////////////
+    // API
+    CompModule apiModule = MyAlloyLibrary.importAlloyModule(apiFile);
+    // TEST
+    File testFile = new File(testing_dir, manualFileName);
+    System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
+    CompModule testModule = MyAlloyLibrary.importAlloyModule(testFile);
 
-    System.out.println(sysmlAbstractSyntaxTree);
-    System.out.println(alloyFileAbstractSyntaxTree);
 
-    assertTrue(ec.compareTwoExpressions(sysmlAbstractSyntaxTree, alloyFileAbstractSyntaxTree));
+    //////////////////////// Comparing Reachable Facts ////////////////////////////////
+    // API
+    Expr api_reachableFacts = apiModule.getAllReachableFacts();// test.getOverallFacts();
+    System.out.println(api_reachableFacts);
+    // Test
+    Expr test_reachableFacts = testModule.getAllReachableFacts();
+    System.out.println(test_reachableFacts);
+    // Compare
+    assertTrue(ec.compareTwoExpressions(api_reachableFacts, test_reachableFacts));
 
-    // ========== Set up signatures ==========
-
-    List<Sig> alloyFileSignatures = importedModule.getAllReachableUserDefinedSigs();
-    List<Sig> generatedFileSignatures = generatedModule.getAllReachableUserDefinedSigs();
-    Map<String, Sig> alloyFileSigMap = new HashMap<>();
-    Map<String, Sig> genFileSigMap = new HashMap<>();
-    
-    for (Sig sig : alloyFileSignatures) {
-      alloyFileSigMap.put(sig.label, sig);
+    ///////////////////////// Comparing Sigs ////////////////////
+    // ========== Set up Sigs ==========
+    // API
+    List<Sig> api_reachableDefinedSigs = apiModule.getAllReachableUserDefinedSigs();
+    Map<String, Sig> api_SigByName = new HashMap<>();// test.getAllReachableUserDefinedSigs();
+    for (Sig sig : api_reachableDefinedSigs) {
+      api_SigByName.put(sig.label, sig);
     }
-    for (Sig sig : generatedFileSignatures) {
-      genFileSigMap.put(sig.label, sig);
+    // TEST
+    List<Sig> test_reachableDefinedSigs = testModule.getAllReachableUserDefinedSigs();
+    Map<String, Sig> test_SigByName = new HashMap<>();
+    for (Sig sig : test_reachableDefinedSigs) {
+      test_SigByName.put(sig.label, sig);
     }
 
-    // ========== Compare the number of signatures ==========
-    assertTrue(genFileSigMap.size() == alloyFileSigMap.size());
+    // Compare - Size
+    assertTrue(api_SigByName.size() == test_SigByName.size());
 
-    System.out.println(alloyFileSigMap);
-    System.out.println(genFileSigMap);
-
-    // ========== Compare each signature ==========
-
-    for (String sigName : genFileSigMap.keySet()) {
-      // System.out.println(alloyFileSigMap.get(sigName));
-      // System.out.println(sysmlSigMap.get(sigName));
-      Sig alloyFileSig = alloyFileSigMap.get(sigName);
-      Sig sysmlSig = genFileSigMap.get(sigName);
-      if (alloyFileSig == null)
-        alloyFileSig = alloyFileSigMap.get("this/" + sigName);// this/BehaviorFork
-
-      // System.out.println(alloyFileSig);
-      assertTrue(ec.compareTwoExpressions(alloyFileSig, sysmlSig));
+    // Compare - each sig
+    for (String sigName : api_SigByName.keySet()) {
+      Sig alloyFileSig = test_SigByName.get(sigName);
+      Sig apiSig = api_SigByName.get(sigName);
+      assertTrue(ec.compareTwoExpressions(alloyFileSig, apiSig));
     }
   }
 
