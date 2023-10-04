@@ -100,7 +100,7 @@ class FoodServiceControlFlowExplicitFactTest {
 
 
 
-    alloy.addSteps(fs, foodServiceSig, fieldTypeByField);
+    alloy.addSteps(fs, foodServiceSig);
 
     // SingleFoodService:
 
