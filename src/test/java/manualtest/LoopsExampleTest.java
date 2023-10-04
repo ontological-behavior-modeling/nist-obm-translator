@@ -26,7 +26,7 @@ class LoopsExampleTest {
 
   @Test
   void test() {
-    Alloy alloy = new Alloy();
+    Alloy alloy = new Alloy("src/test/resources");
 
     // ========== Define list of signatures unique to the file ==========
 

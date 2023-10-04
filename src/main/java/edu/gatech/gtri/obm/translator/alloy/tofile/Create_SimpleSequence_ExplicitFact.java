@@ -28,7 +28,7 @@ public class Create_SimpleSequence_ExplicitFact {
 
     String moduleName = "SimpleSequence_ExplicitFact";
 
-    Alloy sst = new Alloy();
+    Alloy sst = new Alloy(System.getProperty("user.dir"));
 
     Set<Sig> ignoredSigs = new HashSet<>();
     Set<Expr> ignoredExprs = new HashSet<>();

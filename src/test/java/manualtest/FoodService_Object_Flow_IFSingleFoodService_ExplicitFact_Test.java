@@ -31,7 +31,7 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 	@Test
 	void test() {
 		
-		Alloy alloy = new Alloy();
+		Alloy alloy = new Alloy("src/test/resources");
 		
 		// ========== Define list of signatures unique to the file ==========
 		

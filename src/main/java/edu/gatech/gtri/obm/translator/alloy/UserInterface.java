@@ -62,6 +62,7 @@ public class UserInterface {
   private JList<String> list;
   private String[] allClassNames;
   private JLabel lblTop;
+  private static String dir = System.getProperty("user.home");
 
   /**
    * Launch the application.
@@ -69,7 +70,7 @@ public class UserInterface {
    * @throws FileNotFoundException 
    */
   public static void main(String[] args) throws FileNotFoundException, UMLModelErrorException {
-    OBMXMI2Alloy test = new OBMXMI2Alloy();
+    OBMXMI2Alloy test = new OBMXMI2Alloy("src/test/resources");
     UserInterface ui = new UserInterface();
     ui.getBtnOk().addActionListener(new ActionListener(){
        @Override
@@ -226,12 +227,9 @@ public class UserInterface {
    */
   private File chooseXMI() {
     JFileChooser j = new JFileChooser();
-    File dir = new File("C:/Users/jnapolitano7/Documents/GitHub/CastingError.bkpt");
-    System.setProperty("user.dir", dir.getAbsolutePath());
     j.setFileFilter(new FileNameExtensionFilter("XMI Files", "xmi"));
     j.setDialogTitle("Choose model .xmi file");  
     j.showOpenDialog(null);
-    j.setCurrentDirectory(dir);
     File selected = j.getSelectedFile();
     
     return selected;
