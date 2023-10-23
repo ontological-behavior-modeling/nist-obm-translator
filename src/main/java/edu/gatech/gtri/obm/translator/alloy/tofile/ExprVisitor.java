@@ -32,9 +32,11 @@ public class ExprVisitor extends VisitQuery<String> {
   private boolean isImplicitFact = false;
   private boolean isSigFact = false;
   private int factNumber = 1;
+  private final Set<Sig.Field> parameterFields; // used to include disj or not
 
-  public ExprVisitor(Set<Expr> ignoredExprs) {
+  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> pf) {
     this.ignoredExprs = ignoredExprs;
+    this.parameterFields = pf;
   }
 
   @Override
@@ -290,12 +292,20 @@ public class ExprVisitor extends VisitQuery<String> {
                 .toString();
           } else { // have to be > 1
 
+            boolean isdisj = true;
             String[] labels = new String[fs.size()];
             for (int i = 0; i < fs.size(); i++) {
+
+              if (this.parameterFields.contains(fs.get(i)))
+                isdisj = false;
               labels[i] = MyAlloyLibrary.removeSlash(fs.get(i).label);
             }
-            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
-                .append(String.join(", ", labels)).append(": ").append(type).toString();
+            if (isdisj)
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
+                  .append(String.join(", ", labels)).append(": ").append(type).toString();
+            else
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+                  .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
 
@@ -343,6 +353,7 @@ public class ExprVisitor extends VisitQuery<String> {
     }
 
     return MyAlloyLibrary.removeSlash(x.label);
+
   }
 
   public Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) throws Err {

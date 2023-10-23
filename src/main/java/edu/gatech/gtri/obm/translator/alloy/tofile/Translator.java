@@ -16,8 +16,9 @@ public class Translator {
   private final Set<Func> ignoredFuncs;
   private final Set<Sig> ignoredSigs;
 
-  public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs) {
-    exprVisitor = new ExprVisitor(ignoredExprs);
+  public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs,
+      Set<Sig.Field> parameterFields) {
+    exprVisitor = new ExprVisitor(ignoredExprs, parameterFields);
     this.ignoredFuncs = ignoredFuncs;
     this.ignoredSigs = ignoredSigs;
   }
