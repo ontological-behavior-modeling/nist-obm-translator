@@ -51,7 +51,7 @@ public class Alloy {
 
 
   protected static Func bijectionFiltered;
-  protected static Func funcFiltered;
+  protected static Func functionFiltered;
   protected static Func inverseFunctionFiltered;
 
   protected static Func osteps;
@@ -109,7 +109,7 @@ public class Alloy {
     happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
     happensDuring = Helper.getFunction(transferModule, "o/happensDuring");
     bijectionFiltered = Helper.getFunction(transferModule, "o/bijectionFiltered");
-    funcFiltered = Helper.getFunction(transferModule, "o/functionFiltered");
+    functionFiltered = Helper.getFunction(transferModule, "o/functionFiltered");
     inverseFunctionFiltered = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
 
     sources = Helper.getFunction(transferModule, "o/sources");
@@ -294,8 +294,8 @@ public class Alloy {
       Expr to) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
 
-    Expr funcFilteredExpr =
-        funcFiltered.call(happensBefore.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+    Expr funcFilteredExpr = functionFiltered.call(happensBefore.call(), addExprVarToExpr(s, from),
+        addExprVarToExpr(s, to));
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -351,7 +351,7 @@ public class Alloy {
       _to = _to.plus(s.join(to[i]));
     }
 
-    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), _from, _to);
+    Expr funcFilteredExpr = functionFiltered.call(happensBefore.call(), _from, _to);
     List<ExprHasName> names = List.of(s);
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -385,6 +385,18 @@ public class Alloy {
     this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
   }
 
+  public void createIsAfterSourceOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(isAfterSource.call(s.join(transfer)).forAll(decl));
+  }
+
+  public void createIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
+  }
+
   public void createInverseFunctionFilteredAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
       Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
@@ -405,7 +417,7 @@ public class Alloy {
     from = from == null ? s : from;
 
     Expr funcFilteredExpr =
-        funcFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+        functionFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -414,19 +426,38 @@ public class Alloy {
   /* if from or to is null, use ExprVar x */
   public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Expr fromExpr = null;
+    Expr toExpr = null;
 
-    to = to == null ? s : to;
-    from = from == null ? s : from;
-
-    Expr fromExpr = addExprVarToExpr(s, from);
-    Expr toExpr = addExprVarToExpr(s, to);
+    boolean justFunction = false;
+    boolean justInverseFunction = false;
+    if (to == null) {// just x - means no field but to itself
+                     // i.e., fact {all x: B | bijectionFiltered[sources, x.transferB1B2, x.b1]} in
+                     // 4.1.4 Transfer Parameter2 -Parameter Behavior.als
+      justFunction = true;
+      toExpr = s;
+    } else
+      toExpr = addExprVarToExpr(s, to);
+    if (from == null) {// just x - means no field but to itself
+      justInverseFunction = true;
+      fromExpr = s;
+    } else
+      fromExpr = addExprVarToExpr(s, from);
 
     Expr funcCall = func.call();
-    Expr bijectionFilteredExpr = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+
+    Expr fnc_inversefnc_or_bijection = null;
+    if (!justFunction && !justInverseFunction) {
+      fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+    } else if (justFunction) {
+      fnc_inversefnc_or_bijection = functionFiltered.call(funcCall, fromExpr, toExpr);
+    } else if (justInverseFunction) {
+      fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
+    }
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-    this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+    this.addToOverallFact(fnc_inversefnc_or_bijection.forAll(decl));
   }
 
   /**
@@ -496,6 +527,13 @@ public class Alloy {
         s.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
+  // fact {all x: B1 | x.vin=x.vout}
+  public void addEqual(Sig ownerSig, Sig.Field field1, Sig.Field field2) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(s.join(field1).equal(s.join(field2)).forAll(decl));
+  }
 
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
     Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
@@ -538,51 +576,76 @@ public class Alloy {
     }
   }
 
-  public void addSteps(ExprVar var, Sig ownerSig) {
-
-    // ?? do you need different call?
-    // steps
-    Expr ostepsExpr1 = osteps.call();
-    // Expr ostepsExpr2 = osteps.call();
-
-    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr = createStepExpr(var, ownerSig);
-    if (expr != null) {
-      // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
-      // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
-      addBothToOverallFact(var, expr, ostepsExpr1, decl);
-    }
-  }
-
   private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
     addToOverallFact((expr).in(var.join(varJoinExpr)).forAll(decl));
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
-  // comparing two files but step order need to be the same
-  private Expr createStepExpr(ExprVar s, Sig ownerSig) {
+  // public void addSteps(ExprVar var, Sig ownerSig) {
+  //
+  // // ?? do you need different call?
+  // // steps
+  // Expr ostepsExpr1 = osteps.call();
+  // // Expr ostepsExpr2 = osteps.call();
+  //
+  // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+  // Expr expr = createStepExpr(var, ownerSig);
+  // if (expr != null) {
+  // // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
+  // // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
+  // addBothToOverallFact(var, expr, ostepsExpr1, decl);
+  // }
+  // }
+  //
+  // private Expr createStepExpr(ExprVar s, Sig ownerSig) {
+  //
+  // List<String> sortedFieldLabel = new ArrayList<>();
+  // for (Field field : ownerSig.getFields()) {
+  // sortedFieldLabel.add(field.label);
+  // }
+  // Collections.sort(sortedFieldLabel);
+  //
+  // Expr expr = null;
+  //
+  // for (String fieldName : sortedFieldLabel) {
+  // for (Field field : ownerSig.getFields()) {
+  // if (field.label.equals(fieldName)) {
+  // expr = expr == null ? s.join(ownerSig.domain(field))
+  // : expr.plus(s.join(ownerSig.domain(field)));
+  // break;
+  // }
+  // }
+  // }
+  //
+  //
+  // return expr;
+  // }
+
+  public void addSteps(Sig sig, Set<String> stepFields) {
+    ExprVar s = ExprVar.make(null, "x", sig.type());
+    Expr ostepsExpr1 = osteps.call();
+    Decl decl = new Decl(null, null, null, List.of(s), sig.oneOf());
 
     List<String> sortedFieldLabel = new ArrayList<>();
-    for (Field field : ownerSig.getFields()) {
-      sortedFieldLabel.add(field.label);
-    }
+    for (String stepField : stepFields)
+      sortedFieldLabel.add(stepField);
     Collections.sort(sortedFieldLabel);
 
     Expr expr = null;
-
     for (String fieldName : sortedFieldLabel) {
-      for (Field field : ownerSig.getFields()) {
+      for (Field field : sig.getFields()) {
         if (field.label.equals(fieldName)) {
-          expr = expr == null ? s.join(ownerSig.domain(field))
-              : expr.plus(s.join(ownerSig.domain(field)));
+          expr = expr == null ? s.join(sig.domain(field)) : expr.plus(s.join(sig.domain(field)));
           break;
         }
       }
     }
-
-
-    return expr;
+    if (expr != null) {
+      addBothToOverallFact(s, expr, ostepsExpr1, decl);
+    }
   }
+
+
 
   private Map<Sig, List<Field>> toFieldsByFieldType(Map<Field, Sig> fieldByFieldType) {
     Map<Sig, List<Field>> fieldsByFieldType = new HashMap<>();

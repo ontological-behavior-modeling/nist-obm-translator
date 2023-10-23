@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.Helper;
@@ -45,8 +46,10 @@ public class ToAlloy {
       else
         s = alloy.createSigAsChildOfParentSigAddToAllSigs(name, parentSig);
       sigByName.put(name, s);
-      if (isMainSig)
+      if (isMainSig) {
         mainSig = s;
+        // noInputsOutputs(mainSig);
+      }
       return s;
     } else
       return sigByName.get(name);
@@ -272,6 +275,8 @@ public class ToAlloy {
     Field sourceTypeField = Helper.getFieldFromSigByFieldType(sourceTypeName, ownerSig);
     Field targetTypeField = Helper.getFieldFromSigByFieldType(targetTypeName, ownerSig);
 
+
+
     // fact {all x: ParticipantTransfer | bijectionFiltered[sources, x.transferSupplierCustomer,
     // x.supplier]}
     // fact {all x: ParticipantTransfer | bijectionFiltered[targets, x.transferSupplierCustomer,
@@ -316,45 +321,50 @@ public class ToAlloy {
 
 
 
-  public void createFnForTransferBeforeAndAddToOverallFact(PrimSig ownerSig, Expr start,
-      Expr middle, Expr end, String sourceTypeName, String targetTypeName) {
+  // public void createFnForTransferBeforeAndAddToOverallFact(PrimSig ownerSig, Expr start,
+  // Expr middle, Expr end, String sourceTypeName, String targetTypeName) {
+  //
+  // Field sourceTypeField = Helper.getFieldFromSigByFieldType(sourceTypeName, ownerSig);
+  // Field targetTypeField = Helper.getFieldFromSigByFieldType(targetTypeName, ownerSig);
+  //
+  //
+  // /** start --- Constraints on the Transfer from input of B to intput of B1 */
+  // // fact {all x: B | functionFiltered[sources, x.transferBB1, x]}//missing
+  // // fact {all x: B | bijectionFiltered[targets, x.transferBB1, x.b1]}//missing
+  // // fact {all x: B | subsettingItemRuleForSources[x.transferBB1]}//missing
+  // // fact {all x: B | subsettingItemRuleForTargets[x.transferBB1]}//missing
+  // // fact {all x: B | isBeforeTarget[x.transferBB1]}//missing
+  //
+  // alloy.createFunctionFilteredAndAddToOverallFact(ownerSig, start, sourceTypeField,
+  // Alloy.sources);
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, start, targetTypeField, Alloy.targets);
+  // alloy.createSubSettingItemRuleOverallFact(ownerSig, start);
+  //
+  // /** middle Constraints on the Transfer from output of B1 to input of B2 */
+  // // fact {all x: B | bijectionFiltered[sources, x.transferbeforeB1B2, x.b1]}//missing
+  // // fact {all x: B | bijectionFiltered[targets, x.transferbeforeB1B2, x.b2]}//missing
+  // // fact {all x: B | subsettingItemRuleForSources[x.transferBB1]}//missing
+  // // fact {all x: B | subsettingItemRuleForTargets[x.transferBB1]}//missing
+  // // fact {all x: B | isAfterSource[x.transferbeforeB1B2]}//missing
+  // // fact {all x: B | isBeforeTarget[x.transferbeforeB1B2]}//missing
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, middle, sourceTypeField, Alloy.sources);
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, middle, targetTypeField, Alloy.targets);
+  // alloy.createSubSettingItemRuleOverallFact(ownerSig, middle);
+  //
+  // /** Constraints on the Transfer from output of B2 to output of B */
+  // // fact {all x: B | bijectionFiltered[sources, x.transferB2B, x.b2]}//missing
+  // // fact {all x: B | functionFiltered[targets, x.transferB2B, x]}//missing
+  // // fact {all x: B | subsettingItemRuleForSources[x.transferB2B]}//missing
+  // // fact {all x: B | subsettingItemRuleForTargets[x.transferB2B]}//missing
+  // // fact {all x: B | isAfterSource[x.transferB2B]}//missing
+  // alloy.createFunctionFilteredAndAddToOverallFact(ownerSig, end, sourceTypeField, Alloy.sources);
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, end, targetTypeField, Alloy.targets);
+  // alloy.createSubSettingItemRuleOverallFact(ownerSig, end);
+  // }
 
-    Field sourceTypeField = Helper.getFieldFromSigByFieldType(sourceTypeName, ownerSig);
-    Field targetTypeField = Helper.getFieldFromSigByFieldType(targetTypeName, ownerSig);
-
-
-    /** start --- Constraints on the Transfer from input of B to intput of B1 */
-    // fact {all x: B | functionFiltered[sources, x.transferBB1, x]}//missing
-    // fact {all x: B | bijectionFiltered[targets, x.transferBB1, x.b1]}//missing
-    // fact {all x: B | subsettingItemRuleForSources[x.transferBB1]}//missing
-    // fact {all x: B | subsettingItemRuleForTargets[x.transferBB1]}//missing
-    // fact {all x: B | isBeforeTarget[x.transferBB1]}//missing
-
-    alloy.createFunctionFilteredAndAddToOverallFact(ownerSig, start, sourceTypeField,
-        Alloy.sources);
-    alloy.createBijectionFilteredToOverallFact(ownerSig, start, targetTypeField, Alloy.targets);
-    alloy.createSubSettingItemRuleOverallFact(ownerSig, start);
-
-    /** middle Constraints on the Transfer from output of B1 to input of B2 */
-    // fact {all x: B | bijectionFiltered[sources, x.transferbeforeB1B2, x.b1]}//missing
-    // fact {all x: B | bijectionFiltered[targets, x.transferbeforeB1B2, x.b2]}//missing
-    // fact {all x: B | subsettingItemRuleForSources[x.transferBB1]}//missing
-    // fact {all x: B | subsettingItemRuleForTargets[x.transferBB1]}//missing
-    // fact {all x: B | isAfterSource[x.transferbeforeB1B2]}//missing
-    // fact {all x: B | isBeforeTarget[x.transferbeforeB1B2]}//missing
-    alloy.createBijectionFilteredToOverallFact(ownerSig, middle, sourceTypeField, Alloy.sources);
-    alloy.createBijectionFilteredToOverallFact(ownerSig, middle, targetTypeField, Alloy.targets);
-    alloy.createSubSettingItemRuleOverallFact(ownerSig, middle);
-
-    /** Constraints on the Transfer from output of B2 to output of B */
-    // fact {all x: B | bijectionFiltered[sources, x.transferB2B, x.b2]}//missing
-    // fact {all x: B | functionFiltered[targets, x.transferB2B, x]}//missing
-    // fact {all x: B | subsettingItemRuleForSources[x.transferB2B]}//missing
-    // fact {all x: B | subsettingItemRuleForTargets[x.transferB2B]}//missing
-    // fact {all x: B | isAfterSource[x.transferB2B]}//missing
-    alloy.createFunctionFilteredAndAddToOverallFact(ownerSig, end, sourceTypeField, Alloy.sources);
-    alloy.createBijectionFilteredToOverallFact(ownerSig, end, targetTypeField, Alloy.targets);
-    alloy.createSubSettingItemRuleOverallFact(ownerSig, end);
+  public void noInputsOutputs(Sig sig) {
+    alloy.noInputs(sig);
+    alloy.noOutputs(sig);
   }
 
   public void noInputs(String sigName) {
@@ -387,17 +397,32 @@ public class ToAlloy {
       System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
   }
 
-  public void addSteps(List<String> noStepSigs) {
-    for (Sig sig : sigByName.values()) {
-      if (!noStepSigs.contains(sig.label)) {
-        ExprVar s = ExprVar.make(null, "x", sig.type());
-        alloy.addSteps(s, sig);
-      }
+  // public void addSteps(Set<String> noStepSigs) {
+  // for (Sig sig : sigByName.values()) {
+  // if (!noStepSigs.contains(sig.label)) {
+  // ExprVar s = ExprVar.make(null, "x", sig.type());
+  // alloy.addSteps(s, sig);
+  // }
+  // }
+  // }
+
+  public void addSteps(Map<String, Set<String>> stepPropertiesBySig) {
+    for (String sigName : stepPropertiesBySig.keySet()) {
+      Sig sig = sigByName.get(sigName);
+      alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
     }
   }
 
+  // fact {all x: B1 | x.vin=x.vout}
+  public void addEqual(PrimSig ownerSig, String fieldName1, String fieldName2) {
+    Field f1 = Helper.getFieldFromSig(fieldName1, ownerSig);
+    Field f2 = Helper.getFieldFromSig(fieldName2, ownerSig);
+    if (f1 != null && f2 != null) {
+      alloy.addEqual(ownerSig, f1, f2);
+    }
+  }
 
-  public String createAlloyFile(File outputFile) {
+  public String createAlloyFile(File outputFile, Set<Field> parameterFields) {
 
     // set modulename without this
     String moduleName =
@@ -410,8 +435,8 @@ public class ToAlloy {
     AlloyModule alloyModule =
         new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
-    Translator translator =
-        new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
+    Translator translator = new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(),
+        alloy.getIgnoredSigs(), parameterFields);
 
     if (outputFile != null) {
       String outputFileName = outputFile.getAbsolutePath();

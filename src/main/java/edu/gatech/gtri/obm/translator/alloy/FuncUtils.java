@@ -3,7 +3,6 @@ package edu.gatech.gtri.obm.translator.alloy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import edu.mit.csail.sdg.alloy4.Pos;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
 import edu.mit.csail.sdg.ast.Func;
@@ -38,8 +37,9 @@ public class FuncUtils {
   }
 
   public static Sig.Field[] addTrickyField(java.lang.String[] labels, Sig sig, Sig sigType) {
-    Pos isDisjoint = new Pos("", 0, 0);
-    return sig.addTrickyField(null, null, isDisjoint, null, null, labels, sigType.setOf());
+    // Pos isDisjoint = new Pos("", 0, 0);
+    // 3rd parameter is isDisjoint but does not affect to write out as disj
+    return sig.addTrickyField(null, null, null, null, null, labels, sigType.setOf());
   }
 
   public static Expr createExprEqualToNumber(Expr expr, int num) {
