@@ -1,15 +1,17 @@
 package manualtest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import edu.gatech.gtri.obm.translator.alloy.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Expr;
@@ -18,18 +20,17 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+import obmtest.ExpressionComparator;
 
 class SimpleSequenceImplicitFactTest {
 
   @Test
   void test() {
 
+    String moduleName = "SimpleSequence_ImplicitFact";
+    String outFileName = "src/test/resources/generated-" + moduleName + ".als";
+    String filename =
+        "src/test/resources/4.1.1 Control Nodes1 - SimpleSequence_Implicit_modified.als";
     Alloy alloy = new Alloy("src/test/resources");
 
     // ========== Define list of signatures unique to the file ==========
@@ -44,41 +45,39 @@ class SimpleSequenceImplicitFactTest {
 
     // ========== Define implicit facts ==========
 
-    Func stepsFunction = Helper.getFunction(Alloy.transferModule, "o/steps");
-    Func functionFilteredFunction = Helper.getFunction(Alloy.transferModule, "o/functionFiltered");
+    Func stepsFunction = AlloyUtils.getFunction(Alloy.transferModule, "o/steps");
+    Func functionFilteredFunction =
+        AlloyUtils.getFunction(Alloy.transferModule, "o/functionFiltered");
     Func inverseFunctionFilteredFunction =
-        Helper.getFunction(Alloy.transferModule, "o/inverseFunctionFiltered");
-    Func happensBefore = Helper.getFunction(Alloy.transferModule, "o/happensBefore");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/inverseFunctionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(Alloy.transferModule, "o/happensBefore");
 
     ExprVar thisVar = ExprVar.make(null, "this", mainSig.type());
 
     Expr functionFilteredExpression =
         functionFilteredFunction.call(happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
-    Expr inverseFunctionFilteredExpression =
-        inverseFunctionFilteredFunction.call(
-            happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
+    Expr inverseFunctionFilteredExpression = inverseFunctionFilteredFunction
+        .call(happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
 
-    mainSig.addFact(
-        functionFilteredExpression
-            .and(inverseFunctionFilteredExpression)
-            .and(thisVar.join(p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
-            .and(thisVar.join(p1).plus(thisVar.join(p2)).in(thisVar.join(stepsFunction.call())))
-            .and(thisVar.join(stepsFunction.call()).in(thisVar.join(p1).plus(thisVar.join(p2)))));
+    mainSig.addFact(functionFilteredExpression.and(inverseFunctionFilteredExpression)
+        .and(thisVar.join(p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
+        .and(thisVar.join(p1).plus(thisVar.join(p2)).in(thisVar.join(stepsFunction.call())))
+        .and(thisVar.join(stepsFunction.call()).in(thisVar.join(p1).plus(thisVar.join(p2)))));
 
     // ========== Define functions and predicates ==========
 
-    //	    Func nonZeroDurationOnlyFunction = Helper.getFunction(Alloy.transferModule,
+    // Func nonZeroDurationOnlyFunction = Helper.getFunction(Alloy.transferModule,
     // "o/nonZeroDurationOnly");
-    //	    Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
+    // Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
 
-    Sig transfer = Helper.getReachableSig(Alloy.transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(Alloy.transferModule, "o/Transfer");
     Expr suppressTransfersExpessionBody = transfer.no();
     Func suppressTransfersFunction =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
     Expr suppressTransfersExpression = suppressTransfersFunction.call();
 
-    Func inputs = Helper.getFunction(Alloy.transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(Alloy.transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(Alloy.transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(Alloy.transferModule, "o/outputs");
     Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
     Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
     Expr suppressIOExpression = suppressIOFunction.call();
@@ -91,76 +90,49 @@ class SimpleSequenceImplicitFactTest {
         new Func(null, "p2DuringExample", new ArrayList<>(), null, abSig.in(mainSig.join(p2)));
     Expr p2DuringExampleExpression = p2DuringExamplePredicate.call();
 
-    Func instancesDuringExamplePredicate =
-        new Func(
-            null,
-            "instancesDuringExample",
-            new ArrayList<>(),
-            null,
-            p1DuringExampleExpression.and(p2DuringExampleExpression));
+    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
+        new ArrayList<>(), null, p1DuringExampleExpression.and(p2DuringExampleExpression));
     Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
 
-    Func onlySimpleSequencePredicate =
-        new Func(
-            null,
-            "onlySimpleSequence",
-            new ArrayList<>(),
-            null,
-            mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
+    Func onlySimpleSequencePredicate = new Func(null, "onlySimpleSequence", new ArrayList<>(), null,
+        mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
     Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
 
-    Expr predicates =
-        (suppressTransfersExpression)
-            .and(suppressIOExpression)
-            .and(instancesDuringExampleExpression)
-            .and(onlySimpleSequenceExpression);
+    Expr predicates = (suppressTransfersExpression).and(suppressIOExpression)
+        .and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
 
     // ========== Done creating AST ==========
 
     // ========== Define command ==========
 
-    Expr simpleSequencImplicitFactExpr =
-        (suppressTransfersExpression)
-            .and(suppressIOExpression)
-            .and(instancesDuringExampleExpression)
-            .and(onlySimpleSequenceExpression);
+    Expr simpleSequencImplicitFactExpr = (suppressTransfersExpression).and(suppressIOExpression)
+        .and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
 
     Command simpleSequenceImplicitFactCmd =
-        new Command(
-            null,
-            simpleSequencImplicitFactExpr,
-            "SimpleSequence",
-            false,
-            6,
-            -1,
-            -1,
-            -1,
-            Arrays.asList(new CommandScope[] {}),
-            Arrays.asList(new Sig[] {}),
-            simpleSequencImplicitFactExpr.and(alloy.getOverAllFact()),
-            null);
+        new Command(null, simpleSequencImplicitFactExpr, "SimpleSequence", false, 6, -1, -1, -1,
+            Arrays.asList(new CommandScope[] {}), Arrays.asList(new Sig[] {}),
+            simpleSequencImplicitFactExpr.and(alloy.getOverAllFact()), null);
 
     // ========== Write file ==========
 
     Command[] commands = new Command[] {simpleSequenceImplicitFactCmd};
 
-    AlloyModule alloyModule =
-        new AlloyModule(
-            "SimpleSequence_ImplicitFact", alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+    AlloyModule alloyModule = new AlloyModule("SimpleSequence_ImplicitFact", alloy.getAllSigs(),
+        alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
+
 
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
 
-    String filename = "src/test/resources/4.1.1 Control Nodes1 - SimpleSequence_Implicit_modified.als";
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 
-    CompModule apiModule = MyAlloyLibrary.importAlloyModule(outFileName);
+    CompModule importedModule = AlloyUtils.importAlloyModule(filename);
+
+    CompModule apiModule = AlloyUtils.importAlloyModule(outFileName);
 
     // ========== Test if they are equal ==========
 
@@ -175,10 +147,10 @@ class SimpleSequenceImplicitFactTest {
     Map<String, Sig> apiMap = new HashMap<>();
 
     for (Sig sig : fileSigs) {
-      fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      fileMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
     for (Sig sig : apiSigs) {
-      apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      apiMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
 
     assertTrue(ec.compareTwoExpressions(fileFacts, apiFacts));

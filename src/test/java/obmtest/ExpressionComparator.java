@@ -1,5 +1,9 @@
-package edu.gatech.gtri.obm.translator.alloy.tofile;
+package obmtest;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.ast.Attr;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -18,26 +22,15 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Type;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class ExpressionComparator {
 
   private final Set<List<Expr>> visitedExpressions;
-  private Set<Sig.Field> fields;
-
   private final Set<Expr> usedExpr2s;
 
   public ExpressionComparator() {
     visitedExpressions = new HashSet<>();
     usedExpr2s = new HashSet<>();
-
-    // try {
-    // System.setErr(new PrintStream(new FileOutputStream("error.log")));
-    // } catch (FileNotFoundException e) {
-    // System.err.println(e.getMessage());
-    // }
   }
 
   public boolean compareTwoExpressions(Expr e1, Expr e2) {
@@ -68,10 +61,8 @@ public class ExpressionComparator {
 
     // ConstList<Sig> additionalExactScopes
     if (c1.additionalExactScopes.size() != c2.additionalExactScopes.size()) {
-      System.err.println(
-          "compareCommand: "
-              + "c1.additionalExactScopes.size() != "
-              + "c2.additionalExactScopes.size()");
+      System.err.println("compareCommand: " + "c1.additionalExactScopes.size() != "
+          + "c2.additionalExactScopes.size()");
       System.err.println("c1.additionalExactScopes.size()=" + c1.additionalExactScopes.size());
       System.err.println("c2.additionalExactScopes.size()=" + c2.additionalExactScopes.size());
       return false;
@@ -370,11 +361,7 @@ public class ExpressionComparator {
     expr2 = expr2.deNOP();
 
     if (!expr1.getClass().equals(expr2.getClass())) {
-      System.err.println(expr1);
-      System.err.println(expr2);
-      System.err.println(
-          "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!compareExpr:"
-              + " !expr1.getClass().equals(expr2.getClass())!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
       System.err.println("expr1.getClass(): " + expr1.getClass());
       System.err.println("expr2.getClass(): " + expr2.getClass());
       System.err.println();
@@ -394,8 +381,8 @@ public class ExpressionComparator {
       if (!compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)) {
         System.err.println(expr1);
         System.err.println(expr2);
-        System.err.println(
-            "compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)");
+        System.err
+            .println("compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)");
         System.err.println();
         return false;
       }
@@ -403,8 +390,8 @@ public class ExpressionComparator {
       if (!compareExprCall((ExprCall) expr1, (ExprCall) expr2)) {
         System.err.println(expr1);
         System.err.println(expr2);
-        System.err.println(
-            "compareExpr: " + "!compareExprCall((ExprCall) expr1, (ExprCall) expr2)");
+        System.err
+            .println("compareExpr: " + "!compareExprCall((ExprCall) expr1, (ExprCall) expr2)");
         System.err.println();
         System.err.println("expr1.class=" + expr1.getClass());
         System.err.println("expr2.class=" + expr2.getClass());
@@ -431,8 +418,8 @@ public class ExpressionComparator {
       System.err.println("ExprLet: not implemented");
     } else if (expr1.getClass().equals(ExprList.class)) {
       if (!compareExprList((ExprList) expr1, (ExprList) expr2)) {
-        System.err.println(
-            "compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2)");
+        System.err
+            .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -448,8 +435,8 @@ public class ExpressionComparator {
       }
     } else if (expr1.getClass().equals(ExprUnary.class)) {
       if (!compareExprUnary((ExprUnary) expr1, (ExprUnary) expr2)) {
-        System.err.println(
-            "compareExpr: !compareExprUnary(" + "(ExprUnary) expr1, (ExprUnary) expr2)");
+        System.err
+            .println("compareExpr: !compareExprUnary(" + "(ExprUnary) expr1, (ExprUnary) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -465,8 +452,8 @@ public class ExpressionComparator {
       }
     } else if (expr1.getClass().equals(Sig.Field.class)) {
       if (!compareSigField((Sig.Field) expr1, (Sig.Field) expr2)) {
-        System.err.println(
-            "compareExpr: !compareSigField(" + "(Sig.Field) expr1, (Sig.Field) expr2)");
+        System.err
+            .println("compareExpr: !compareSigField(" + "(Sig.Field) expr1, (Sig.Field) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -711,26 +698,41 @@ public class ExpressionComparator {
       System.err.println();
       return false;
     }
-
+    // for each expr1.arg
     for (int i = 0; i < expr1.args.size(); i++) {
-      for (int j = 0; j < expr1.args.size(); j++) {
+      boolean found = false;
+      for (int j = 0; j < expr2.args.size(); j++) {
+        // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
+        // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
         if (compareAsString(expr1.args.get(i), expr2.args.get(j))) {
           if (!compareExpr(expr1.args.get(i), expr2.args.get(j))) {
-            System.err.println("compareExprList: " + "expr1.args != expr2.args for i = " + i);
-            System.err.println("expr1.args: " + expr1.args);
-            System.err.println("expr2.args: " + expr2.args);
+            System.err.println(
+                "compareExprList: " + "expr1.args != expr2.args for i = " + i + " j = " + j);
+            System.err.println("expr1.args(" + i + "): " + expr1.args.get(i));
+            System.err.println("expr2.args(" + j + "): " + expr2.args.get(j));
             System.err.println();
-            return false;
+            // expr1.args.get(i) == expr2.args.get(j) but not belong to same sig ParameterBehavior
+            // vs. A then should continue the search
+            found = false;
+          } else {
+            // expr1 in expr2 and compare return true
+            found = true;
+            break;
           }
         }
+      } // end of j loop
+      if (!found) {
+        System.err.println(expr1.args.get(i) + " not found in " + expr2.args);
+        return false;
       }
     }
-    return true; // exprList
+    return true;
   }
 
   private boolean compareAsString(Expr expr1, Expr expr2) {
     String s1 = expr1.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
     String s2 = expr2.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
+
     if (s1.equals(s2)) {
       return true;
     } else {
@@ -791,7 +793,6 @@ public class ExpressionComparator {
       System.err.println();
       return false;
     }
-
     boolean found;
     for (Decl d1 : expr1.decls) {
       found = false;
@@ -930,10 +931,8 @@ public class ExpressionComparator {
           if (!compareDecl(func1.decls.get(i), func2.decls.get(j))) {
             System.err.println("Func func1: " + func1);
             System.err.println("Func func2: " + func2);
-            System.err.println(
-                "compareFunction: !compareDecl("
-                    + "func1.decls.get(i), func2.decls.get(i)) for i="
-                    + i);
+            System.err.println("compareFunction: !compareDecl("
+                + "func1.decls.get(i), func2.decls.get(i)) for i=" + i);
             System.err.println();
             return false;
           }
@@ -951,26 +950,24 @@ public class ExpressionComparator {
     if (func1.isPrivate == null && func2.isPrivate != null) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err.println(
-          "compareFunctions: " + "func1.isPrivate == null && func2.isPrivate != null");
+      System.err
+          .println("compareFunctions: " + "func1.isPrivate == null && func2.isPrivate != null");
       System.err.println();
       return false;
     }
     if (func1.isPrivate != null && func2.isPrivate == null) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err.println(
-          "compareFunctions: " + "func1.isPrivate != null && func2.isPrivate == null");
+      System.err
+          .println("compareFunctions: " + "func1.isPrivate != null && func2.isPrivate == null");
       System.err.println();
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(func1.label).equals(MyAlloyLibrary.removeSlash(func2.label))) {
+    if (!AlloyUtils.removeSlash(func1.label).equals(AlloyUtils.removeSlash(func2.label))) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err.println(
-          "compareFunctions: "
-              + "!MyAlloyLibrary.removeSlash(func1.label)"
-              + ".equals(MyAlloyLibrary.removeSlash(func2.label))");
+      System.err.println("compareFunctions: " + "!MyAlloyLibrary.removeSlash(func1.label)"
+          + ".equals(MyAlloyLibrary.removeSlash(func2.label))");
       System.err.println("func1.label: " + func1.label);
       System.err.println("func2.label: " + func2.label);
       System.err.println();
@@ -1003,8 +1000,8 @@ public class ExpressionComparator {
     if (primSig1.children().size() != primSig2.children().size()) {
       System.err.println(primSig1);
       System.err.println(primSig2);
-      System.err.println(
-          "comparePrimSig: primSig1.children().size() != primSig2.children().size()");
+      System.err
+          .println("comparePrimSig: primSig1.children().size() != primSig2.children().size()");
       System.err.println("primSig1.children().size() = " + primSig1.children().size());
       System.err.println("primSig2.children().size() = " + primSig2.children().size());
       System.err.println();
@@ -1030,8 +1027,7 @@ public class ExpressionComparator {
       return false;
     }
 
-    if (sig1 instanceof Sig.PrimSig
-        && sig2 instanceof Sig.PrimSig
+    if (sig1 instanceof Sig.PrimSig && sig2 instanceof Sig.PrimSig
         && !comparePrimSig((Sig.PrimSig) sig1, (Sig.PrimSig) sig2)) {
       return false;
     }
@@ -1180,12 +1176,12 @@ public class ExpressionComparator {
       System.err.println("compareSig: sig1.isSubsig != null && sig2.isSubsig == null");
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(sig1.label).equals(MyAlloyLibrary.removeSlash(sig2.label))) {
+    if (!AlloyUtils.removeSlash(sig1.label).equals(AlloyUtils.removeSlash(sig2.label))) {
       System.err.println("sig1: " + sig1);
       System.err.println("sig2: " + sig2);
       System.err.println("compareSig: !sig1.label.equals(sig2.label)");
-      System.err.println("sig1.label: " + MyAlloyLibrary.removeSlash(sig1.label));
-      System.err.println("sig2.label: " + MyAlloyLibrary.removeSlash(sig2.label));
+      System.err.println("sig1.label: " + AlloyUtils.removeSlash(sig1.label));
+      System.err.println("sig2.label: " + AlloyUtils.removeSlash(sig2.label));
       System.err.println();
       return false;
     }
@@ -1283,8 +1279,7 @@ public class ExpressionComparator {
       System.err.println("compareSig: sig1.isTopLevel() != sig2.isTopLevel()");
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(sig1.toString())
-        .equals(MyAlloyLibrary.removeSlash(sig2.toString()))) {
+    if (!AlloyUtils.removeSlash(sig1.toString()).equals(AlloyUtils.removeSlash(sig2.toString()))) {
       System.err.println("sig1: " + sig1);
       System.err.println("sig2: " + sig2);
       System.err.println("compareSig: !sig1.toString().equals(sig2.toString())");
@@ -1308,12 +1303,11 @@ public class ExpressionComparator {
       System.err.println("sig1Field != null && sig2Field == null");
     }
 
-    if (!MyAlloyLibrary.removeSlash(sig1Field.label)
-        .equals(MyAlloyLibrary.removeSlash(sig2Field.label))) {
+    if (!AlloyUtils.removeSlash(sig1Field.label).equals(AlloyUtils.removeSlash(sig2Field.label))) {
       // if (!sig1Field.label.equals(sig2Field.label)) {
       System.err.println("Sig.Field1: " + sig1Field);
       System.err.println("Sig.Field2: " + sig2Field);
-      System.err.println("!!!!!ok!!!!!!!!!Sig.Field: sig1.label != sig2.label");
+      System.err.println("Sig.Field: sig1.label != sig2.label");
       return false;
     }
 

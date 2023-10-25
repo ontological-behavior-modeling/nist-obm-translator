@@ -33,7 +33,8 @@ public class MDUtils {
         System.err.println("Only one parent is allowed. One parent \"" + parentName
             + "\" is included as sig \"" + aClass.getName() + "\"'s parent");
       }
-      if (!Helper.validParent(((Class) parents.get(0)).getName()))
+      // parentName == null , "BehaviorOccurrence", "Occurrence" or "Anything"
+      if (!AlloyUtils.validParent(((Class) parents.get(0)).getName()))
         return null;
       return (Class) parents.get(0);
     } else

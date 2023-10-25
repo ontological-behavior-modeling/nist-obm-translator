@@ -1,9 +1,11 @@
-package edu.gatech.gtri.obm.translator.alloy.tofile;
+package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -17,7 +19,12 @@ public class Translator {
   private final Set<Sig> ignoredSigs;
 
   public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs) {
-    exprVisitor = new ExprVisitor(ignoredExprs);
+    this(ignoredExprs, ignoredFuncs, ignoredSigs, (Set<Sig.Field>) new HashSet<Sig.Field>());
+  }
+
+  public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs,
+      Set<Sig.Field> parameterFields) {
+    exprVisitor = new ExprVisitor(ignoredExprs, parameterFields);
     this.ignoredFuncs = ignoredFuncs;
     this.ignoredSigs = ignoredSigs;
   }
@@ -56,7 +63,7 @@ public class Translator {
         visitedFuncs.add(func.toString());
 
         if (func.isPred) {
-          sb.append("pred ").append(MyAlloyLibrary.removeSlash(func.label));
+          sb.append("pred ").append(AlloyUtils.removeSlash(func.label));
 
           if (!func.decls.isEmpty()) {
             sb.append('[');
@@ -79,11 +86,11 @@ public class Translator {
             sb.append(']');
           }
 
-          sb.append('{').append(MyAlloyLibrary.removeSlash(exprVisitor.visitThis(func.getBody())))
+          sb.append('{').append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
               .append("}\n");
 
         } else if (!func.isPred) {
-          sb.append("fun ").append(MyAlloyLibrary.removeSlash(func.label));
+          sb.append("fun ").append(AlloyUtils.removeSlash(func.label));
 
           if (!func.decls.isEmpty()) {
             sb.append('[');
@@ -106,9 +113,8 @@ public class Translator {
             sb.append(']');
           }
 
-          sb.append(": ").append(MyAlloyLibrary.removeSlash(exprVisitor.visitThis(func.returnDecl)))
-              .append(" {")
-              .append(MyAlloyLibrary.removeSlash(exprVisitor.visitThis(func.getBody())))
+          sb.append(": ").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.returnDecl)))
+              .append(" {").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
               .append("}\n");
         }
       }

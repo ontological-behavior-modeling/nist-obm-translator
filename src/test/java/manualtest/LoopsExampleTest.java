@@ -1,14 +1,16 @@
 package manualtest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.ExprConstant;
@@ -16,18 +18,16 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+import obmtest.ExpressionComparator;
 
 class LoopsExampleTest {
 
   @Test
   void test() {
+    String moduleName = "LoopsExample";
+    String outFileName = "src/test/resources/generated-" + moduleName + ".als";
+    String filename = "src/test/resources/4.1.2 LoopsExamples.als";
     Alloy alloy = new Alloy("src/test/resources");
-
     // ========== Define list of signatures unique to the file ==========
 
     Sig abSig = alloy.createSigAsChildOfOccSigAndAddToAllSigs("AtomicBehavior");
@@ -45,58 +45,41 @@ class LoopsExampleTest {
 
     ExprVar loopThis = ExprVar.make(null, "this", loopSig.type());
 
-    Func functionFilteredFunction = Helper.getFunction(alloy.transferModule, "o/functionFiltered");
-    Func happensBefore = Helper.getFunction(Alloy.transferModule, "o/happensBefore");
+    Func functionFilteredFunction =
+        AlloyUtils.getFunction(alloy.transferModule, "o/functionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(Alloy.transferModule, "o/happensBefore");
     Func inverseFunctionFilteredFunction =
-        Helper.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
-    Func stepsFunction = Helper.getFunction(Alloy.transferModule, "o/steps");
+        AlloyUtils.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
+    Func stepsFunction = AlloyUtils.getFunction(Alloy.transferModule, "o/steps");
 
-    loopSig.addFact(
-        functionFilteredFunction
-            .call(happensBefore.call(), loopThis.join(loop_p1), loopThis.join(loop_p2))
-            .and(
-                inverseFunctionFilteredFunction.call(
-                    happensBefore.call(),
-                    loopThis.join(loop_p1).plus(loopThis.join(loop_p2)),
-                    loopThis.join(loop_p2)))
-            .and(
-                functionFilteredFunction.call(
-                    happensBefore.call(),
-                    loopThis.join(loop_p2),
-                    loopThis.join(loop_p2).plus(loopThis.join(loop_p3))))
-            .and(
-                inverseFunctionFilteredFunction.call(
-                    happensBefore.call(), loopThis.join(loop_p2), loopThis.join(loop_p3)))
-            .and(loopThis.join(loop_p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
-            .and(loopThis.join(loop_p2).cardinality().gte(ExprConstant.makeNUMBER(2)))
-            .and(loopThis.join(loop_p3).cardinality().gte(ExprConstant.makeNUMBER(1)))
-            .and(
-                loopThis
-                    .join(loop_p1)
-                    .plus(loopThis.join(loop_p2))
-                    .plus(loopThis.join(loop_p3))
-                    .in(loopThis.join(stepsFunction.call()))
-                    .and(
-                        loopThis
-                            .join(stepsFunction.call())
-                            .in(
-                                loopThis
-                                    .join(loop_p1)
-                                    .plus(loopThis.join(loop_p2))
-                                    .plus(loopThis.join(loop_p3))))));
+    loopSig.addFact(functionFilteredFunction
+        .call(happensBefore.call(), loopThis.join(loop_p1), loopThis.join(loop_p2))
+        .and(inverseFunctionFilteredFunction.call(happensBefore.call(),
+            loopThis.join(loop_p1).plus(loopThis.join(loop_p2)), loopThis.join(loop_p2)))
+        .and(functionFilteredFunction.call(happensBefore.call(), loopThis.join(loop_p2),
+            loopThis.join(loop_p2).plus(loopThis.join(loop_p3))))
+        .and(inverseFunctionFilteredFunction.call(happensBefore.call(), loopThis.join(loop_p2),
+            loopThis.join(loop_p3)))
+        .and(loopThis.join(loop_p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
+        .and(loopThis.join(loop_p2).cardinality().gte(ExprConstant.makeNUMBER(2)))
+        .and(loopThis.join(loop_p3).cardinality().gte(ExprConstant.makeNUMBER(1)))
+        .and(loopThis.join(loop_p1).plus(loopThis.join(loop_p2)).plus(loopThis.join(loop_p3))
+            .in(loopThis.join(stepsFunction.call()))
+            .and(loopThis.join(stepsFunction.call()).in(loopThis.join(loop_p1)
+                .plus(loopThis.join(loop_p2)).plus(loopThis.join(loop_p3))))));
 
     // ========== Define functions and predicates ==========
 
     // suppressTransfers
-    Sig transfer = Helper.getReachableSig(alloy.transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(alloy.transferModule, "o/Transfer");
     Expr suppressTransfersExpessionBody = transfer.no();
     Func suppressTransfersFunction =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
     Expr suppressTransfersExpression = suppressTransfersFunction.call();
 
     // suppressIO
-    Func inputs = Helper.getFunction(alloy.transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(alloy.transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(alloy.transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(alloy.transferModule, "o/outputs");
     Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
     Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
     Expr suppressIOExpression = suppressIOFunction.call();
@@ -126,14 +109,10 @@ class LoopsExampleTest {
     Expr p4DuringExampleExpression = p4DuringExamplePredicate.call();
 
     // instancesDuringExample
-    Expr instancesDuringExampleBody =
-        p1DuringExampleExpression
-            .and(p2DuringExampleExpression)
-            .and(p3DuringExampleExpression)
-            .and(p4DuringExampleExpression);
-    Func instancesDuringExamplePredicate =
-        new Func(
-            null, "instancesDuringExample", new ArrayList<>(), null, instancesDuringExampleBody);
+    Expr instancesDuringExampleBody = p1DuringExampleExpression.and(p2DuringExampleExpression)
+        .and(p3DuringExampleExpression).and(p4DuringExampleExpression);
+    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
+        new ArrayList<>(), null, instancesDuringExampleBody);
     Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
 
     // instancesDuringExample
@@ -142,49 +121,49 @@ class LoopsExampleTest {
     Expr onlyLoopExpression = onlyLoopPredicate.call();
 
     // nonZeroDurationOnly
-    //	    Func nonZeroDurationOnlyFunction = Helper.getFunction(alloy.transferModule,
+    // Func nonZeroDurationOnlyFunction = Helper.getFunction(alloy.transferModule,
     // "o/nonZeroDurationOnly");
-    //	    Expr nonZeroDurationOnlyExpression = nonZeroDurationOnlyFunction.call();
+    // Expr nonZeroDurationOnlyExpression = nonZeroDurationOnlyFunction.call();
 
     // ========== Define command(s) ==========
 
-//    Expr loopExpr =
-//        alloy.getCommonCmdExprs().and(instancesDuringExampleExpression).and(onlyLoopExpression);
-//    Command loopCmd =
-//        new Command(
-//            null,
-//            loopExpr,
-//            "loop",
-//            false,
-//            12,
-//            -1,
-//            -1,
-//            -1,
-//            new ArrayList<>(),
-//            new ArrayList<>(),
-//            loopExpr.and(alloy.getOverAllFact()),
-//            null);
+    // Expr loopExpr =
+    // alloy.getCommonCmdExprs().and(instancesDuringExampleExpression).and(onlyLoopExpression);
+    // Command loopCmd =
+    // new Command(
+    // null,
+    // loopExpr,
+    // "loop",
+    // false,
+    // 12,
+    // -1,
+    // -1,
+    // -1,
+    // new ArrayList<>(),
+    // new ArrayList<>(),
+    // loopExpr.and(alloy.getOverAllFact()),
+    // null);
 
     Command[] commands = {};
 
     // ========== Write file ==========
 
     AlloyModule alloyModule =
-        new AlloyModule("LoopsExample", alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+        new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
+
 
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
 
-    String filename = "src/test/resources/4.1.2 LoopsExamples.als";
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 
-    CompModule apiModule = MyAlloyLibrary.importAlloyModule(outFileName);
+    CompModule importedModule = AlloyUtils.importAlloyModule(filename);
+
+    CompModule apiModule = AlloyUtils.importAlloyModule(outFileName);
 
     // ========== Test if they are equal ==========
 
@@ -199,10 +178,10 @@ class LoopsExampleTest {
     Map<String, Sig> apiMap = new HashMap<>();
 
     for (Sig sig : fileSigs) {
-      fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      fileMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
     for (Sig sig : apiSigs) {
-      apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      apiMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
 
     assertTrue(ec.compareTwoExpressions(fileFacts, apiFacts));

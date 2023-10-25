@@ -1,8 +1,10 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.alloy4.Pair;
 import edu.mit.csail.sdg.ast.Browsable;
@@ -14,9 +16,27 @@ import edu.mit.csail.sdg.ast.Module;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.mit.csail.sdg.parser.CompModule;
+import edu.mit.csail.sdg.parser.CompUtil;
 
-public class Helper {
+public class AlloyUtils {
 
+  public static CompModule importAlloyModule(File f) {
+    return AlloyUtils.importAlloyModule(f.getAbsolutePath());
+  }
+
+  public static CompModule importAlloyModule(String absoluteFileName) {
+    return CompUtil.parseEverything_fromFile(new A4Reporter(), null, absoluteFileName);
+  }
+
+  public static String removeSlash(String sig) {
+    if (sig.contains("/")) {
+      int index = sig.lastIndexOf('/');
+      return sig.substring(index + 1, sig.length());
+    }
+
+    return sig;
+  }
 
   public static boolean validParent(String parentName) {
     if (parentName == null || parentName.equals("BehaviorOccurrence")
@@ -308,6 +328,7 @@ public class Helper {
 
   public static Func getFunction(Module module, String lookingForFunctionLabel) {
     for (Func f : module.getAllFunc()) {
+      System.out.println(f.label);
       if (f.label.equals(lookingForFunctionLabel))
         return f;
     }

@@ -1,14 +1,16 @@
 package manualtest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -18,16 +20,16 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+import obmtest.ExpressionComparator;
 
 class ControlNodesTest {
 
   @Test
   void test() {
+
+    String modulename = "ControlNodes";
+    String outFileName = "src/test/resources/generated-" + modulename + ".als";
+    String manualfilename = "src/test/resources/4.1.1 ControlNodesExamples.als";
     Alloy alloy = new Alloy("src/test/resources");
 
     // ========== Define list of signatures unique to the file ==========
@@ -73,11 +75,12 @@ class ControlNodesTest {
 
     // SimpleSequence
 
-    Func stepsFunction = Helper.getFunction(alloy.transferModule, "o/steps");
-    Func functionFilteredFunction = Helper.getFunction(alloy.transferModule, "o/functionFiltered");
+    Func stepsFunction = AlloyUtils.getFunction(alloy.transferModule, "o/steps");
+    Func functionFilteredFunction =
+        AlloyUtils.getFunction(alloy.transferModule, "o/functionFiltered");
     Func inverseFunctionFilteredFunction =
-        Helper.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
-    Func happensBefore = Helper.getFunction(alloy.transferModule, "o/happensBefore");
+        AlloyUtils.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(alloy.transferModule, "o/happensBefore");
 
     ExprVar s1 = ExprVar.make(null, "x", simpleSequenceSig.type());
     ExprVar s2 = ExprVar.make(null, "x", simpleSequenceSig.type());
@@ -100,47 +103,30 @@ class ControlNodesTest {
     Decl decl5 = new Decl(null, null, null, names5, simpleSequenceSig.oneOf());
     Decl decl6 = new Decl(null, null, null, names6, simpleSequenceSig.oneOf());
 
-    Expr functionFilteredExpr =
-        functionFilteredFunction.call(
-            happensBefore.call(),
-            s1.join(simpleSequenceSig.domain(simpleSequence_p1)),
-            s1.join(simpleSequenceSig.domain(simpleSequence_p2)));
+    Expr functionFilteredExpr = functionFilteredFunction.call(happensBefore.call(),
+        s1.join(simpleSequenceSig.domain(simpleSequence_p1)),
+        s1.join(simpleSequenceSig.domain(simpleSequence_p2)));
 
-    Expr inverseFunctionFilteredExpr =
-        inverseFunctionFilteredFunction.call(
-            happensBefore.call(),
-            s2.join(simpleSequenceSig.domain(simpleSequence_p1)),
-            s2.join(simpleSequenceSig.domain(simpleSequence_p2)));
+    Expr inverseFunctionFilteredExpr = inverseFunctionFilteredFunction.call(happensBefore.call(),
+        s2.join(simpleSequenceSig.domain(simpleSequence_p1)),
+        s2.join(simpleSequenceSig.domain(simpleSequence_p2)));
 
-    alloy.addToOverallFact(
-        (functionFilteredExpr.forAll(decl1))
-            .and(inverseFunctionFilteredExpr.forAll(decl2))
-            .and(
-                s3.join(simpleSequenceSig.domain(simpleSequence_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(decl3))
-            .and(
-                s4.join(simpleSequenceSig.domain(simpleSequence_p2))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(decl4))
-            .and(
-                s5.join(simpleSequenceSig.domain(simpleSequence_p1))
-                    .plus(s5.join(simpleSequence_p2))
-                    .in(s5.join(stepsFunction.call()))
-                    .forAll(decl5))
-            .and(
-                s6.join(stepsFunction.call())
-                    .in(
-                        s6.join(simpleSequenceSig.domain(simpleSequence_p1))
-                            .plus(s6.join(simpleSequence_p2)))
-                    .forAll(decl6)));
+    alloy.addToOverallFact((functionFilteredExpr.forAll(decl1))
+        .and(inverseFunctionFilteredExpr.forAll(decl2))
+        .and(s3.join(simpleSequenceSig.domain(simpleSequence_p1)).cardinality()
+            .equal(ExprConstant.makeNUMBER(1)).forAll(decl3))
+        .and(s4.join(simpleSequenceSig.domain(simpleSequence_p2)).cardinality()
+            .equal(ExprConstant.makeNUMBER(1)).forAll(decl4))
+        .and(s5.join(simpleSequenceSig.domain(simpleSequence_p1)).plus(s5.join(simpleSequence_p2))
+            .in(s5.join(stepsFunction.call())).forAll(decl5))
+        .and(s6.join(stepsFunction.call()).in(
+            s6.join(simpleSequenceSig.domain(simpleSequence_p1)).plus(s6.join(simpleSequence_p2)))
+            .forAll(decl6)));
 
-    //		// Fork
+    // // Fork
 
     Func bijectionFilteredFunction =
-        Helper.getFunction(alloy.transferModule, "o/bijectionFiltered");
+        AlloyUtils.getFunction(alloy.transferModule, "o/bijectionFiltered");
 
     ExprVar forkThis = ExprVar.make(null, "this", forkSig.type());
 
@@ -162,38 +148,21 @@ class ControlNodesTest {
     Decl f_decl4 = new Decl(null, null, null, f_names4, forkSig.oneOf());
     Decl f_decl5 = new Decl(null, null, null, f_names5, forkSig.oneOf());
 
-    Expr bijectionFilteredExpr1 =
-        bijectionFilteredFunction.call(
-            happensBefore.call(),
-            f_s1.join(forkSig.domain(fork_p1)),
-            f_s1.join(forkSig.domain(fork_p2)));
-    Expr bijectionFilteredExpr2 =
-        bijectionFilteredFunction.call(
-            happensBefore.call(),
-            f_s2.join(forkSig.domain(fork_p1)),
-            f_s2.join(forkSig.domain(fork_p3)));
+    Expr bijectionFilteredExpr1 = bijectionFilteredFunction.call(happensBefore.call(),
+        f_s1.join(forkSig.domain(fork_p1)), f_s1.join(forkSig.domain(fork_p2)));
+    Expr bijectionFilteredExpr2 = bijectionFilteredFunction.call(happensBefore.call(),
+        f_s2.join(forkSig.domain(fork_p1)), f_s2.join(forkSig.domain(fork_p3)));
 
     alloy.addToOverallFact(
-        (bijectionFilteredExpr1.forAll(f_decl1))
-            .and(bijectionFilteredExpr2.forAll(f_decl2))
-            .and(
-                f_s3.join(forkSig.domain(fork_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(f_decl3))
-            .and(
-                f_s4.join(forkSig.domain(fork_p1))
-                    .plus(f_s3.join(forkSig.domain(fork_p2)))
-                    .plus(f_s3.join(forkSig.domain(fork_p3)))
-                    .in(f_s3.join(stepsFunction.call()))
-                    .forAll(f_decl4))
-            .and(
-                f_s5.join(stepsFunction.call())
-                    .in(
-                        f_s5.join(forkSig.domain(fork_p1))
-                            .plus(f_s5.join(forkSig.domain(fork_p2)))
-                            .plus(f_s5.join(forkSig.domain(fork_p3))))
-                    .forAll(f_decl5)));
+        (bijectionFilteredExpr1.forAll(f_decl1)).and(bijectionFilteredExpr2.forAll(f_decl2))
+            .and(f_s3.join(forkSig.domain(fork_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
+                .forAll(f_decl3))
+            .and(f_s4.join(forkSig.domain(fork_p1)).plus(f_s3.join(forkSig.domain(fork_p2)))
+                .plus(f_s3.join(forkSig.domain(fork_p3))).in(f_s3.join(stepsFunction.call()))
+                .forAll(f_decl4))
+            .and(f_s5.join(stepsFunction.call()).in(f_s5.join(forkSig.domain(fork_p1))
+                .plus(f_s5.join(forkSig.domain(fork_p2))).plus(f_s5.join(forkSig.domain(fork_p3))))
+                .forAll(f_decl5)));
 
     // Join
 
@@ -220,43 +189,23 @@ class ControlNodesTest {
     Decl j_decl5 = new Decl(null, null, null, j_names5, joinSig.oneOf());
     Decl j_decl6 = new Decl(null, null, null, j_names6, joinSig.oneOf());
 
-    Expr bijectionFilteredExpr3 =
-        bijectionFilteredFunction.call(
-            happensBefore.call(),
-            j_s1.join(joinSig.domain(join_p1)),
-            j_s1.join(joinSig.domain(join_p3)));
-    Expr bijectionFilteredExpr4 =
-        bijectionFilteredFunction.call(
-            happensBefore.call(),
-            j_s2.join(joinSig.domain(join_p2)),
-            j_s2.join(joinSig.domain(join_p3)));
+    Expr bijectionFilteredExpr3 = bijectionFilteredFunction.call(happensBefore.call(),
+        j_s1.join(joinSig.domain(join_p1)), j_s1.join(joinSig.domain(join_p3)));
+    Expr bijectionFilteredExpr4 = bijectionFilteredFunction.call(happensBefore.call(),
+        j_s2.join(joinSig.domain(join_p2)), j_s2.join(joinSig.domain(join_p3)));
 
     alloy.addToOverallFact(
-        (bijectionFilteredExpr3.forAll(j_decl1))
-            .and(bijectionFilteredExpr4.forAll(j_decl2))
-            .and(
-                j_s3.join(joinSig.domain(join_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(j_decl3))
-            .and(
-                j_s4.join(joinSig.domain(join_p2))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(j_decl4))
-            .and(
-                j_s5.join(joinSig.domain(join_p1))
-                    .plus(j_s5.join(joinSig.domain(join_p2)))
-                    .plus(j_s5.join(joinSig.domain(join_p3)))
-                    .in(j_s5.join(stepsFunction.call()))
-                    .forAll(j_decl5))
-            .and(
-                j_s6.join(stepsFunction.call())
-                    .in(
-                        j_s6.join(joinSig.domain(join_p1))
-                            .plus(j_s6.join(joinSig.domain(join_p2)))
-                            .plus(j_s6.join(joinSig.domain(join_p3))))
-                    .forAll(j_decl6)));
+        (bijectionFilteredExpr3.forAll(j_decl1)).and(bijectionFilteredExpr4.forAll(j_decl2))
+            .and(j_s3.join(joinSig.domain(join_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
+                .forAll(j_decl3))
+            .and(j_s4.join(joinSig.domain(join_p2)).cardinality().equal(ExprConstant.makeNUMBER(1))
+                .forAll(j_decl4))
+            .and(j_s5.join(joinSig.domain(join_p1)).plus(j_s5.join(joinSig.domain(join_p2)))
+                .plus(j_s5.join(joinSig.domain(join_p3))).in(j_s5.join(stepsFunction.call()))
+                .forAll(j_decl5))
+            .and(j_s6.join(stepsFunction.call()).in(j_s6.join(joinSig.domain(join_p1))
+                .plus(j_s6.join(joinSig.domain(join_p2))).plus(j_s6.join(joinSig.domain(join_p3))))
+                .forAll(j_decl6)));
 
     // Decision
     ExprVar d_s1 = ExprVar.make(null, "x", decisionSig.type());
@@ -280,41 +229,27 @@ class ControlNodesTest {
     Decl d_decl5 = new Decl(null, null, null, d_names5, decisionSig.oneOf());
     Decl d_decl6 = new Decl(null, null, null, d_names6, decisionSig.oneOf());
 
-    Expr functionFilteredExpr2 =
-        functionFilteredFunction.call(
-            happensBefore.call(),
-            d_s1.join(decisionSig.domain(decision_p1)),
-            (d_s1.join(decisionSig.domain(decision_p2)))
-                .plus(d_s1.join(decisionSig.domain(decision_p3))));
+    Expr functionFilteredExpr2 = functionFilteredFunction.call(happensBefore.call(),
+        d_s1.join(decisionSig.domain(decision_p1)), (d_s1.join(decisionSig.domain(decision_p2)))
+            .plus(d_s1.join(decisionSig.domain(decision_p3))));
 
-    Expr inverseFunctionFilteredExpr2 =
-        inverseFunctionFilteredFunction.call(
-            happensBefore.call(),
-            d_s2.join(decisionSig.domain(decision_p1)),
-            (d_s2.join(decisionSig.domain(decision_p2)))
-                .plus(d_s2.join(decisionSig.domain(decision_p3))));
+    Expr inverseFunctionFilteredExpr2 = inverseFunctionFilteredFunction.call(happensBefore.call(),
+        d_s2.join(decisionSig.domain(decision_p1)), (d_s2.join(decisionSig.domain(decision_p2)))
+            .plus(d_s2.join(decisionSig.domain(decision_p3))));
 
     alloy.addToOverallFact(
-        (functionFilteredExpr2.forAll(d_decl2))
-            .and(inverseFunctionFilteredExpr2.forAll(d_decl2))
-            .and(
-                d_s3.join(decisionSig.domain(decision_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(d_decl3))
-            .and(
-                d_s4.join(decisionSig.domain(decision_p1))
-                    .plus(d_s4.join(decisionSig.domain(decision_p2)))
-                    .plus(d_s4.join(decisionSig.domain(decision_p3)))
-                    .in(d_s4.join(stepsFunction.call()))
-                    .forAll(d_decl4))
-            .and(
-                d_s5.join(stepsFunction.call())
-                    .in(
-                        d_s5.join(decisionSig.domain(decision_p1))
-                            .plus(d_s5.join(decisionSig.domain(decision_p2)))
-                            .plus(d_s5.join(decisionSig.domain(decision_p3))))
-                    .forAll(d_decl5)));
+        (functionFilteredExpr2.forAll(d_decl2)).and(inverseFunctionFilteredExpr2.forAll(d_decl2))
+            .and(d_s3.join(decisionSig.domain(decision_p1)).cardinality()
+                .equal(ExprConstant.makeNUMBER(1)).forAll(d_decl3))
+            .and(d_s4.join(decisionSig.domain(decision_p1))
+                .plus(d_s4.join(decisionSig.domain(decision_p2)))
+                .plus(d_s4.join(decisionSig.domain(decision_p3)))
+                .in(d_s4.join(stepsFunction.call())).forAll(d_decl4))
+            .and(d_s5.join(stepsFunction.call())
+                .in(d_s5.join(decisionSig.domain(decision_p1))
+                    .plus(d_s5.join(decisionSig.domain(decision_p2)))
+                    .plus(d_s5.join(decisionSig.domain(decision_p3))))
+                .forAll(d_decl5)));
 
     // Merge
 
@@ -339,44 +274,26 @@ class ControlNodesTest {
     Decl m_decl5 = new Decl(null, null, null, m_names5, mergeSig.oneOf());
     Decl m_decl6 = new Decl(null, null, null, m_names6, mergeSig.oneOf());
 
-    Expr functionFilteredExpr3 =
-        functionFilteredFunction.call(
-            happensBefore.call(),
-            m_s1.join(mergeSig.domain(merge_p1)).plus(m_s1.join(mergeSig.domain(merge_p2))),
-            (m_s1.join(mergeSig.domain(merge_p3))));
+    Expr functionFilteredExpr3 = functionFilteredFunction.call(happensBefore.call(),
+        m_s1.join(mergeSig.domain(merge_p1)).plus(m_s1.join(mergeSig.domain(merge_p2))),
+        (m_s1.join(mergeSig.domain(merge_p3))));
 
-    Expr inverseFunctionFilteredExpr3 =
-        inverseFunctionFilteredFunction.call(
-            happensBefore.call(),
-            m_s2.join(mergeSig.domain(merge_p1)).plus(m_s2.join(mergeSig.domain(merge_p2))),
-            (m_s2.join(mergeSig.domain(merge_p3))));
+    Expr inverseFunctionFilteredExpr3 = inverseFunctionFilteredFunction.call(happensBefore.call(),
+        m_s2.join(mergeSig.domain(merge_p1)).plus(m_s2.join(mergeSig.domain(merge_p2))),
+        (m_s2.join(mergeSig.domain(merge_p3))));
 
-    alloy.addToOverallFact(
-        (functionFilteredExpr3.forAll(m_decl1))
-            .and(inverseFunctionFilteredExpr3.forAll(m_decl2))
-            .and(
-                m_s3.join(mergeSig.domain(merge_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(m_decl3))
-            .and(
-                m_s4.join(mergeSig.domain(merge_p2))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(m_decl4))
-            .and(
-                m_s5.join(mergeSig.domain(merge_p1))
-                    .plus(m_s5.join(mergeSig.domain(merge_p2)))
-                    .plus(m_s5.join(mergeSig.domain(merge_p3)))
-                    .in(m_s5.join(stepsFunction.call()))
-                    .forAll(m_decl5))
-            .and(
-                m_s6.join(stepsFunction.call())
-                    .in(
-                        m_s6.join(mergeSig.domain(merge_p1))
-                            .plus(m_s6.join(mergeSig.domain(merge_p2)))
-                            .plus(m_s6.join(mergeSig.domain(merge_p3))))
-                    .forAll(m_decl6)));
+    alloy.addToOverallFact((functionFilteredExpr3.forAll(m_decl1))
+        .and(inverseFunctionFilteredExpr3.forAll(m_decl2))
+        .and(m_s3.join(mergeSig.domain(merge_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
+            .forAll(m_decl3))
+        .and(m_s4.join(mergeSig.domain(merge_p2)).cardinality().equal(ExprConstant.makeNUMBER(1))
+            .forAll(m_decl4))
+        .and(m_s5.join(mergeSig.domain(merge_p1)).plus(m_s5.join(mergeSig.domain(merge_p2)))
+            .plus(m_s5.join(mergeSig.domain(merge_p3))).in(m_s5.join(stepsFunction.call()))
+            .forAll(m_decl5))
+        .and(m_s6.join(stepsFunction.call()).in(m_s6.join(mergeSig.domain(merge_p1))
+            .plus(m_s6.join(mergeSig.domain(merge_p2))).plus(m_s6.join(mergeSig.domain(merge_p3))))
+            .forAll(m_decl6)));
 
     // AllControl
     ExprVar ac_s1 = ExprVar.make(null, "x", allControlSig.type());
@@ -409,253 +326,223 @@ class ControlNodesTest {
     Decl ac_decl8 = new Decl(null, null, null, ac_names8, allControlSig.oneOf());
     Decl ac_decl9 = new Decl(null, null, null, ac_names9, allControlSig.oneOf());
 
-    alloy.addToOverallFact(
-        (bijectionFilteredFunction
-                .call(
-                    happensBefore.call(),
-                    ac_s1.join(allControlSig.domain(allControl_p1)),
-                    ac_s1.join(allControlSig.domain(allControl_p2)))
-                .forAll(ac_decl1))
-            .and(
-                bijectionFilteredFunction
-                    .call(
-                        happensBefore.call(),
-                        ac_s2.join(allControlSig.domain(allControl_p1)),
+    alloy
+        .addToOverallFact((bijectionFilteredFunction
+            .call(happensBefore.call(), ac_s1.join(allControlSig.domain(allControl_p1)),
+                ac_s1.join(allControlSig.domain(allControl_p2)))
+            .forAll(ac_decl1))
+                .and(bijectionFilteredFunction
+                    .call(happensBefore.call(), ac_s2.join(allControlSig.domain(allControl_p1)),
                         ac_s2.join(allControlSig.domain(allControl_p3)))
                     .forAll(ac_decl2))
-            .and(
-                bijectionFilteredFunction
-                    .call(
-                        happensBefore.call(),
-                        ac_s3.join(allControlSig.domain(allControl_p2)),
+                .and(bijectionFilteredFunction
+                    .call(happensBefore.call(), ac_s3.join(allControlSig.domain(allControl_p2)),
                         ac_s3.join(allControlSig.domain(allControl_p4)))
                     .forAll(ac_decl3))
-            .and(
-                bijectionFilteredFunction
-                    .call(
-                        happensBefore.call(),
-                        ac_s4.join(allControlSig.domain(allControl_p3)),
-                        ac_s4.join(allControlSig.domain(allControl_p4)))
-                    .forAll(ac_decl4))
-            .and(
-                bijectionFilteredFunction
-                    .call(
-                        happensBefore.call(),
-                        ac_s5.join(allControlSig.domain(allControl_p4)),
-                        ac_s5
-                            .join(allControlSig.domain(allControl_p5))
-                            .plus(ac_s5.join(allControlSig.domain(allControl_p6))))
-                    .forAll(ac_decl5))
-            .and(
-                bijectionFilteredFunction
-                    .call(
-                        happensBefore.call(),
-                        ac_s6
-                            .join(allControlSig.domain(allControl_p5))
-                            .plus(ac_s6.join(allControlSig.domain(allControl_p6))),
-                        ac_s6.join(allControlSig.domain(allControl_p7)))
-                    .forAll(ac_decl6))
-            .and(
-                ac_s7
-                    .join(allControlSig.domain(allControl_p1))
-                    .cardinality()
-                    .equal(ExprConstant.makeNUMBER(1))
-                    .forAll(ac_decl7))
-            .and(
-                ac_s8
-                    .join(allControlSig.domain(allControl_p1))
+                .and(
+                    bijectionFilteredFunction
+                        .call(happensBefore.call(), ac_s4.join(allControlSig.domain(allControl_p3)),
+                            ac_s4.join(allControlSig.domain(allControl_p4)))
+                        .forAll(ac_decl4))
+                .and(
+                    bijectionFilteredFunction
+                        .call(happensBefore.call(), ac_s5.join(allControlSig.domain(allControl_p4)),
+                            ac_s5.join(allControlSig.domain(allControl_p5))
+                                .plus(ac_s5.join(allControlSig.domain(allControl_p6))))
+                        .forAll(ac_decl5))
+                .and(bijectionFilteredFunction.call(happensBefore.call(),
+                    ac_s6.join(allControlSig.domain(allControl_p5))
+                        .plus(ac_s6.join(allControlSig.domain(allControl_p6))),
+                    ac_s6.join(allControlSig.domain(allControl_p7))).forAll(ac_decl6))
+                .and(ac_s7.join(allControlSig.domain(allControl_p1)).cardinality()
+                    .equal(ExprConstant.makeNUMBER(1)).forAll(ac_decl7))
+                .and(ac_s8.join(allControlSig.domain(allControl_p1))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p2)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p3)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p4)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p5)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p6)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p7)))
-                    .in(ac_s8.join(stepsFunction.call()))
-                    .forAll(ac_decl8))
-            .and(
-                ac_s9
-                    .join(stepsFunction.call())
-                    .in(
-                        ac_s9
-                            .join(allControlSig.domain(allControl_p1))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p2)))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p3)))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p4)))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p5)))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p6)))
-                            .plus(ac_s9.join(allControlSig.domain(allControl_p7))))
+                    .in(ac_s8.join(stepsFunction.call())).forAll(ac_decl8))
+                .and(ac_s9.join(stepsFunction.call())
+                    .in(ac_s9.join(allControlSig.domain(allControl_p1))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p2)))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p3)))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p4)))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p5)))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p6)))
+                        .plus(ac_s9.join(allControlSig.domain(allControl_p7))))
                     .forAll(ac_decl9)));
 
     // ========== Define functions and predicates ==========
 
-    //	    // p1DuringExample
-    //	    Expr p1DuringExampleBody =
+    // // p1DuringExample
+    // Expr p1DuringExampleBody =
     // abSig.in(/*simpleSequenceSig.join(simpleSequence_p1).plus(forkSig.join(fork_p1)).plus(joinSig.join(join_p1)).plus(decisionSig.join(decision_p1)).plus(mergeSig.join(merge_p1)).plus*/(allControlSig.join(allControl_p1)));
-    //	    Func p1DuringExamplePredicate = new Func(null, "p1DuringExample", new ArrayList<>(),
+    // Func p1DuringExamplePredicate = new Func(null, "p1DuringExample", new ArrayList<>(),
     // null, p1DuringExampleBody);
-    //	    Expr p1DuringExampleExpr = p1DuringExamplePredicate.call();
+    // Expr p1DuringExampleExpr = p1DuringExamplePredicate.call();
     //
-    //	    // p2DuringExample
-    //	    Expr p2DuringExampleBody =
+    // // p2DuringExample
+    // Expr p2DuringExampleBody =
     // abSig.in(/*simpleSequenceSig.join(simpleSequence_p2).plus(forkSig.join(fork_p2).plus(joinSig.join(join_p2)).plus(decisionSig.join(decision_p2).plus(mergeSig.join(merge_p2).plus*/(allControlSig.join(allControl_p2)));//)));
-    //	    Func p2DuringExamplePredicate = new Func(null, "p2DuringExample", new ArrayList<>(),
+    // Func p2DuringExamplePredicate = new Func(null, "p2DuringExample", new ArrayList<>(),
     // null, p2DuringExampleBody);
-    //	    Expr p2DuringExampleExpr = p2DuringExamplePredicate.call();
+    // Expr p2DuringExampleExpr = p2DuringExamplePredicate.call();
     //
-    //	    // p3DuringExample
-    //	    Expr p3DuringExampleBody =
+    // // p3DuringExample
+    // Expr p3DuringExampleBody =
     // abSig.in(/*forkSig.join(fork_p3).plus(joinSig.join(join_p3).plus(decisionSig.join(decision_p3).plus(mergeSig.join(merge_p3).plus*/(allControlSig.join(allControl_p3)));//)));
-    //	    Func p3DuringExamplePredicate = new Func(null, "p3DuringExample", new ArrayList<>(),
+    // Func p3DuringExamplePredicate = new Func(null, "p3DuringExample", new ArrayList<>(),
     // null, p3DuringExampleBody);
-    //	    Expr p3DuringExampleExpr = p3DuringExamplePredicate.call();
+    // Expr p3DuringExampleExpr = p3DuringExamplePredicate.call();
     //
-    //	    // p4DuringExample
-    //	    Expr p4DuringExampleBody = abSig.in(allControlSig.join(allControl_p4));
-    //	    Func p4DuringExamplePredicate = new Func(null, "p4DuringExample", new ArrayList<>(),
+    // // p4DuringExample
+    // Expr p4DuringExampleBody = abSig.in(allControlSig.join(allControl_p4));
+    // Func p4DuringExamplePredicate = new Func(null, "p4DuringExample", new ArrayList<>(),
     // null, p4DuringExampleBody);
-    //	    Expr p4DuringExampleExpr = p4DuringExamplePredicate.call();
+    // Expr p4DuringExampleExpr = p4DuringExamplePredicate.call();
     //
-    //	    // p5DuringExample
-    //	    Expr p5DuringExampleBody = abSig.in(allControlSig.join(allControl_p5));
-    //	    Func p5DuringExamplePredicate = new Func(null, "p5DuringExample", new ArrayList<>(),
+    // // p5DuringExample
+    // Expr p5DuringExampleBody = abSig.in(allControlSig.join(allControl_p5));
+    // Func p5DuringExamplePredicate = new Func(null, "p5DuringExample", new ArrayList<>(),
     // null, p5DuringExampleBody);
-    //	    Expr p5DuringExampleExpr = p5DuringExamplePredicate.call();
+    // Expr p5DuringExampleExpr = p5DuringExamplePredicate.call();
     //
-    //	    // p6DuringExample
-    //	    Expr p6DuringExampleBody = abSig.in(allControlSig.join(allControl_p6));
-    //	    Func p6DuringExamplePredicate = new Func(null, "p6DuringExample", new ArrayList<>(),
+    // // p6DuringExample
+    // Expr p6DuringExampleBody = abSig.in(allControlSig.join(allControl_p6));
+    // Func p6DuringExamplePredicate = new Func(null, "p6DuringExample", new ArrayList<>(),
     // null, p6DuringExampleBody);
-    //	    Expr p6DuringExampleExpr = p6DuringExamplePredicate.call();
+    // Expr p6DuringExampleExpr = p6DuringExamplePredicate.call();
     //
-    //	    // p6DuringExample
-    //	    Expr p7DuringExampleBody = abSig.in(allControlSig.join(allControl_p7));
-    //	    Func p7DuringExamplePredicate = new Func(null, "p7DuringExample", new ArrayList<>(),
+    // // p6DuringExample
+    // Expr p7DuringExampleBody = abSig.in(allControlSig.join(allControl_p7));
+    // Func p7DuringExamplePredicate = new Func(null, "p7DuringExample", new ArrayList<>(),
     // null, p7DuringExampleBody);
-    //	    Expr p7DuringExampleExpr = p7DuringExamplePredicate.call();
+    // Expr p7DuringExampleExpr = p7DuringExamplePredicate.call();
     //
-    //	    // instancesDuringExample
-    //	    Expr instancesDuringExampleBody =
+    // // instancesDuringExample
+    // Expr instancesDuringExampleBody =
     // p1DuringExampleExpr.and(p2DuringExampleExpr).and(p3DuringExampleExpr).and(p4DuringExampleExpr).and(p5DuringExampleExpr).and(p6DuringExampleExpr).and(p7DuringExampleExpr);
-    //	    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample", new
+    // Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample", new
     // ArrayList<>(), null, instancesDuringExampleBody);
-    //	    Expr instancesDuringExampleExpr = instancesDuringExamplePredicate.call();
+    // Expr instancesDuringExampleExpr = instancesDuringExamplePredicate.call();
 
-    //	    // onlySimpleSequence
-    //	    Expr onlySimpleSequenceBody =
+    // // onlySimpleSequence
+    // Expr onlySimpleSequenceBody =
     // simpleSequenceSig.cardinality().equal(ExprConstant.makeNUMBER(1)).and(forkSig.no()).and(joinSig.no()).and(decisionSig.no()).and(mergeSig.no()).and(allControlSig.no());
-    //	    Func onlySimpleSequencePredicate = new Func(null, "onlySimpleSequence", new
+    // Func onlySimpleSequencePredicate = new Func(null, "onlySimpleSequence", new
     // ArrayList<>(), null, onlySimpleSequenceBody);
-    //	    Expr onlySimpleSequenceExpr = onlySimpleSequencePredicate.call();
+    // Expr onlySimpleSequenceExpr = onlySimpleSequencePredicate.call();
     //
-    //	    // onlyFork
-    //	    Expr onlyForkBody =
+    // // onlyFork
+    // Expr onlyForkBody =
     // simpleSequenceSig.no().and(forkSig.cardinality().equal(ExprConstant.makeNUMBER(1))).and(joinSig.no()).and(decisionSig.no()).and(mergeSig.no()).and(allControlSig.no());
-    //	    Func onlyForkPredicate = new Func(null, "onlyFork", new ArrayList<>(), null,
+    // Func onlyForkPredicate = new Func(null, "onlyFork", new ArrayList<>(), null,
     // onlyForkBody);
-    //	    Expr onlyForkExpr = onlyForkPredicate.call();
+    // Expr onlyForkExpr = onlyForkPredicate.call();
     //
-    //	    // onlyJoin
-    //	    Expr onlyJoinBody =
+    // // onlyJoin
+    // Expr onlyJoinBody =
     // simpleSequenceSig.no().and(forkSig.no()).and(joinSig.cardinality().equal(ExprConstant.makeNUMBER(1))).and(decisionSig.no()).and(mergeSig.no()).and(allControlSig.no());
-    //	    Func onlyJoinPredicate = new Func(null, "onlyJoin", new ArrayList<>(), null,
+    // Func onlyJoinPredicate = new Func(null, "onlyJoin", new ArrayList<>(), null,
     // onlyJoinBody);
-    //	    Expr onlyJoinExpr = onlyJoinPredicate.call();
+    // Expr onlyJoinExpr = onlyJoinPredicate.call();
     //
-    //	    // onlyDecision
-    //	    Expr onlyDecisionBody =
+    // // onlyDecision
+    // Expr onlyDecisionBody =
     // simpleSequenceSig.no().and(forkSig.no()).and(joinSig.no()).and(decisionSig.cardinality().equal(ExprConstant.makeNUMBER(1))).and(mergeSig.no()).and(allControlSig.no());
-    //	    Func onlyDecisionPredicate = new Func(null, "onlyDecision", new ArrayList<>(), null,
+    // Func onlyDecisionPredicate = new Func(null, "onlyDecision", new ArrayList<>(), null,
     // onlyDecisionBody);
-    //	    Expr onlyDecisionExpr = onlyDecisionPredicate.call();
+    // Expr onlyDecisionExpr = onlyDecisionPredicate.call();
     //
-    //	    // onlyMerge
-    //	    Expr onlyMergeBody =
+    // // onlyMerge
+    // Expr onlyMergeBody =
     // simpleSequenceSig.no().and(forkSig.no()).and(joinSig.no()).and(decisionSig.no()).and(mergeSig.cardinality().equal(ExprConstant.makeNUMBER(1))).and(allControlSig.no());
-    //	    Func onlyMergePredicate = new Func(null, "onlyMerge", new ArrayList<>(), null,
+    // Func onlyMergePredicate = new Func(null, "onlyMerge", new ArrayList<>(), null,
     // onlyMergeBody);
-    //	    Expr onlyMergeExpr = onlyMergePredicate.call();
+    // Expr onlyMergeExpr = onlyMergePredicate.call();
 
     // onlyAllControl
-    //	    Expr onlyAllControlBody =
+    // Expr onlyAllControlBody =
     // /*simpleSequenceSig.no().and(forkSig.no()).and(joinSig.no()).and(decisionSig.no()).and(mergeSig.no()).and*/(allControlSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
-    //	    Func onlyAllControlPredicate = new Func(null, "onlyAllControl", new ArrayList<>(), null,
+    // Func onlyAllControlPredicate = new Func(null, "onlyAllControl", new ArrayList<>(), null,
     // onlyAllControlBody);
-    //	    Expr onlyAllControlExpr = onlyAllControlPredicate.call();
+    // Expr onlyAllControlExpr = onlyAllControlPredicate.call();
 
     // ========== Define command(s) ==========
 
-    //      Expr simpleSequenceExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlySimpleSequenceExpr);
+    // Expr simpleSequenceExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlySimpleSequenceExpr);
     //
-    //      Expr forkExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlyForkExpr);
+    // Expr forkExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlyForkExpr);
     //
-    //      Expr joinExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlyJoinExpr);
+    // Expr joinExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlyJoinExpr);
     //
-    //      Expr decisionExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlyDecisionExpr);
+    // Expr decisionExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlyDecisionExpr);
     //
-    //      Expr mergeExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlyMergeExpr);
+    // Expr mergeExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlyMergeExpr);
 
-    //      Expr allControlExpr = alloy.getCommonCmdExprs()
-    //    .and(instancesDuringExampleExpr).and(onlyAllControlExpr);
+    // Expr allControlExpr = alloy.getCommonCmdExprs()
+    // .and(instancesDuringExampleExpr).and(onlyAllControlExpr);
 
-    //      Command simpleSequenceCmd = new Command(
-    //    null, simpleSequenceExpr, "SimpleSequence", false, 6,
-    //    -1, -1, -1, Arrays.asList(new CommandScope[] {}),
-    //    Arrays.asList(new Sig[] {}),
-    //    simpleSequenceExpr.and(alloy.getOverAllFact()), null);
+    // Command simpleSequenceCmd = new Command(
+    // null, simpleSequenceExpr, "SimpleSequence", false, 6,
+    // -1, -1, -1, Arrays.asList(new CommandScope[] {}),
+    // Arrays.asList(new Sig[] {}),
+    // simpleSequenceExpr.and(alloy.getOverAllFact()), null);
     //
-    //      Command forkCmd = new Command(
-    //    null, forkExpr, "fork", false, 10,
-    //    -1, -1, -1, Arrays.asList(new CommandScope[] {}),
-    //    Arrays.asList(new Sig[] {}),
-    //    forkExpr.and(alloy.getOverAllFact()), null);
+    // Command forkCmd = new Command(
+    // null, forkExpr, "fork", false, 10,
+    // -1, -1, -1, Arrays.asList(new CommandScope[] {}),
+    // Arrays.asList(new Sig[] {}),
+    // forkExpr.and(alloy.getOverAllFact()), null);
     //
-    //      Command joinCmd = new Command(
-    //    null, joinExpr, "join", false, 6,
-    //    -1, -1, -1, Arrays.asList(new CommandScope[] {}),
-    //    Arrays.asList(new Sig[] {}),
-    //    joinExpr.and(alloy.getOverAllFact()), null);
+    // Command joinCmd = new Command(
+    // null, joinExpr, "join", false, 6,
+    // -1, -1, -1, Arrays.asList(new CommandScope[] {}),
+    // Arrays.asList(new Sig[] {}),
+    // joinExpr.and(alloy.getOverAllFact()), null);
     //
-    //      Command decisionCmd = new Command(null, decisionExpr, "decision",
-    //    false, 6, -1, -1, -1, Arrays.asList(new CommandScope[] {}),
-    //    Arrays.asList(new Sig[] {}), decisionExpr.and(alloy.getOverAllFact()),
-    //    null);
+    // Command decisionCmd = new Command(null, decisionExpr, "decision",
+    // false, 6, -1, -1, -1, Arrays.asList(new CommandScope[] {}),
+    // Arrays.asList(new Sig[] {}), decisionExpr.and(alloy.getOverAllFact()),
+    // null);
     //
-    //      Command mergeCmd = new Command(null, mergeExpr, "merge", false, 6, -1,
-    //      -1, -1, new ArrayList<>(), new ArrayList<>(),
-    //      mergeExpr.and(alloy.getOverAllFact()), null);
+    // Command mergeCmd = new Command(null, mergeExpr, "merge", false, 6, -1,
+    // -1, -1, new ArrayList<>(), new ArrayList<>(),
+    // mergeExpr.and(alloy.getOverAllFact()), null);
 
-    //      Command allControlCmd = new Command(null, allControlExpr, "AllControl",
-    //    false, 10, -1, -1, -1, new ArrayList<>(), new ArrayList<>(),
-    //    allControlExpr.and(alloy.getOverAllFact()), null);
+    // Command allControlCmd = new Command(null, allControlExpr, "AllControl",
+    // false, 10, -1, -1, -1, new ArrayList<>(), new ArrayList<>(),
+    // allControlExpr.and(alloy.getOverAllFact()), null);
 
     Command[] commands = {
-      /*simpleSequenceCmd, forkCmd, joinCmd, decisionCmd,
-      mergeCmd, allControlCmd*/
+        /*
+         * simpleSequenceCmd, forkCmd, joinCmd, decisionCmd, mergeCmd, allControlCmd
+         */
     };
 
     // ========== Write file ==========
 
     AlloyModule alloyModule =
-        new AlloyModule("ControlNodes", alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+        new AlloyModule(modulename, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
-
-    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
 
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
 
-    String filename = "src/test/resources/4.1.1 ControlNodesExamples.als";
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
 
-    CompModule apiModule = MyAlloyLibrary.importAlloyModule(outFileName);
+    CompModule importedModule = AlloyUtils.importAlloyModule(manualfilename);
+
+    CompModule apiModule = AlloyUtils.importAlloyModule(outFileName);
 
     // ========== Test if they are equal ==========
 
@@ -670,10 +557,10 @@ class ControlNodesTest {
     Map<String, Sig> apiMap = new HashMap<>();
 
     for (Sig sig : fileSigs) {
-      fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      fileMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
     for (Sig sig : apiSigs) {
-      apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      apiMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
 
     assertTrue(ec.compareTwoExpressions(fileFacts, apiFacts));

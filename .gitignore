@@ -3,6 +3,8 @@
 /target/
 .classpath
 
-/*.als
 error.log
 src/test/resources/alloy_heredoc*.als
+src/test/resources/before_092623/*
+src/test/resources/obm-alloy-code_2023-09-25/*
+

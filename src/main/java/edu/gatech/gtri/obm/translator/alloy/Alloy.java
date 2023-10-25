@@ -1,13 +1,10 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.alloy4.Pos;
@@ -29,8 +26,6 @@ import edu.mit.csail.sdg.parser.CompUtil;
 
 public class Alloy {
 
-  protected static final String templateString =
-      "open Transfer[Occurrence] as o \n" + "abstract sig Occurrence{}";
   protected static PrimSig occSig;
   protected static Module templateModule;
   public static Module transferModule;
@@ -49,9 +44,8 @@ public class Alloy {
   public static Func isAfterSource;
   public static Func isBeforeTarget;
 
-
   protected static Func bijectionFiltered;
-  protected static Func funcFiltered;
+  protected static Func functionFiltered;
   protected static Func inverseFunctionFiltered;
 
   protected static Func osteps;
@@ -64,20 +58,21 @@ public class Alloy {
   protected List<Sig> allSigs;
   protected Expr _nameExpr;
 
+  public static Sig transferSig;
+  public static Sig transferBeforeSig;
 
-  // src/test/resources
+  protected static final String templateString =
+      "open Transfer[Occurrence] as o \n" + "abstract sig Occurrence{}";
+
+
+  /**
+   * 
+   * @param working_dir where required alloy library defined in templateString is locating.
+   */
   public Alloy(String working_dir) {
 
-    // System.setProperty(("java.io.tmpdir"), "src/test/resources");
-    // File tFile = new File("src/test/resources/Transfer.als");
-
     System.setProperty(("java.io.tmpdir"), working_dir);
-    File tFile = new File(working_dir + File.separator + "Transfer.als");
-
-
-
-    A4Reporter rep = new A4Reporter();
-    templateModule = CompUtil.parseEverything_fromString(rep, templateString);
+    templateModule = CompUtil.parseEverything_fromString(new A4Reporter(), templateString);
 
     // can not define directory because Module.getAllReachableUserDefinedSigs returns ConstList<Sig>
     // and does not allow to add to the list
@@ -97,8 +92,8 @@ public class Alloy {
 
 
     // abstract
-    occSig = (PrimSig) Helper.getReachableSig(templateModule, "this/Occurrence");
-    transferModule = Helper.getAllReachableModuleByName(templateModule, "TransferModule");
+    occSig = (PrimSig) AlloyUtils.getReachableSig(templateModule, "this/Occurrence");
+    transferModule = AlloyUtils.getAllReachableModuleByName(templateModule, "TransferModule");
     ignoredFuncs = new HashSet<>();
     for (Module module : transferModule.getAllReachableModules()) {
       for (Func func : module.getAllFunc()) {
@@ -106,26 +101,29 @@ public class Alloy {
       }
     }
 
-    happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
-    happensDuring = Helper.getFunction(transferModule, "o/happensDuring");
-    bijectionFiltered = Helper.getFunction(transferModule, "o/bijectionFiltered");
-    funcFiltered = Helper.getFunction(transferModule, "o/functionFiltered");
-    inverseFunctionFiltered = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
+    happensBefore = AlloyUtils.getFunction(transferModule, "o/happensBefore");
+    happensDuring = AlloyUtils.getFunction(transferModule, "o/happensDuring");
+    bijectionFiltered = AlloyUtils.getFunction(transferModule, "o/bijectionFiltered");
+    functionFiltered = AlloyUtils.getFunction(transferModule, "o/functionFiltered");
+    inverseFunctionFiltered = AlloyUtils.getFunction(transferModule, "o/inverseFunctionFiltered");
 
-    sources = Helper.getFunction(transferModule, "o/sources");
-    targets = Helper.getFunction(transferModule, "o/targets");
+    sources = AlloyUtils.getFunction(transferModule, "o/sources");
+    targets = AlloyUtils.getFunction(transferModule, "o/targets");
     subsettingItemRuleForSources =
-        Helper.getFunction(transferModule, "o/subsettingItemRuleForSources");
+        AlloyUtils.getFunction(transferModule, "o/subsettingItemRuleForSources");
     subsettingItemRuleForTargets =
-        Helper.getFunction(transferModule, "o/subsettingItemRuleForTargets");
+        AlloyUtils.getFunction(transferModule, "o/subsettingItemRuleForTargets");
 
-    isAfterSource = Helper.getFunction(transferModule, "o/isAfterSource");
-    isBeforeTarget = Helper.getFunction(transferModule, "o/isBeforeTarget");
+    isAfterSource = AlloyUtils.getFunction(transferModule, "o/isAfterSource");
+    isBeforeTarget = AlloyUtils.getFunction(transferModule, "o/isBeforeTarget");
 
 
-    osteps = Helper.getFunction(transferModule, "o/steps");
-    oinputs = Helper.getFunction(transferModule, "o/inputs");
-    ooutputs = Helper.getFunction(transferModule, "o/outputs");
+    osteps = AlloyUtils.getFunction(transferModule, "o/steps");
+    oinputs = AlloyUtils.getFunction(transferModule, "o/inputs");
+    ooutputs = AlloyUtils.getFunction(transferModule, "o/outputs");
+
+    transferSig = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
+    transferBeforeSig = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
 
     // // constraints
     // Func nonZeroDurationOnlyFunction = Helper.getFunction(transferModule,
@@ -149,6 +147,15 @@ public class Alloy {
     // .and(suppressIOExpression);
   }
 
+  // public Sig getTransferSig() {
+  // Sig transfer = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
+  // return transfer;
+  // }
+  //
+  // public Sig getTransferBeforeSig() {
+  // Sig transfer = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
+  // return transfer;
+  // }
 
   public Module getTransferModule() {
     return Alloy.transferModule;
@@ -294,38 +301,12 @@ public class Alloy {
       Expr to) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
 
-    Expr funcFilteredExpr =
-        funcFiltered.call(happensBefore.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+    Expr funcFilteredExpr = functionFiltered.call(happensBefore.call(), addExprVarToExpr(s, from),
+        addExprVarToExpr(s, to));
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
   }
-
-
-  // public void createFunctionFilteredBeforeAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
-  // String funcName) {
-  // ExprVar s = ExprVar.make(null, "x", ownerSig.type());
-  //
-  // Expr func = null;
-  // switch (funcName) {
-  // case "happensBefore":
-  // func = happensBefore.call();
-  // break;
-  // case "sources":
-  // func = sources.call();
-  // break;
-  // case "targets":
-  // func = targets.call();
-  // break;
-  // }
-  //
-  // Expr funcFilteredExpr =
-  // funcFiltered.call(func, addExprVarToExpr(s, from), addExprVarToExpr(s, to));
-  // List<ExprHasName> names = new ArrayList<>(List.of(s));
-  // Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-  // this.addToOverallFact(funcFilteredExpr.forAll(decl));
-  // }
-
 
 
   /**
@@ -351,7 +332,7 @@ public class Alloy {
       _to = _to.plus(s.join(to[i]));
     }
 
-    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), _from, _to);
+    Expr funcFilteredExpr = functionFiltered.call(happensBefore.call(), _from, _to);
     List<ExprHasName> names = List.of(s);
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -385,6 +366,18 @@ public class Alloy {
     this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
   }
 
+  public void createIsAfterSourceOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(isAfterSource.call(s.join(transfer)).forAll(decl));
+  }
+
+  public void createIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+    this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
+  }
+
   public void createInverseFunctionFilteredAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
       Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
@@ -405,7 +398,7 @@ public class Alloy {
     from = from == null ? s : from;
 
     Expr funcFilteredExpr =
-        funcFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+        functionFiltered.call(func.call(), addExprVarToExpr(s, from), addExprVarToExpr(s, to));
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
     this.addToOverallFact(funcFilteredExpr.forAll(decl));
@@ -414,19 +407,38 @@ public class Alloy {
   /* if from or to is null, use ExprVar x */
   public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Expr fromExpr = null;
+    Expr toExpr = null;
 
-    to = to == null ? s : to;
-    from = from == null ? s : from;
-
-    Expr fromExpr = addExprVarToExpr(s, from);
-    Expr toExpr = addExprVarToExpr(s, to);
+    boolean justFunction = false;
+    boolean justInverseFunction = false;
+    if (to == null) {// just x - means no field but to itself
+                     // i.e., fact {all x: B | bijectionFiltered[sources, x.transferB1B2, x.b1]} in
+                     // 4.1.4 Transfer Parameter2 -Parameter Behavior.als
+      justFunction = true;
+      toExpr = s;
+    } else
+      toExpr = addExprVarToExpr(s, to);
+    if (from == null) {// just x - means no field but to itself
+      justInverseFunction = true;
+      fromExpr = s;
+    } else
+      fromExpr = addExprVarToExpr(s, from);
 
     Expr funcCall = func.call();
-    Expr bijectionFilteredExpr = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+
+    Expr fnc_inversefnc_or_bijection = null;
+    if (!justFunction && !justInverseFunction) {
+      fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+    } else if (justFunction) {
+      fnc_inversefnc_or_bijection = functionFiltered.call(funcCall, fromExpr, toExpr);
+    } else if (justInverseFunction) {
+      fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
+    }
 
     List<ExprHasName> names = new ArrayList<>(List.of(s));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-    this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+    this.addToOverallFact(fnc_inversefnc_or_bijection.forAll(decl));
   }
 
   /**
@@ -453,19 +465,20 @@ public class Alloy {
    * @return nonZeroDurationOnly and suppressTransfers and suppressIO
    */
   public Expr getCommonCmdExprs() {
-    Func nonZeroDurationOnlyFunction = Helper.getFunction(transferModule, "o/nonZeroDurationOnly");
+    Func nonZeroDurationOnlyFunction =
+        AlloyUtils.getFunction(transferModule, "o/nonZeroDurationOnly");
 
     Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
 
-    Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
     Expr suppressTransfersExpessionBody = transfer.no();
     Func suppressTransfersFunction =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
 
     Expr suppressTransfersExpression = suppressTransfersFunction.call();
 
-    Func inputs = Helper.getFunction(transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(transferModule, "o/outputs");
     Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
 
     Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
@@ -496,6 +509,13 @@ public class Alloy {
         s.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
+  // fact {all x: B1 | x.vin=x.vout}
+  public void addEqual(Sig ownerSig, Sig.Field field1, Sig.Field field2) {
+    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    this.addToOverallFact(s.join(field1).equal(s.join(field2)).forAll(decl));
+  }
 
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
     Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
@@ -538,150 +558,75 @@ public class Alloy {
     }
   }
 
-  public void addSteps(ExprVar var, Sig ownerSig) {
-
-    // ?? do you need different call?
-    // steps
-    Expr ostepsExpr1 = osteps.call();
-    // Expr ostepsExpr2 = osteps.call();
-
-    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr = createStepExpr(var, ownerSig);
-    if (expr != null) {
-      // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
-      // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
-      addBothToOverallFact(var, expr, ostepsExpr1, decl);
-    }
-  }
-
   private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
     addToOverallFact((expr).in(var.join(varJoinExpr)).forAll(decl));
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
-  // comparing two files but step order need to be the same
-  private Expr createStepExpr(ExprVar s, Sig ownerSig) {
+  // public void addSteps(ExprVar var, Sig ownerSig) {
+  //
+  // // ?? do you need different call?
+  // // steps
+  // Expr ostepsExpr1 = osteps.call();
+  // // Expr ostepsExpr2 = osteps.call();
+  //
+  // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+  // Expr expr = createStepExpr(var, ownerSig);
+  // if (expr != null) {
+  // // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
+  // // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
+  // addBothToOverallFact(var, expr, ostepsExpr1, decl);
+  // }
+  // }
+  //
+  // private Expr createStepExpr(ExprVar s, Sig ownerSig) {
+  //
+  // List<String> sortedFieldLabel = new ArrayList<>();
+  // for (Field field : ownerSig.getFields()) {
+  // sortedFieldLabel.add(field.label);
+  // }
+  // Collections.sort(sortedFieldLabel);
+  //
+  // Expr expr = null;
+  //
+  // for (String fieldName : sortedFieldLabel) {
+  // for (Field field : ownerSig.getFields()) {
+  // if (field.label.equals(fieldName)) {
+  // expr = expr == null ? s.join(ownerSig.domain(field))
+  // : expr.plus(s.join(ownerSig.domain(field)));
+  // break;
+  // }
+  // }
+  // }
+  //
+  //
+  // return expr;
+  // }
+
+  public void addSteps(Sig sig, Set<String> stepFields) {
+    ExprVar s = ExprVar.make(null, "x", sig.type());
+    Expr ostepsExpr1 = osteps.call();
+    Decl decl = new Decl(null, null, null, List.of(s), sig.oneOf());
 
     List<String> sortedFieldLabel = new ArrayList<>();
-    for (Field field : ownerSig.getFields()) {
-      sortedFieldLabel.add(field.label);
-    }
+    for (String stepField : stepFields)
+      sortedFieldLabel.add(stepField);
     Collections.sort(sortedFieldLabel);
 
     Expr expr = null;
-
     for (String fieldName : sortedFieldLabel) {
-      for (Field field : ownerSig.getFields()) {
+      for (Field field : sig.getFields()) {
         if (field.label.equals(fieldName)) {
-          expr = expr == null ? s.join(ownerSig.domain(field))
-              : expr.plus(s.join(ownerSig.domain(field)));
+          expr = expr == null ? s.join(sig.domain(field)) : expr.plus(s.join(sig.domain(field)));
           break;
         }
       }
     }
-
-
-    return expr;
-  }
-
-  private Map<Sig, List<Field>> toFieldsByFieldType(Map<Field, Sig> fieldByFieldType) {
-    Map<Sig, List<Field>> fieldsByFieldType = new HashMap<>();
-    for (Sig.Field field : fieldByFieldType.keySet()) {
-      Sig type = fieldByFieldType.get(field);
-      List<Field> fields = null;
-      if (fieldsByFieldType.containsKey(type)) {
-        fields = fieldsByFieldType.get(type);
-      } else {
-        fields = new ArrayList<>();
-        fieldsByFieldType.put(type, fields);
-      }
-      fields.add(field);
+    if (expr != null) {
+      addBothToOverallFact(s, expr, ostepsExpr1, decl);
     }
-    return fieldsByFieldType;
-
   }
 
-
-  public void addConstraint(Sig ownerSig,
-      /*
-       * Map<String, Field> fieldByName, Map<String, Sig> fieldTypeByFieldName,
-       */ Map<Field, Sig> fieldByFieldType) {
-
-    Map<Sig, List<Field>> fieldsByFieldType = toFieldsByFieldType(fieldByFieldType);
-    Expr duringExampleExpressions = null;
-    for (Sig type : fieldsByFieldType.keySet()) {
-      String labelPrefix = "";
-      Expr body = null;
-      for (Field field : fieldsByFieldType.get(type)) {
-        if (field.sig == ownerSig) {
-          body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
-          labelPrefix += field.label;
-        }
-      }
-      if (body != null) {
-        Expr pDuringExampleBody = type.in(body);
-        String label = labelPrefix + "DuringExample"; // p1DuringExample
-        Pos pos = null;
-        List<Decl> decls = new ArrayList<>();
-        Expr returnDecl = null;
-        Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
-        Expr duringExampleExpression = duringExamplePredicate.call();
-        duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
-            : duringExampleExpressions.and(duringExampleExpression);
-      }
-    }
-    if (duringExampleExpressions != null) {
-      Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
-          new ArrayList<>(), null, duringExampleExpressions);
-      Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
-      addToNameExpr(instancesDuringExampleExpression);
-    }
-
-  }
-
-  public void addOnlyConstraint(Sig sig) {
-    Func onlySimpleSequencePredicate = new Func(null, "only" + sig.label, new ArrayList<>(), null,
-        sig.cardinality().equal(ExprConstant.makeNUMBER(1)));
-    Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
-    addToNameExpr(onlySimpleSequenceExpression);
-  }
-
-  public void addConstraintzz(Sig ownerSig, Map<String, Field> fieldByName,
-      Map<String, Sig> fieldTypeByFieldName) {
-
-    // During
-    Pos pos = null;
-    Expr duringExampleExpressions = null;
-    String label = "pDuringExample"; // p1DuringExample
-    Expr body = null;
-    String commonFieldName = "";
-    for (String fieldName : fieldByName.keySet()) {
-      commonFieldName = fieldName;
-      Sig.Field field = fieldByName.get(fieldName);
-      body = body == null ? ownerSig.join(field) : body.plus(ownerSig.join(field));
-    }
-    // assuming all fieldTypeByFieldName.get(fieldName) are the same
-    Expr pDuringExampleBody = fieldTypeByFieldName.get(commonFieldName).in(body);
-    List<Decl> decls = new ArrayList<>();
-    Expr returnDecl = null;
-    Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody);
-    Expr duringExampleExpression = duringExamplePredicate.call();
-    duringExampleExpressions = duringExampleExpressions == null ? duringExampleExpression
-        : duringExampleExpressions.and(duringExampleExpression);
-
-
-
-    Func instancesDuringExamplePredicate =
-        new Func(null, "instancesDuringExample", new ArrayList<>(), null, duringExampleExpressions);
-    Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
-
-    Func onlySimpleSequencePredicate = new Func(null, "only" + ownerSig.label, new ArrayList<>(),
-        null, ownerSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
-    Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
-
-    addToNameExpr(instancesDuringExampleExpression);
-    addToNameExpr(onlySimpleSequenceExpression);
-  }
 
 
   public Command createCommand(String label, int __overall) {
@@ -704,29 +649,78 @@ public class Alloy {
     return command;
   }
 
-  public Command createRunCommand(String label, int overall) {
-    Pos pos = null;
-    boolean check = false;
-    int bitwidth = -1;
-    int maxseq = -1;
-    int expects = -1;
-    Iterable<CommandScope> scope = Arrays.asList(new CommandScope[] {});
-    Iterable<Sig> additionalExactSig = Arrays.asList(new Sig[] {});
-    Expr formula = _nameExpr.and(getOverAllFact());
-    Command parent = null;
-    return new Command(pos, _nameExpr, label, check, overall, bitwidth, maxseq, expects, scope,
-        additionalExactSig, formula, parent);
-  }
+  /*
+   * private Map<Sig, List<Field>> toFieldsByFieldType(Map<Field, Sig> fieldByFieldType) { Map<Sig,
+   * List<Field>> fieldsByFieldType = new HashMap<>(); for (Sig.Field field :
+   * fieldByFieldType.keySet()) { Sig type = fieldByFieldType.get(field); List<Field> fields = null;
+   * if (fieldsByFieldType.containsKey(type)) { fields = fieldsByFieldType.get(type); } else {
+   * fields = new ArrayList<>(); fieldsByFieldType.put(type, fields); } fields.add(field); } return
+   * fieldsByFieldType;
+   * 
+   * }
+   * 
+   * 
+   * public void addConstraint(Sig ownerSig, Map<Field, Sig> fieldByFieldType) {
+   * 
+   * Map<Sig, List<Field>> fieldsByFieldType = toFieldsByFieldType(fieldByFieldType); Expr
+   * duringExampleExpressions = null; for (Sig type : fieldsByFieldType.keySet()) { String
+   * labelPrefix = ""; Expr body = null; for (Field field : fieldsByFieldType.get(type)) { if
+   * (field.sig == ownerSig) { body = body == null ? ownerSig.join(field) :
+   * body.plus(ownerSig.join(field)); labelPrefix += field.label; } } if (body != null) { Expr
+   * pDuringExampleBody = type.in(body); String label = labelPrefix + "DuringExample"; //
+   * p1DuringExample Pos pos = null; List<Decl> decls = new ArrayList<>(); Expr returnDecl = null;
+   * Func duringExamplePredicate = new Func(pos, label, decls, returnDecl, pDuringExampleBody); Expr
+   * duringExampleExpression = duringExamplePredicate.call(); duringExampleExpressions =
+   * duringExampleExpressions == null ? duringExampleExpression :
+   * duringExampleExpressions.and(duringExampleExpression); } } if (duringExampleExpressions !=
+   * null) { Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample", new
+   * ArrayList<>(), null, duringExampleExpressions); Expr instancesDuringExampleExpression =
+   * instancesDuringExamplePredicate.call(); addToNameExpr(instancesDuringExampleExpression); }
+   * 
+   * }
+   * 
+   * public void addOnlyConstraint(Sig sig) { Func onlySimpleSequencePredicate = new Func(null,
+   * "only" + sig.label, new ArrayList<>(), null,
+   * sig.cardinality().equal(ExprConstant.makeNUMBER(1))); Expr onlySimpleSequenceExpression =
+   * onlySimpleSequencePredicate.call(); addToNameExpr(onlySimpleSequenceExpression); }
+   * 
+   * public void addConstraintzz(Sig ownerSig, Map<String, Field> fieldByName, Map<String, Sig>
+   * fieldTypeByFieldName) {
+   * 
+   * // During Pos pos = null; Expr duringExampleExpressions = null; String label =
+   * "pDuringExample"; // p1DuringExample Expr body = null; String commonFieldName = ""; for (String
+   * fieldName : fieldByName.keySet()) { commonFieldName = fieldName; Sig.Field field =
+   * fieldByName.get(fieldName); body = body == null ? ownerSig.join(field) :
+   * body.plus(ownerSig.join(field)); } // assuming all fieldTypeByFieldName.get(fieldName) are the
+   * same Expr pDuringExampleBody = fieldTypeByFieldName.get(commonFieldName).in(body); List<Decl>
+   * decls = new ArrayList<>(); Expr returnDecl = null; Func duringExamplePredicate = new Func(pos,
+   * label, decls, returnDecl, pDuringExampleBody); Expr duringExampleExpression =
+   * duringExamplePredicate.call(); duringExampleExpressions = duringExampleExpressions == null ?
+   * duringExampleExpression : duringExampleExpressions.and(duringExampleExpression);
+   * 
+   * 
+   * 
+   * Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample", new
+   * ArrayList<>(), null, duringExampleExpressions); Expr instancesDuringExampleExpression =
+   * instancesDuringExamplePredicate.call();
+   * 
+   * Func onlySimpleSequencePredicate = new Func(null, "only" + ownerSig.label, new ArrayList<>(),
+   * null, ownerSig.cardinality().equal(ExprConstant.makeNUMBER(1))); Expr
+   * onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
+   * 
+   * addToNameExpr(instancesDuringExampleExpression); addToNameExpr(onlySimpleSequenceExpression); }
+   */
 
-  public Sig getTransferSig() {
-    Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
-    return transfer;
-  }
 
-  public Sig getTransferBeforeSig() {
-    Sig transfer = Helper.getReachableSig(transferModule, "o/TransferBefore");
-    return transfer;
-  }
+  /*
+   * public Command createRunCommand(String label, int overall) { Pos pos = null; boolean check =
+   * false; int bitwidth = -1; int maxseq = -1; int expects = -1; Iterable<CommandScope> scope =
+   * Arrays.asList(new CommandScope[] {}); Iterable<Sig> additionalExactSig = Arrays.asList(new
+   * Sig[] {}); Expr formula = _nameExpr.and(getOverAllFact()); Command parent = null; return new
+   * Command(pos, _nameExpr, label, check, overall, bitwidth, maxseq, expects, scope,
+   * additionalExactSig, formula, parent); }
+   */
+
 
 }
 

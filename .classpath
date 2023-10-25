@@ -38,5 +38,6 @@
 	<classpathentry kind="lib" path="lib/gs-core-2.0.jar"/>
 	<classpathentry kind="lib" path="lib/gs-ui-swing-2.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/omgutil3"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

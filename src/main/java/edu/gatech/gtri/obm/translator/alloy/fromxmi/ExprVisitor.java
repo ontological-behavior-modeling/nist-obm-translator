@@ -1,4 +1,4 @@
-package edu.gatech.gtri.obm.translator.alloy.tofile;
+package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -31,10 +32,14 @@ public class ExprVisitor extends VisitQuery<String> {
   private boolean fieldAfterSig = false;
   private boolean isImplicitFact = false;
   private boolean isSigFact = false;
-  private int factNumber = 1;
+  // used to include disj fields or not
+  // previously all fields with the same type are treated as disjoint fields
+  private final Set<Sig.Field> parameterFields;
 
-  public ExprVisitor(Set<Expr> ignoredExprs) {
+
+  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> pf) {
     this.ignoredExprs = ignoredExprs;
+    this.parameterFields = pf;
   }
 
   @Override
@@ -79,7 +84,7 @@ public class ExprVisitor extends VisitQuery<String> {
 
     isRootSig = false;
 
-    String funcName = MyAlloyLibrary.removeSlash(x.fun.label);
+    String funcName = AlloyUtils.removeSlash(x.fun.label);
     String[] args = new String[x.args.size()];
 
     for (int i = 0; i < x.args.size(); i++) {
@@ -130,9 +135,6 @@ public class ExprVisitor extends VisitQuery<String> {
         String fact = y.accept(this);
 
         if (!isImplicitFact) {
-          // sb.append("fact f").append(factNumber++).append(" {").append(fact).append('}')
-          // .append('\n');
-          // remove fact name
           sb.append("fact ").append("{").append(fact).append('}').append('\n');
         } else if (isImplicitFact) {
           sb.append('\t').append(fact).append('\n');
@@ -178,7 +180,7 @@ public class ExprVisitor extends VisitQuery<String> {
 
     StringBuilder sb = new StringBuilder();
     return sb.append(op).append(' ').append(names).append(": ")
-        .append(MyAlloyLibrary.removeSlash(sigType)).append(" | ").append(sub).toString();
+        .append(AlloyUtils.removeSlash(sigType)).append(" | ").append(sub).toString();
   }
 
   @Override
@@ -250,13 +252,13 @@ public class ExprVisitor extends VisitQuery<String> {
         sb.append("abstract ");
       }
 
-      sb.append("sig ").append(MyAlloyLibrary.removeSlash(x.label));
+      sb.append("sig ").append(AlloyUtils.removeSlash(x.label));
 
       if (x instanceof Sig.PrimSig) {
         Sig.PrimSig ps = (Sig.PrimSig) x;
         if (ps.parent != null) {
           sb.append(" extends ");
-          sb.append(MyAlloyLibrary.removeSlash(ps.parent.label));
+          sb.append(AlloyUtils.removeSlash(ps.parent.label));
         }
       }
 
@@ -286,16 +288,24 @@ public class ExprVisitor extends VisitQuery<String> {
           List<Sig.Field> fs = fieldByType.get(type);
           if (fs.size() == 1) {
             fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
-                .append(MyAlloyLibrary.removeSlash(fs.get(0).label)).append(": ").append(type)
+                .append(AlloyUtils.removeSlash(fs.get(0).label)).append(": ").append(type)
                 .toString();
           } else { // have to be > 1
 
+            boolean isdisj = true;
             String[] labels = new String[fs.size()];
             for (int i = 0; i < fs.size(); i++) {
-              labels[i] = MyAlloyLibrary.removeSlash(fs.get(i).label);
+
+              if (this.parameterFields.contains(fs.get(i)))
+                isdisj = false;
+              labels[i] = AlloyUtils.removeSlash(fs.get(i).label);
             }
-            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
-                .append(String.join(", ", labels)).append(": ").append(type).toString();
+            if (isdisj)
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
+                  .append(String.join(", ", labels)).append(": ").append(type).toString();
+            else
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+                  .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
 
@@ -342,7 +352,8 @@ public class ExprVisitor extends VisitQuery<String> {
       return sb.toString();
     }
 
-    return MyAlloyLibrary.removeSlash(x.label);
+    return AlloyUtils.removeSlash(x.label);
+
   }
 
   public Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) throws Err {
@@ -381,7 +392,7 @@ public class ExprVisitor extends VisitQuery<String> {
     if (fieldAfterSig) {
 
       StringBuilder sb = new StringBuilder();
-      String output = sb.append(' ').append(MyAlloyLibrary.removeSlash(x.label)).append(": ")
+      String output = sb.append(' ').append(AlloyUtils.removeSlash(x.label)).append(": ")
           .append(x.decl().expr.accept(this)).toString();
       return output;
     }

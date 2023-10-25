@@ -10,7 +10,7 @@ import edu.mit.csail.sdg.ast.Sig;
 public class AlloyModule {
 
   private final String moduleName;
-  private final Expr facts;
+  private Expr facts;
   private final List<Sig> signatures;
   private final Command[] commands;
 
