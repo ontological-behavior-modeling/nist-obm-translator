@@ -56,8 +56,8 @@ public class FuncUtils {
 
   public static Expr addBijectionFilteredExprHappensBefore(Module transferModule, Expr first,
       Expr second) {
-    Func happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
-    Func bijectionFiltered = Helper.getFunction(transferModule, "o/bijectionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(transferModule, "o/happensBefore");
+    Func bijectionFiltered = AlloyUtils.getFunction(transferModule, "o/bijectionFiltered");
 
     // bijectionFiltered[happensBefore, first, second]
     Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.getBody(), first, second);
@@ -66,8 +66,8 @@ public class FuncUtils {
 
   public static Expr addFunctionFilteredExprHappensBefore(Module transferModule, Expr first,
       Expr second) {
-    Func happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
-    Func fn = Helper.getFunction(transferModule, "o/functionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(transferModule, "o/happensBefore");
+    Func fn = AlloyUtils.getFunction(transferModule, "o/functionFiltered");
 
     // bijectionFiltered[happensBefore, first, second]
     Expr expr = fn.call(happensBefore.getBody(), first, second);
@@ -76,8 +76,8 @@ public class FuncUtils {
 
   public static Expr addInverseFunctionFilteredExprHappensBefore(Module transferModule, Expr first,
       Expr second) {
-    Func happensBefore = Helper.getFunction(transferModule, "o/happensBefore");
-    Func fn = Helper.getFunction(transferModule, "o/inverseFunctionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(transferModule, "o/happensBefore");
+    Func fn = AlloyUtils.getFunction(transferModule, "o/inverseFunctionFiltered");
 
     // bijectionFiltered[happensBefore, first, second]
     Expr expr = fn.call(happensBefore.getBody(), first, second);
@@ -102,14 +102,14 @@ public class FuncUtils {
     // pred nonZeroDurationOnly{all occ: Occurrence | not o/isZeroDuration[occ]}
     // pred isZeroDuration [x: Occurrence] {before[x,x]}
     // v1
-    Func nonZeroDurationOnlyFunc = Helper.getFunction(transferModule, "o/nonZeroDurationOnly");
+    Func nonZeroDurationOnlyFunc = AlloyUtils.getFunction(transferModule, "o/nonZeroDurationOnly");
     Expr nonZeroDurationOnlyFuncExpr = nonZeroDurationOnlyFunc.call();
     return nonZeroDurationOnlyFuncExpr;
   }
 
 
   public static Expr addSuppressTransfersExpr(Module transferModule) {
-    Sig transfer = Helper.getReachableSig(transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
     Expr suppressTransfersExprBody = transfer.no();
     Func suppressTransfers =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExprBody);
@@ -119,8 +119,8 @@ public class FuncUtils {
 
   public static Expr addSuppressIOExpr(Module transferModule) {
     // pred suppressIO {no inputs and no outputs}
-    Func inputs = Helper.getFunction(transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(transferModule, "o/outputs");
     Expr suppressIOExprBody = inputs.call().no().and(outputs.call().no());
     Func suppressIOFuc = new Func(null, "suppressIO", null, null, suppressIOExprBody);
     Expr suppressIOExpr = suppressIOFuc.call();
@@ -142,7 +142,7 @@ public class FuncUtils {
 
   // p1 + p2 + p3 in this.steps
   public static Expr addFieldsInStep(Module transferModule, List<Sig.Field> fields, Sig sig) {
-    Func osteps = Helper.getFunction(transferModule, "o/steps");
+    Func osteps = AlloyUtils.getFunction(transferModule, "o/steps");
     Expr ostepsExpr = osteps.call();
     Expr e = sig.join(fields.get(0));
     for (int i = 1; i < fields.size(); i++) {
@@ -154,7 +154,7 @@ public class FuncUtils {
 
   // this.steps in p1 + p2 + p3
   public static Expr addStepsInFields(Module transferModule, List<Sig.Field> fields, Sig sig) {
-    Func osteps = Helper.getFunction(transferModule, "o/steps");
+    Func osteps = AlloyUtils.getFunction(transferModule, "o/steps");
     Expr ostepsExpr = osteps.call();
     Expr e = sig.join(fields.get(0));
     for (int i = 1; i < fields.size(); i++) {

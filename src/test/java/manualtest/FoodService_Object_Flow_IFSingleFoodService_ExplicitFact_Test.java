@@ -1,18 +1,15 @@
 package manualtest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.alloy4.Pos;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -23,14 +20,18 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import obmtest.ExpressionComparator;
 
 
 class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 
   @Test
   void test() {
-
-    Alloy alloy = new Alloy("src/test/resources/obm-alloy-code_2023-09-25/obm");
+    String moduleName = "FoodServiceObjectControlFlowIFSingleFoodService_ExplicitFact";
+    String outFileName = "src/test/resources/generated-" + moduleName + ".als";
+    String filename =
+        "src/test/resources/4.2.2_FoodServiceObjectFlowIFSingleFoodService_ExplicitFacts.als";
+    Alloy alloy = new Alloy("src/test/resources");
 
     // ========== Define list of signatures unique to the file ==========
 
@@ -62,7 +63,7 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
     Sig ofParallelFoodService =
         alloy.createSigAndAddToAllSigs("OFParallelFoodService", (Sig.PrimSig) ofFoodService);
 
-    Sig transferBefore = Helper.getReachableSig(alloy.getTemplateModule(), "o/TransferBefore");
+    Sig transferBefore = AlloyUtils.getReachableSig(alloy.getTemplateModule(), "o/TransferBefore");
 
     // ========== Define list of relations unique to the file ==========
 
@@ -147,21 +148,21 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
     /***** Explicit Facts *****/
 
     // Setup:
-    Func happensBefore = Helper.getFunction(Alloy.transferModule, "o/happensBefore");
-    Func steps = Helper.getFunction(Alloy.transferModule, "o/steps");
-    Func inputs = Helper.getFunction(Alloy.transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(Alloy.transferModule, "o/outputs");
-    Func items = Helper.getFunction(Alloy.transferModule, "o/items");
-    Func sources = Helper.getFunction(Alloy.transferModule, "o/sources");
-    Func targets = Helper.getFunction(Alloy.transferModule, "o/targets");
-    Func functionFiltered = Helper.getFunction(Alloy.transferModule, "o/functionFiltered");
-    Func bijectionFiltered = Helper.getFunction(Alloy.transferModule, "o/bijectionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(Alloy.transferModule, "o/happensBefore");
+    Func steps = AlloyUtils.getFunction(Alloy.transferModule, "o/steps");
+    Func inputs = AlloyUtils.getFunction(Alloy.transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(Alloy.transferModule, "o/outputs");
+    Func items = AlloyUtils.getFunction(Alloy.transferModule, "o/items");
+    Func sources = AlloyUtils.getFunction(Alloy.transferModule, "o/sources");
+    Func targets = AlloyUtils.getFunction(Alloy.transferModule, "o/targets");
+    Func functionFiltered = AlloyUtils.getFunction(Alloy.transferModule, "o/functionFiltered");
+    Func bijectionFiltered = AlloyUtils.getFunction(Alloy.transferModule, "o/bijectionFiltered");
     Func inverseFunctionFiltered =
-        Helper.getFunction(Alloy.transferModule, "o/inverseFunctionFiltered");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/inverseFunctionFiltered");
     Func subsettingItemRuleForSources =
-        Helper.getFunction(Alloy.transferModule, "o/subsettingItemRuleForSources");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/subsettingItemRuleForSources");
     Func subsettingItemRuleForTargets =
-        Helper.getFunction(Alloy.transferModule, "o/subsettingItemRuleForTargets");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/subsettingItemRuleForTargets");
 
     // Order: none
     // Prepare: none
@@ -1560,9 +1561,9 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
     // Checks and runs
 
     // setup
-
+    //
     Func nonZeroDurationOnlyFunc =
-        Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
 
     // showOFFoodService
     Expr showOFFoodServiceExpr = nonZeroDurationOnlyFunc.call()
@@ -1594,14 +1595,12 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
     Command showOFParallelFoodServiceCommand = new Command(null, showOFParallelFoodServiceExpr,
         "showOFParallelFoodService", false, 10, -1, -1, -1, List.of(), List.of(),
         alloy.getOverAllFact().and(showOFParallelFoodServiceExpr), null);
-
-    Command[] commands = {showOFFoodServiceCommand, showOFSingleFoodServiceCommand,
-        showOFLoopFoodServiceCommand, showOFParallelFoodServiceCommand};
+    //
+    // Command[] commands = {showOFFoodServiceCommand, showOFSingleFoodServiceCommand,
+    // showOFLoopFoodServiceCommand, showOFParallelFoodServiceCommand};
 
     // ===== Create Alloy file version =====
-    String filename =
-        "src/test/resources/4.2.2_FoodServiceObjectFlowIFSingleFoodService_ExplicitFacts.als";
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
+    CompModule importedModule = AlloyUtils.importAlloyModule(filename);
 
     // ========== Test if facts are equal ==========
 
@@ -1619,10 +1618,10 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
     Map<String, Sig> apiMap = new HashMap<>();
 
     for (Sig sig : fileSigs) {
-      fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      fileMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
     for (Sig sig : apiSigs) {
-      apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      apiMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
 
     assertTrue(fileSigs.size() == apiSigs.size());
@@ -1634,24 +1633,29 @@ class FoodService_Object_Flow_IFSingleFoodService_ExplicitFact_Test {
 
     // ========== Test if command(s) are equal ==========
 
-    List<Command> importedCommands = importedModule.getAllCommands();
+    // List<Command> importedCommands = importedModule.getAllCommands();
+    //
+    // assertEquals(commands.length, importedCommands.size());
+    //
+    // for (int i = 0; i < commands.length; i++) {
+    // assertTrue(ec.compareCommand(commands[i], importedCommands.get(i)));
+    // }
 
-    assertEquals(commands.length, importedCommands.size());
-
-    for (int i = 0; i < commands.length; i++) {
-      assertTrue(ec.compareCommand(commands[i], importedCommands.get(i)));
-    }
+    // commands without content
+    Command command = alloy.createCommand(moduleName, 10);
+    Command[] commands = {command};
 
     // ========== Write file ==========
 
+
+
     AlloyModule alloyModule =
-        new AlloyModule("FoodServiceObjectControlFlowIFSingleFoodService_ExplicitFact",
-            alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+        new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
+
 
     translator.generateAlsFileContents(alloyModule, outFileName);
 

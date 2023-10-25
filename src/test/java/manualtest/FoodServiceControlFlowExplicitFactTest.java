@@ -3,17 +3,17 @@ package manualtest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
-import edu.gatech.gtri.obm.translator.alloy.tofile.Translator;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Decl;
@@ -24,12 +24,17 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.parser.CompModule;
+import obmtest.ExpressionComparator;
 
 class FoodServiceControlFlowExplicitFactTest {
 
   @Test
   void test() {
-    Alloy alloy = new Alloy("src/test/resources/obm-alloy-code_2023-09-25/obm");
+    String moduleName = "FoodServiceControlFlow_ExplicitFast";
+    String outFileName = "src/test/resources/generated-" + moduleName + ".als";
+    String filename = "src/test/resources/4.2.1_FoodServiceControlFlow_ExplicitFacts.als";
+    Alloy alloy = new Alloy("src/test/resources");
+
 
     // ========== Define list of signatures unique to the file ==========
 
@@ -99,8 +104,13 @@ class FoodServiceControlFlowExplicitFactTest {
     // fieldByName.put(foodService_serveField.label, foodService_serveField);
 
 
-
-    alloy.addSteps(fs, foodServiceSig);
+    Set<String> foodServiceSteps = new HashSet<String>();
+    foodServiceSteps.add("order");
+    foodServiceSteps.add("prepare");
+    foodServiceSteps.add("pay");
+    foodServiceSteps.add("eat");
+    foodServiceSteps.add("serve");
+    alloy.addSteps(foodServiceSig, foodServiceSteps);
 
     // SingleFoodService:
 
@@ -120,8 +130,8 @@ class FoodServiceControlFlowExplicitFactTest {
         foodService_eatField, foodService_payField);
 
     // ChurchSupperService:
-    Func bijectionFiltered = Helper.getFunction(Alloy.transferModule, "o/bijectionFiltered");
-    Func happensBefore = Helper.getFunction(Alloy.transferModule, "o/happensBefore");
+    Func bijectionFiltered = AlloyUtils.getFunction(Alloy.transferModule, "o/bijectionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(Alloy.transferModule, "o/happensBefore");
     ExprVar css = ExprVar.make(null, "css", churchSupperServiceSig.type());
     Decl cssDecl = new Decl(null, null, null, List.of(css), churchSupperServiceSig.oneOf());
     alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(),
@@ -237,17 +247,17 @@ class FoodServiceControlFlowExplicitFactTest {
 
     // nonZeroDurationOnly
     Func nonZeroDurationOnlyFunc =
-        Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
+        AlloyUtils.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
 
     // suppressTransfers
-    Sig transfer = Helper.getReachableSig(Alloy.transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(Alloy.transferModule, "o/Transfer");
     Expr suppressTransfersExpessionBody = transfer.no();
     Func suppressTransfersFunc =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
 
     // suppressIO
-    Func inputs = Helper.getFunction(Alloy.transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(Alloy.transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(Alloy.transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(Alloy.transferModule, "o/outputs");
     Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
     Func suppressIOFunc = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
 
@@ -322,8 +332,8 @@ class FoodServiceControlFlowExplicitFactTest {
         showUnsatisfiableFoodServiceCmd};
 
     // ========== Create Alloy file version ==========
-    String filename = "src/test/resources/4.2.1_FoodServiceControlFlow_ExplicitFacts.als";
-    CompModule importedModule = MyAlloyLibrary.importAlloyModule(filename);
+
+    CompModule importedModule = AlloyUtils.importAlloyModule(filename);
 
     // ========== Test if facts are equal ==========
 
@@ -341,10 +351,10 @@ class FoodServiceControlFlowExplicitFactTest {
     Map<String, Sig> apiMap = new HashMap<>();
 
     for (Sig sig : fileSigs) {
-      fileMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      fileMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
     for (Sig sig : apiSigs) {
-      apiMap.put(MyAlloyLibrary.removeSlash(sig.toString()), sig);
+      apiMap.put(AlloyUtils.removeSlash(sig.toString()), sig);
     }
 
     assertTrue(fileSigs.size() == apiSigs.size());
@@ -366,11 +376,11 @@ class FoodServiceControlFlowExplicitFactTest {
 
     // ========== Write file ==========
 
-    AlloyModule alloyModule = new AlloyModule("FoodServiceControlFlow_ExplicitFast",
-        alloy.getAllSigs(), alloy.getOverAllFact(), commands);
+    AlloyModule alloyModule =
+        new AlloyModule(moduleName, alloy.getAllSigs(), alloy.getOverAllFact(), commands);
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
-    String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
+
     translator.generateAlsFileContents(alloyModule, outFileName);
   }
 }

@@ -3,14 +3,14 @@ package obmtest;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.fromxmi.OBMXMI2Alloy;
-import edu.gatech.gtri.obm.translator.alloy.tofile.ExpressionComparator;
-import edu.gatech.gtri.obm.translator.alloy.tofile.MyAlloyLibrary;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
@@ -84,58 +84,51 @@ class OBMXMI2AlloyTest {
    */
   void sameAbstractSyntaxTreeTestAndSignatures(String manualFileName, String className)
       throws FileNotFoundException, UMLModelErrorException {
-    // PrintStream o = new PrintStream(new File("error.txt"));
-    // // PrintStream console = System.out;
-    // System.setErr(o);
 
-    // System.setProperty(("java.io.tmpdir"),
-    // "C:/Users/mw107/Documents/Projects/NIST OBM/info/obm-alloy-code_2023-05-26/obm");// find
-    // transfer.als
-    System.out.println("fileName = " + manualFileName);
+    System.out.println("manual file to compare = " + manualFileName);
     System.out.println("className = " + className);
-
 
     // ========== Create Alloy model from OBM XMI file & write as a file ==========
 
-    String working_dir = "src/test/resources";
-    OBMXMI2Alloy test = new OBMXMI2Alloy(working_dir);
+    String ombmodel_dir = "src/test/resources";
+    String output_and_testfiles_dir = "src/test/resources";
+    File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
 
-    File testing_dir = new File(working_dir);
-    File xmiFile = new File(testing_dir, "OBMModel.xmi");
+    // setting any errors to be in error file
+    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
+    System.setErr(o);
 
-    // File xmiFile = new File(
-    // "C:/Users/mw107/Documents/Projects/NIST
-    // OBM/GIT/NIST-OBM-Translator.git/develop_mw/target/classes/OBMModel_MW.xmi");
-    System.out.println("XMIFile: " + xmiFile.exists() + "? " + xmiFile.getAbsolutePath());
-
-    File apiFile = new File(testing_dir, manualFileName + "_Generated-"
+    File apiFile = new File(output_and_testfiles_dir, manualFileName + "_Generated-"
         + className.replaceAll("::", "_") /* alloyModule.getModuleName() */ + ".als");
-    test.createAlloyFile(xmiFile, className, apiFile);
 
+    OBMXMI2Alloy test = new OBMXMI2Alloy(output_and_testfiles_dir);
+    if (!test.createAlloyFile(xmiFile, className, apiFile))
+      return;
 
+    // creating comparator
     ExpressionComparator ec = new ExpressionComparator();
+
 
     ////////////////////// Set up (Importing Modules) /////////////////////////////////////////
     // API
-    CompModule apiModule = MyAlloyLibrary.importAlloyModule(apiFile);
+    CompModule apiModule = AlloyUtils.importAlloyModule(apiFile);
     // TEST
-    File testFile = new File(testing_dir, manualFileName);
+    File testFile = new File(output_and_testfiles_dir, manualFileName);
     System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
-    CompModule testModule = MyAlloyLibrary.importAlloyModule(testFile);
+    CompModule testModule = AlloyUtils.importAlloyModule(testFile);
 
 
     //////////////////////// Comparing Reachable Facts ////////////////////////////////
     // API
     Expr api_reachableFacts = apiModule.getAllReachableFacts();// test.getOverallFacts();
     System.out.println(api_reachableFacts);
-    // Test
+    // TEST
     Expr test_reachableFacts = testModule.getAllReachableFacts();
     System.out.println(test_reachableFacts);
     // Compare
     assertTrue(ec.compareTwoExpressions(api_reachableFacts, test_reachableFacts));
 
     ///////////////////////// Comparing Sigs ////////////////////
-    // ========== Set up Sigs ==========
     // API
     List<Sig> api_reachableDefinedSigs = apiModule.getAllReachableUserDefinedSigs();
     Map<String, Sig> api_SigByName = new HashMap<>();// test.getAllReachableUserDefinedSigs();
@@ -149,16 +142,14 @@ class OBMXMI2AlloyTest {
       test_SigByName.put(sig.label, sig);
     }
 
-    // Compare - Size
+    // Compare - Sig size
     assertTrue(api_SigByName.size() == test_SigByName.size());
 
-    // Compare - each sig
+    // Compare - Each sig
     for (String sigName : api_SigByName.keySet()) {
       Sig alloyFileSig = test_SigByName.get(sigName);
       Sig apiSig = api_SigByName.get(sigName);
       assertTrue(ec.compareTwoExpressions(alloyFileSig, apiSig));
     }
   }
-
-
 }

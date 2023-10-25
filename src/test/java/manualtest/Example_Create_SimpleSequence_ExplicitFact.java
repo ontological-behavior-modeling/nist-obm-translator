@@ -1,4 +1,4 @@
-package edu.gatech.gtri.obm.translator.alloy.tofile;
+package manualtest;
 
 
 import java.util.ArrayList;
@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
-import edu.gatech.gtri.obm.translator.alloy.Helper;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.Translator;
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.mit.csail.sdg.alloy4.Pos;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -22,13 +24,13 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Module;
 import edu.mit.csail.sdg.ast.Sig;
 
-public class Create_SimpleSequence_ExplicitFact {
+public class Example_Create_SimpleSequence_ExplicitFact {
 
   public static void main(String[] args) {
 
     String moduleName = "SimpleSequence_ExplicitFact";
-
-    Alloy sst = new Alloy();
+    String outFileName = "generated-" + moduleName + ".als";
+    Alloy sst = new Alloy("src/test/resources");
 
     Set<Sig> ignoredSigs = new HashSet<>();
     Set<Expr> ignoredExprs = new HashSet<>();
@@ -64,10 +66,11 @@ public class Create_SimpleSequence_ExplicitFact {
 
     // ========== Define explicit facts + functions/predicates ==========
 
-    Func osteps = Helper.getFunction(sst.transferModule, "o/steps");
-    Func funcFiltered = Helper.getFunction(sst.transferModule, "o/functionFiltered");
-    Func happensBefore = Helper.getFunction(sst.transferModule, "o/happensBefore");
-    Func inverseFuncFiltered = Helper.getFunction(sst.transferModule, "o/inverseFunctionFiltered");
+    Func osteps = AlloyUtils.getFunction(sst.transferModule, "o/steps");
+    Func funcFiltered = AlloyUtils.getFunction(sst.transferModule, "o/functionFiltered");
+    Func happensBefore = AlloyUtils.getFunction(sst.transferModule, "o/happensBefore");
+    Func inverseFuncFiltered =
+        AlloyUtils.getFunction(sst.transferModule, "o/inverseFunctionFiltered");
     Expr ostepsExpr1 = osteps.call();
     Expr ostepsExpr2 = osteps.call();
 
@@ -113,17 +116,17 @@ public class Create_SimpleSequence_ExplicitFact {
             .and(inverseFuncFilteredExpr.forAll(decl5)));
 
     Func nonZeroDurationOnlyFunction =
-        Helper.getFunction(sst.transferModule, "o/nonZeroDurationOnly");
+        AlloyUtils.getFunction(sst.transferModule, "o/nonZeroDurationOnly");
     Expr nonZeroDurationOnlyFunctionExpression = nonZeroDurationOnlyFunction.call();
 
-    Sig transfer = Helper.getReachableSig(sst.transferModule, "o/Transfer");
+    Sig transfer = AlloyUtils.getReachableSig(sst.transferModule, "o/Transfer");
     Expr suppressTransfersExpessionBody = transfer.no();
     Func suppressTransfersFunction =
         new Func(null, "suppressTransfers", null, null, suppressTransfersExpessionBody);
     Expr suppressTransfersExpression = suppressTransfersFunction.call();
 
-    Func inputs = Helper.getFunction(sst.transferModule, "o/inputs");
-    Func outputs = Helper.getFunction(sst.transferModule, "o/outputs");
+    Func inputs = AlloyUtils.getFunction(sst.transferModule, "o/inputs");
+    Func outputs = AlloyUtils.getFunction(sst.transferModule, "o/outputs");
     Expr suppressIOExpressionBody = inputs.call().no().and(outputs.call().no());
     Func suppressIOFunction = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
     Expr suppressIOExpression = suppressIOFunction.call();
@@ -166,14 +169,15 @@ public class Create_SimpleSequence_ExplicitFact {
 
     // ========== Define command ==========
 
-    Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq, _expects, _scope, _additionalExactSig, _formula, _parent);
+    Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq,
+        _expects, _scope, _additionalExactSig, _formula, _parent);
     Command[] commands = {command};
 
     AlloyModule alloyModule =
         new AlloyModule(moduleName, sst.getAllSigs(), sst.getOverAllFact(), commands);
 
     Translator translator = new Translator(ignoredExprs, ignoredFuncs, ignoredSigs);
-    String outFileName = "generated-" + alloyModule.getModuleName() + ".als";
+
     translator.generateAlsFileContents(alloyModule, outFileName);
   }
 }

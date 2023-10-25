@@ -34,7 +34,7 @@ public class MDUtils {
             + "\" is included as sig \"" + aClass.getName() + "\"'s parent");
       }
       // parentName == null , "BehaviorOccurrence", "Occurrence" or "Anything"
-      if (!Helper.validParent(((Class) parents.get(0)).getName()))
+      if (!AlloyUtils.validParent(((Class) parents.get(0)).getName()))
         return null;
       return (Class) parents.get(0);
     } else

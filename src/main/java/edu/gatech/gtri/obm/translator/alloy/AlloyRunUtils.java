@@ -7,7 +7,7 @@ import edu.mit.csail.sdg.ast.CommandScope;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
 
-public class Utils {
+public class AlloyRunUtils {
 
 
   public static void run(Sig _mainSig, int _overallScope, List<Sig> _allSigs, Expr _overallFact) {

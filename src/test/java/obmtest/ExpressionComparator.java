@@ -1,8 +1,9 @@
-package edu.gatech.gtri.obm.translator.alloy.tofile;
+package obmtest;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.ast.Attr;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -25,19 +26,11 @@ import edu.mit.csail.sdg.ast.Type;
 public class ExpressionComparator {
 
   private final Set<List<Expr>> visitedExpressions;
-  private Set<Sig.Field> fields;
-
   private final Set<Expr> usedExpr2s;
 
   public ExpressionComparator() {
     visitedExpressions = new HashSet<>();
     usedExpr2s = new HashSet<>();
-
-    // try {
-    // System.setErr(new PrintStream(new FileOutputStream("error.log")));
-    // } catch (FileNotFoundException e) {
-    // System.err.println(e.getMessage());
-    // }
   }
 
   public boolean compareTwoExpressions(Expr e1, Expr e2) {
@@ -970,7 +963,7 @@ public class ExpressionComparator {
       System.err.println();
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(func1.label).equals(MyAlloyLibrary.removeSlash(func2.label))) {
+    if (!AlloyUtils.removeSlash(func1.label).equals(AlloyUtils.removeSlash(func2.label))) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
       System.err.println("compareFunctions: " + "!MyAlloyLibrary.removeSlash(func1.label)"
@@ -1183,12 +1176,12 @@ public class ExpressionComparator {
       System.err.println("compareSig: sig1.isSubsig != null && sig2.isSubsig == null");
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(sig1.label).equals(MyAlloyLibrary.removeSlash(sig2.label))) {
+    if (!AlloyUtils.removeSlash(sig1.label).equals(AlloyUtils.removeSlash(sig2.label))) {
       System.err.println("sig1: " + sig1);
       System.err.println("sig2: " + sig2);
       System.err.println("compareSig: !sig1.label.equals(sig2.label)");
-      System.err.println("sig1.label: " + MyAlloyLibrary.removeSlash(sig1.label));
-      System.err.println("sig2.label: " + MyAlloyLibrary.removeSlash(sig2.label));
+      System.err.println("sig1.label: " + AlloyUtils.removeSlash(sig1.label));
+      System.err.println("sig2.label: " + AlloyUtils.removeSlash(sig2.label));
       System.err.println();
       return false;
     }
@@ -1286,8 +1279,7 @@ public class ExpressionComparator {
       System.err.println("compareSig: sig1.isTopLevel() != sig2.isTopLevel()");
       return false;
     }
-    if (!MyAlloyLibrary.removeSlash(sig1.toString())
-        .equals(MyAlloyLibrary.removeSlash(sig2.toString()))) {
+    if (!AlloyUtils.removeSlash(sig1.toString()).equals(AlloyUtils.removeSlash(sig2.toString()))) {
       System.err.println("sig1: " + sig1);
       System.err.println("sig2: " + sig2);
       System.err.println("compareSig: !sig1.toString().equals(sig2.toString())");
@@ -1311,12 +1303,11 @@ public class ExpressionComparator {
       System.err.println("sig1Field != null && sig2Field == null");
     }
 
-    if (!MyAlloyLibrary.removeSlash(sig1Field.label)
-        .equals(MyAlloyLibrary.removeSlash(sig2Field.label))) {
+    if (!AlloyUtils.removeSlash(sig1Field.label).equals(AlloyUtils.removeSlash(sig2Field.label))) {
       // if (!sig1Field.label.equals(sig2Field.label)) {
       System.err.println("Sig.Field1: " + sig1Field);
       System.err.println("Sig.Field2: " + sig2Field);
-      System.err.println("!!!!!ok!!!!!!!!!Sig.Field: sig1.label != sig2.label");
+      System.err.println("Sig.Field: sig1.label != sig2.label");
       return false;
     }
 
