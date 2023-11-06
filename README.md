@@ -121,7 +121,7 @@ TBD
 
 ### Prerequisites
 
-TBD
+In order to build the project, maven needs to be installed and added to environment variables (instructions here https://maven.apache.org/), and you need access to the private repository for omgutil (https://github.com/ontological-behavior-modeling/omgutil.git). A github token needs to be added to your local maven settings.xml file. A sample settings.xml file is included in the repository with information about creating a github token and adding it to the file.
 
 [comment]: <> (This is an example of how to list things you need to use the software and how to install them.)
 
@@ -134,7 +134,11 @@ TBD
 [comment]: <> (  ```)
 
 ### Installation
-TBD
+1. Clone the repository onto local machine (https://github.com/ontological-behavior-modeling/NIST-OBM-Translator.git).
+2. Open terminal to location of cloned repository.
+3. Enter <code>mvn clean package -DskipTests</code>.
+4. Jar file is created in the target folder of the repository. The correct file is appened with "-with-dependencies.jar".
+5. Double-click jar file to open.
 
 [comment]: <> (1. Get a free API Key at [https://example.com]&#40;https://example.com&#41;)
 
