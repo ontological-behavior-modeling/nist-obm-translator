@@ -1,16 +1,26 @@
 package edu.gatech.gtri.obm.translator.alloy.userinterface;
 
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JLabel;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -21,17 +31,25 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.text.*;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import javax.swing.ImageIcon;
-import javax.swing.JFileChooser;
-import javax.swing.JSplitPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.common.util.URI;
@@ -40,24 +58,12 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.internal.impl.ClassImpl;
+
 import edu.gatech.gtri.obm.translator.alloy.fromxmi.OBMXMI2Alloy;
 import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.UMLModelErrorException;
-import javax.swing.JButton;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import lombok.Getter;
 import lombok.Setter;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import javax.swing.JCheckBox;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.AffineTransform;
-import java.awt.FlowLayout;
-import java.awt.BorderLayout;
-import javax.swing.JPanel;
 
 
 @Getter
@@ -166,6 +172,12 @@ public class UserInterface {
     ImageIcon img = new ImageIcon(getImage("OBM.png"));
     frmObmAlloyTranslator.setIconImage(img.getImage());
     
+//    try {
+//      obm = new OBMXMI2Alloy("src/main/resources");
+//    } catch (FileNotFoundException | UMLModelErrorException e) {
+//      e.printStackTrace();
+//    }
+    
     lblTop = new JLabel("Select File to Translate");
     lblTop.setHorizontalAlignment(SwingConstants.CENTER);
     lblTop.setFont(new Font("Tahoma", Font.BOLD, 20));
@@ -273,13 +285,14 @@ public class UserInterface {
       public void actionPerformed(ActionEvent e) {
         String location = xmiFile.getAbsolutePath();
         int slash = location.lastIndexOf("\\");
+        String path = xmiFile.getAbsolutePath().substring(0, slash);
+        copyResources(path);
         if (list.getSelectedValue() != null) {
           Popup p = new Popup("Generating File");
           int i = 1;
           OBMXMI2Alloy obm = null;
           try {
-            String path = xmiFile.getAbsolutePath().substring(0, slash);
-            obm = new OBMXMI2Alloy(path);
+            obm = new OBMXMI2Alloy(path + "/OBM Alloy Resources");
           } catch (FileNotFoundException | UMLModelErrorException e1) {
             e1.printStackTrace();
             p.getDialog().setTitle("Error" + e1);
@@ -310,7 +323,7 @@ public class UserInterface {
               DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
               Date date = new Date();
               String dt = dateFormat.format(date);
-              alsFile = new File(location + name + "_" + dt + ".als");
+              alsFile = new File(location + "OBM Alloy Resources/" + name + "_" + dt + ".als");
               try {
                obm.createAlloyFile(xmiFile, c, alsFile);
              } catch (FileNotFoundException | UMLModelErrorException e1) {
@@ -431,4 +444,23 @@ public class UserInterface {
     return Toolkit.getDefaultToolkit().getImage(url);
 }
   
+  /**
+   * Add necessary .als resources to xmiFile location
+   */
+  private void copyResources(String path) {
+    path = path + "/OBM Alloy Resources";
+    File alloyOBM = new File(path);
+    alloyOBM.mkdir();
+    URL transferUrl = Thread.currentThread().getContextClassLoader().getResource("Transfer.als");
+    File transferDest = new File(path + "/Transfer.als");
+    URL relUrl = Thread.currentThread().getContextClassLoader().getResource("utilities/types/relation.als");
+    File relDest = new File(path + "/utilities/types/relation.als");
+    try {
+      FileUtils.copyURLToFile(transferUrl, transferDest);
+      FileUtils.copyURLToFile(relUrl, relDest);
+    } catch (IOException e) {
+      JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Error finding file\n" + e);
+    }
+
+  }
 }
