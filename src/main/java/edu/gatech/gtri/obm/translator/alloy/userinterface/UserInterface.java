@@ -185,6 +185,7 @@ public class UserInterface {
     scrollPane = new JScrollPane();
     
     list = new JList<String>();
+    list.setFont(new Font("Tahoma", Font.PLAIN, 16));
     scrollPane.setViewportView(list);
     
     JSplitPane splitPaneSearch = new JSplitPane();
@@ -204,8 +205,9 @@ public class UserInterface {
     textField.setColumns(10);
     
     JLabel lblSearch = new JLabel("Search: ");
-    lblSearch.setFont(new Font("Tahoma", Font.BOLD, 15));
+    lblSearch.setFont(new Font("Tahoma", Font.BOLD, 16));
     splitPaneSearch.setLeftComponent(lblSearch);
+    chckbxName.setFont(new Font("Tahoma", Font.PLAIN, 16));
     
     chckbxName.setHorizontalAlignment(SwingConstants.CENTER);
     
@@ -213,6 +215,7 @@ public class UserInterface {
     splitPaneFile.setDividerSize(0);
     
     btnOpen = new JButton("Open XMI File");
+    btnOpen.setFont(new Font("Tahoma", Font.PLAIN, 16));
     btnOpen.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseReleased(MouseEvent e) {
@@ -231,8 +234,7 @@ public class UserInterface {
           String longest = listClassNames.stream().max(Comparator.comparingInt(String::length)).get();
           AffineTransform affinetransform = new AffineTransform();     
           FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
-          Font font = new Font("Tahoma", Font.BOLD, 12);
-          int textwidth = (int)(font.getStringBounds(longest, frc).getWidth());
+          Font font = new Font("Tahoma", Font.BOLD, 16);
           list.setListData(allClassNames);
           btnOpen.setText("Open New XMI");
           lblTop.setText("Select Class to Translate");
@@ -242,7 +244,7 @@ public class UserInterface {
           btmPanel.setVisible(true);
           btnRefresh.setVisible(true);
           scrollPane.setVisible(true);
-          frmObmAlloyTranslator.setMinimumSize(new Dimension(textwidth + 20, 450));
+          frmObmAlloyTranslator.setMinimumSize(new Dimension(530,450));
           frmObmAlloyTranslator.pack();
           p.getDialog().dispose();
         }
@@ -251,6 +253,7 @@ public class UserInterface {
     splitPaneFile.setLeftComponent(btnOpen);
     
     lblFileName = new JLabel("  No File Selected");
+    lblFileName.setFont(new Font("Tahoma", Font.PLAIN, 16));
     splitPaneFile.setRightComponent(lblFileName);
   
     ImageIcon icon = new ImageIcon(getImage("refresh.png"));
@@ -273,13 +276,24 @@ public class UserInterface {
     });
     
     btnCancel = new JButton("Cancel");
+    btnCancel.setFont(new Font("Tahoma", Font.PLAIN, 16));
     btnCancel.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-          System.exit(0);
+        String location = xmiFile.getAbsolutePath();
+        int slash = location.lastIndexOf("\\");
+        String path = xmiFile.getAbsolutePath().substring(0, slash);
+        path = path + "/OBM Ally Translator";
+        try {
+          FileUtils.deleteDirectory(new File(path));
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        }
+        System.exit(0);
       }});
     
     btnOk = new JButton("OK");
+    btnOk.setFont(new Font("Tahoma", Font.PLAIN, 16));
     btnOk.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
