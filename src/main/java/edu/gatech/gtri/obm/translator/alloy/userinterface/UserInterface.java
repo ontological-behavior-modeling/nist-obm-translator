@@ -280,15 +280,6 @@ public class UserInterface {
     btnCancel.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-        String location = xmiFile.getAbsolutePath();
-        int slash = location.lastIndexOf("\\");
-        String path = xmiFile.getAbsolutePath().substring(0, slash);
-        path = path + "/OBM Ally Translator";
-        try {
-          FileUtils.deleteDirectory(new File(path));
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        }
         System.exit(0);
       }});
     
@@ -337,7 +328,7 @@ public class UserInterface {
               DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
               Date date = new Date();
               String dt = dateFormat.format(date);
-              alsFile = new File(location + "OBM Alloy Resources/" + name + "_" + dt + ".als");
+              alsFile = new File(location + name + "_" + dt + ".als");
               try {
                obm.createAlloyFile(xmiFile, c, alsFile);
              } catch (FileNotFoundException | UMLModelErrorException e1) {
@@ -352,6 +343,7 @@ public class UserInterface {
         } else {
           JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Please Select One or More Options\nfrom the List");
         }
+        deleteResources(path);
       }
       
     });
@@ -476,5 +468,13 @@ public class UserInterface {
       JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Error finding file\n" + e);
     }
 
+  }
+  private void deleteResources(String path) {
+    path = path + "/OBM Alloy Resources";
+    try {
+      FileUtils.deleteDirectory(new File(path));
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
   }
 }
