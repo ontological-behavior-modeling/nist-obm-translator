@@ -13,8 +13,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.font.FontRenderContext;
-import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,7 +21,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -149,7 +146,7 @@ public class UserInterface {
   }
 
   /**
-   * Create the application.
+   * Create the User Interface application.
    */
   public UserInterface() {
     try {
@@ -171,13 +168,6 @@ public class UserInterface {
     
     ImageIcon img = new ImageIcon(getImage("OBM.png"));
     frmObmAlloyTranslator.setIconImage(img.getImage());
-    
-//    try {
-//      obm = new OBMXMI2Alloy("src/main/resources");
-//    } catch (FileNotFoundException | UMLModelErrorException e) {
-//      e.printStackTrace();
-//    }
-    
     lblTop = new JLabel("Select File to Translate");
     lblTop.setHorizontalAlignment(SwingConstants.CENTER);
     lblTop.setFont(new Font("Tahoma", Font.BOLD, 20));
@@ -230,11 +220,6 @@ public class UserInterface {
           } catch (InterruptedException | ExecutionException e1) {
             e1.printStackTrace();
           }
-          List<String> listClassNames = Arrays.asList(allClassNames);
-          String longest = listClassNames.stream().max(Comparator.comparingInt(String::length)).get();
-          AffineTransform affinetransform = new AffineTransform();     
-          FontRenderContext frc = new FontRenderContext(affinetransform,true,true);     
-          Font font = new Font("Tahoma", Font.BOLD, 16);
           list.setListData(allClassNames);
           btnOpen.setText("Open New XMI");
           lblTop.setText("Select Class to Translate");
@@ -313,13 +298,11 @@ public class UserInterface {
               try {
                 alsFile = saveALS(c);
                 if (alsFile == null) {
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, "No File Name Selected. Alloy file generation canceled");
-                  
+                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, "No File Name Selected. Alloy file generation cancelled");         
                 } else
                   obm.createAlloyFile(xmiFile, c, alsFile);                 
               } catch (FileNotFoundException | UMLModelErrorException | NullPointerException e1) {
-                JOptionPane.showMessageDialog(frmObmAlloyTranslator, "File name not entered. \nTranslation Canceled.");
-                break;
+                JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Selected XMI file does not exist.\nTranslation Canceled.");
               }       
             } else {
               location = location.substring(0, slash + 1);
@@ -339,7 +322,7 @@ public class UserInterface {
             fileList = fileList + "\n" + alsFile.getAbsolutePath();   
             i++;
           }
-            JOptionPane.showMessageDialog(null, fileList);  
+            JOptionPane.showMessageDialog(frmObmAlloyTranslator, fileList);  
         } else {
           JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Please Select One or More Options\nfrom the List");
         }
@@ -401,11 +384,13 @@ public class UserInterface {
   
   /**
    * Enter a filename and choose the location to save the translated .als file.
+   * @param name A string of the xmi file class name that is being saved
    */ 
-  private static File saveALS(String name) {
+  private File saveALS(String name) {
     JFileChooser jSave = new JFileChooser();
     jSave.setDialogTitle("Save your ALS file for " + name);
     jSave.setFileFilter(new FileNameExtensionFilter("ALS Files", "als"));
+    jSave.setCurrentDirectory(xmiFile);
     int i = jSave.showSaveDialog(frmObmAlloyTranslator);
     if (i == JFileChooser.APPROVE_OPTION) {
       try {
@@ -429,6 +414,7 @@ public class UserInterface {
   
   /**
    * Search through the list of all model classes for the text in the search JTextField.
+   * @param A string field for the user-typed text
    */
   private void searchList(String field) {
     List<String> updatedList = new ArrayList<String>();
@@ -452,6 +438,8 @@ public class UserInterface {
   
   /**
    * Add necessary .als resources to xmiFile location
+   * 
+   * @param path A string file path that Alloy .als files are saved to
    */
   private void copyResources(String path) {
     path = path + "/OBM Alloy Resources";
@@ -469,6 +457,10 @@ public class UserInterface {
     }
 
   }
+  /**
+   * Delete temporary .als files from xmiFile location
+   * @param path A string file path that Alloy .als files are deleted from
+   */
   private void deleteResources(String path) {
     path = path + "/OBM Alloy Resources";
     try {

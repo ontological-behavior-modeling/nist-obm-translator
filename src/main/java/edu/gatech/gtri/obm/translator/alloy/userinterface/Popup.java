@@ -1,7 +1,6 @@
 package edu.gatech.gtri.obm.translator.alloy.userinterface;
 
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
