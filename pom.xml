@@ -15,28 +15,33 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <spotless.version>2.36.0</spotless.version>
     <omgutil.version>1.0.1</omgutil.version>
-    <commons-io.version>2.1</commons-io.version>
+    <commons-io.version>2.15.0</commons-io.version>
+    <gs-ui-swing.version>2.0</gs-ui-swing.version>
+    <gs-core.version>2.0</gs-core.version>
+    <lombok.version>1.18.26</lombok.version>
+    <junit-jupiter-engine.version>5.9.2</junit-jupiter-engine.version>
+    <junit-jupiter-params.version>5.9.2</junit-jupiter-params.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.9.2</version>
+      <version>${junit-jupiter-engine.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params -->
-	<dependency>
-	    <groupId>org.junit.jupiter</groupId>
-	    <artifactId>junit-jupiter-params</artifactId>
-	    <version>5.9.2</version>
-	    <scope>test</scope>
-	</dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit-jupiter-params.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.26</version>
+      <version>${lombok.version}</version>
       <scope>provided</scope>
     </dependency>
     <!-- https://github.com/AlloyTools/org.alloytools.alloy/tree/v5.1.0 -->
@@ -61,31 +66,27 @@
       <groupId>edu.umd</groupId>
       <artifactId>omgutil3</artifactId>
       <version>${omgutil.version}</version>
-    </dependency> 
+    </dependency>
     <!-- for graph -->
     <dependency>
-		<groupId>com.github.graphstream</groupId>
-		<artifactId>gs-core</artifactId>
-		<version>$2.0</version>
-		<scope>system</scope>
-		<systemPath>${nistobmtranslator.home}/gs-core-2.0.jar</systemPath>
-	</dependency>
-	<dependency>
-		<groupId>com.github.graphstream</groupId>
-		<artifactId>gs-ui-swing</artifactId>
-		<version>$2.0</version>
-		<scope>system</scope>
-		<systemPath>${nistobmtranslator.home}/gs-ui-swing-2.0.jar</systemPath>
-	</dependency> 
-	<dependency>
-        <groupId>commons-io</groupId>
-        <artifactId>commons-io</artifactId>
-        <version>${commons-io.version}</version>
-	</dependency>
+      <groupId>org.graphstream</groupId>
+      <artifactId>gs-core</artifactId>
+      <version>${gs-core.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.graphstream</groupId>
+      <artifactId>gs-ui-swing</artifactId>
+      <version>${gs-ui-swing.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io.version}</version>
+    </dependency>
   </dependencies>
 
   <repositories>
- 	<!--<repository>  The jitpack 'repo' is an on-the-fly build service for Github (and other code repos). 
+    <!--<repository>  The jitpack 'repo' is an on-the-fly build service for Github (and other code repos). 
 	    <id>jitpack.io</id>
 	    <url>https://jitpack.io</url> 
 	</repository>-->
@@ -113,11 +114,35 @@
       <name>GitHub Packages for omgutil</name>
       <url>https://maven.pkg.github.com/ontological-behavior-modeling/omgutil</url>
       <layout>default</layout>
-    </repository> 
+    </repository>
   </repositories>
 
   <build>
     <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>edu.gatech.gtri.obm.translator.alloy.userinterface.UserInterface</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <!-- bind to the packaging phase -->
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <!-- this is used for inheritance merges -->
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <!-- see for documentation and configuration information: https://github.com/Ekryd/sortpom -->
         <groupId>com.github.ekryd.sortpom</groupId>
