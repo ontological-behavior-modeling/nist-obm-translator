@@ -95,6 +95,10 @@ public class UserInterface {
   
   private ExecutorService executor = Executors.newFixedThreadPool(10);
   
+  /**
+   * An callable method to conglomerate all the class elements within the xmi file
+   * @return classNames A string array of the xmi file class elements
+   */
   private Callable<String[]> findXmiClasses = () -> {
     ResourceSet rs = null;
     try {
@@ -276,13 +280,17 @@ public class UserInterface {
         String location = xmiFile.getAbsolutePath();
         int slash = location.lastIndexOf("\\");
         String path = xmiFile.getAbsolutePath().substring(0, slash);
-        copyResources(path);
         if (list.getSelectedValue() != null) {
+          File transfer = new File(path + "/Transfer.als");
+          File relation = new File(path + "/utilities/types/relation.als");
+          if (!(transfer.exists() && relation.exists())) {
+          copyResources(transfer, relation);
+          }
           Popup p = new Popup("Generating File");
           int i = 1;
           OBMXMI2Alloy obm = null;
           try {
-            obm = new OBMXMI2Alloy(path + "/OBM Alloy Resources");
+            obm = new OBMXMI2Alloy(path);
           } catch (FileNotFoundException | UMLModelErrorException e1) {
             e1.printStackTrace();
             p.getDialog().setTitle("Error" + e1);
@@ -326,7 +334,6 @@ public class UserInterface {
         } else {
           JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Please Select One or More Options\nfrom the List");
         }
-        deleteResources(path);
       }
       
     });
@@ -439,34 +446,39 @@ public class UserInterface {
   /**
    * Add necessary .als resources to xmiFile location
    * 
-   * @param path A string file path that Alloy .als files are saved to
+   * @param transfer A file for the location where Transfer.als should be
+   * @param relation A file for the location where relation.als should be
    */
-  private void copyResources(String path) {
-    path = path + "/OBM Alloy Resources";
-    File alloyOBM = new File(path);
-    alloyOBM.mkdir();
-    URL transferUrl = Thread.currentThread().getContextClassLoader().getResource("Transfer.als");
-    File transferDest = new File(path + "/Transfer.als");
-    URL relUrl = Thread.currentThread().getContextClassLoader().getResource("utilities/types/relation.als");
-    File relDest = new File(path + "/utilities/types/relation.als");
-    try {
-      FileUtils.copyURLToFile(transferUrl, transferDest);
-      FileUtils.copyURLToFile(relUrl, relDest);
-    } catch (IOException e) {
-      JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Error finding file\n" + e);
+  private void copyResources(File transfer, File relation) {
+    boolean t = false;
+    boolean r = false;
+    if (!transfer.exists()) {
+      URL transferUrl = Thread.currentThread().getContextClassLoader().getResource("Transfer.als");
+      try {
+        FileUtils.copyURLToFile(transferUrl, transfer);
+      } catch (IOException e) {
+        JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Error finding file\n" + e);
+      }
+      t = true;
     }
-
-  }
-  /**
-   * Delete temporary .als files from xmiFile location
-   * @param path A string file path that Alloy .als files are deleted from
-   */
-  private void deleteResources(String path) {
-    path = path + "/OBM Alloy Resources";
-    try {
-      FileUtils.deleteDirectory(new File(path));
-    } catch (IOException e1) {
-      e1.printStackTrace();
+    if (!relation.exists()) {
+      URL relUrl = Thread.currentThread().getContextClassLoader().getResource("utilities/types/relation.als");
+      try {
+        FileUtils.copyURLToFile(relUrl, relation);
+      } catch (IOException e) {
+        JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Error finding file\n" + e);
+      }
+      r = true;
+    }
+    if (t && r) {    
+    JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Transfer.als and utilities/types/relation.als have "
+        + "been created in your directory");
+    } else if (t) {
+      JOptionPane.showMessageDialog(frmObmAlloyTranslator, "Transfer.als has "
+          + "been created in your directory");
+    } else if (r) {
+      JOptionPane.showMessageDialog(frmObmAlloyTranslator, "utilities/types/relation.als has "
+          + "been created in your directory");
     }
   }
 }
