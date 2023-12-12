@@ -1,0 +1,58 @@
+name: Publish package to GitHub Packages
+
+on:
+  push:
+    branches:
+      - develop_jn
+      
+permissions:
+  contents: write
+  packages: write
+  
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Configure Git
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "Github Actions"
+          # git config --global url.https://${{ secrets.JN_TOKEN }}@github.com/.insteadOf https://github.com/ # Use this line in private repo
+
+      - name: Copy settings.xml
+        run: cp ./.github/Maven/settings.xml $HOME/.m2/settings.xml
+       
+      - name: Prepare Maven Release
+        run: |
+          mvn release:clean release:prepare -B -DdryRun
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Perform Maven Release
+        run: |
+          mvn release:perform -B -DdryRun
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Read Current Maven Version
+        id: mvn_version
+        run: echo "tag=$(git describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
+        
+      #- name: Create new Github Release
+      #  id: create_release
+      #  uses: softprops/action-gh-release@v1
+      #  with:
+      #    files: target/*-with-dependencies.jar
+      #    tag_name: ${{ steps.mvn_version.outputs.tag }}
+      #    body: |
+      #      Release ${{ steps.mvn_release.output.tag }}
