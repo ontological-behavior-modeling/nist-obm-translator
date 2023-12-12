@@ -4,9 +4,9 @@
 
   <groupId>edu.gatech.gtri.obm</groupId>
   <artifactId>nist-obm-translator</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   
-    <scm>
+  <scm>
     <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
     <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</developerConnection>
     <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
@@ -21,7 +21,7 @@
   </distributionManagement>
 
   <properties>
-    <alloy.version>5.1.0</alloy.version>
+    <alloy.version>5.1.0-SNAPSHOT</alloy.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <pomsort.version>3.2.1</pomsort.version>
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>org.alloytools</groupId>
       <artifactId>org.alloytools.alloy.application</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>${alloy.version}</version>
     </dependency>
     <!-- see for documentation and configuration information: https://github.com/Ekryd/sortpom -->
     <dependency>
