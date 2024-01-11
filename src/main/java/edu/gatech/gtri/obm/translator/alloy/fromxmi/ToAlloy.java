@@ -43,30 +43,37 @@ public class ToAlloy {
   }
 
   /**
+   * return PrimSig by name if exist in the instance variable SigbyName. Otherwise create PrimSig by
+   * the name and put in the instance variable Map<String, PrimSig> sigByName. If isMainSig is true,
+   * the instance variable String moduleName is defined.
    * 
    * @param name of sig
    * @param parentSig PrimSig or null (if null, Occurrence will be the parentSig)
-   * @param isMainSig mainSig or not
+   * @param boolean isMainSig mainSig or not
    * @return
    */
-  public PrimSig createAlloySig(String name, PrimSig parentSig, boolean isMainSig) {
+  public PrimSig createSigOrReturnSig(String name, PrimSig parentSig, boolean isMainSig) {
 
-    if (!sigByName.containsKey(name)) {
+    if (!sigByName.containsKey(name)) {// when the name is not exist in the sigByName, create
+                                       // PrimSig with appropriate parentSig
       PrimSig s = null;
-      if (parentSig == null)
-        s = alloy.createSigAsChildOfOccSigAndAddToAllSigs(name); // "Occurrence" as the parent
+      if (parentSig == null)// name is in AlloyUtils.invalidParentNames, then this sig's parent will
+                            // be alloy's this/Occurrence
+        s = alloy.createSigAsChildOfOccSigAndAddToAllSigs(name);
       else
         s = alloy.createSigAsChildOfParentSigAddToAllSigs(name, parentSig);
       sigByName.put(name, s);
       if (isMainSig)
+        // removing "this/" from s.label and assigns as moduleName
         moduleName = s.label.startsWith("this") ? s.label.substring(5) : s.label;
-
       return s;
-    } else
+    } else // when existing in the sigByName
       return sigByName.get(name);
   }
 
+
   /**
+   * Create Sig if not created already
    * 
    * @param name
    * @param parentName
@@ -172,20 +179,17 @@ public class ToAlloy {
           .println("A field \"" + fieldName + "\" not found in Sig \"" + ownerSig.label + "\".");
   }
 
-
-  public void createFnForTransferAndAddToOverallFact(PrimSig ownerSig, Expr transfer,
-      String sourceTypeName, String targetTypeName) {
+  public void createFnForTransferAndAddToOverallFact(PrimSig ownerSig, Expr transfer, String source,
+      String target) {
 
     // for 4.1.4 Transfers and Parameters1 - TransferProduct_modified
     // sig ParticipantTransfer
     // sourceTypeName Supplier -> Field supplier
     // targetTypeName Customer -> Field customer
 
-    // assume only one field has the same type
-    Field sourceTypeField = AlloyUtils.getFieldFromSigByFieldType(sourceTypeName, ownerSig);
-    Field targetTypeField = AlloyUtils.getFieldFromSigByFieldType(targetTypeName, ownerSig);
 
-
+    Field sourceTypeField = AlloyUtils.getFieldFromSig(source, ownerSig);
+    Field targetTypeField = AlloyUtils.getFieldFromSig(target, ownerSig);
 
     // fact {all x: ParticipantTransfer | bijectionFiltered[sources, x.transferSupplierCustomer,
     // x.supplier]}
@@ -206,32 +210,26 @@ public class ToAlloy {
    * @param sourceTypeName
    * @param targetTypeName
    */
+
+
   public void createFnForTransferBeforeAndAddToOverallFact(PrimSig ownerSig, Expr transfer,
-      String sourceTypeName, String targetTypeName) {
+      String sourceName, String targetName) {
 
-    Field sourceTypeField = AlloyUtils.getFieldFromSigByFieldType(sourceTypeName, ownerSig);
-    Field targetTypeField = AlloyUtils.getFieldFromSigByFieldType(targetTypeName, ownerSig);
-
-    // fact {all x: ParticipantTransfer | bijectionFiltered[sources, x.transferSupplierCustomer,
-    // x.supplier]}
-    // fact {all x: ParticipantTransfer | bijectionFiltered[targets, x.transferSupplierCustomer,
-    // x.customer]}
-    // fact {all x: ParticipantTransfer | subsettingItemRuleForSources[x.transferSupplierCustomer]}
-    // fact {all x: ParticipantTransfer | subsettingItemRuleForTargets[x.transferSupplierCustomer]}
-
-    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceTypeField, Alloy.sources);
-    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetTypeField, Alloy.targets);
-    alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer);
+    createFnForTransferAndAddToOverallFact(ownerSig, transfer, sourceName, targetName);
     alloy.createIsAfterSourceIsBeforeTargetOverallFact(ownerSig, transfer);
-
     // fact {all x: ParameterBehavior | isAfterSource[x.transferbeforeAB]}//missing
     // fact {all x: ParameterBehavior | isBeforeTarget[x.transferbeforeAB]}//missing
   }
 
 
+
   public void noInputsOutputs(Sig sig) {
     alloy.noInputs(sig);
     alloy.noOutputs(sig);
+  }
+
+  public void noSteps(Sig sig) {
+    alloy.noSteps(sig);
   }
 
   public void noInputs(String sigName) {
@@ -264,12 +262,113 @@ public class ToAlloy {
       System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
   }
 
-  public void addSteps(Map<String, Set<String>> stepPropertiesBySig) {
-    for (String sigName : stepPropertiesBySig.keySet()) {
-      Sig sig = sigByName.get(sigName);
-      alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
+  public void handleNoTransfer(Set<Sig> sigWithTransferFields) {
+
+    Object[] sigs =
+        sigByName.values().stream().filter(sig -> !sigWithTransferFields.contains(sig)).toArray();
+    for (Object sig : sigs) {
+      if (((PrimSig) sig).getFields().size() > 0)
+        alloy.noTransferStep((PrimSig) sig);
     }
   }
+
+  /**
+   * 
+   * @param transferingTypeSig (ie., Integer)
+   */
+  public void handleStepClosure(Set<String> transferingTypeSig) {
+    for (String sigName : transferingTypeSig) {
+      Sig sig = sigByName.get(sigName);
+      alloy.noStepsX(sig); // fact {all x: Integer | no steps.x}
+    }
+  }
+
+  /**
+   * handle both steps
+   * 
+   * no steps, for example, fact {all x: AtomicBehavior | no x.steps}
+   * 
+   * steps, for examples, fact {all x: SimpleSequence | x.p1 + x.p2 in x.steps} fact {all x:
+   * SimpleSequence | x.steps in x.p1 + x.p2}
+   * 
+   * @param stepPropertiesBySig
+   * @param hasParameterFileld boolean if fields with ParameterField exists or not
+   */
+  public void handleSteps(Map<String, Set<String>> stepPropertiesBySig,
+      Set<Field> parameterFields) {
+    for (String sigName : stepPropertiesBySig.keySet()) {
+      Sig sig = sigByName.get(sigName);
+
+      if (stepPropertiesBySig.get(sigName).size() > 0) {
+        alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
+        // alloy.noTransferStep(sig); // i.e., fact {all x: SimpleSequence | no y: Transfer | y in
+        // x.steps}
+        // } else if (parameterFields.size() == 0) { // parameterFields is for entire model
+        // alloy.noSteps(sig); // add like fact {all x: AtomicBehavior | no x.steps}
+      } else {
+        boolean hasParamterFields = false;
+        for (Field f : parameterFields) {
+          if (f.sig == sig) {
+            // alloy.noTransferStep(sig); // {all x: BehaviorWithParameterInOut | no y: Transfer | y
+            // in
+            // x.steps}
+
+            hasParamterFields = true;
+            break;
+          }
+        }
+        if (!hasParamterFields)
+          alloy.noSteps(sig);
+      }
+
+
+    }
+  }
+
+  /**
+   * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
+   * 
+   * @param inputs
+   * @param outputs
+   */
+  public void handleNoInputsOutputs(HashMap<String, Set<String>> sigInputProperties,
+      HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
+    for (String sigName : sigNames) {
+      if (sigInputProperties.keySet().contains(sigName)) {
+        Set<String> propertyNames = sigInputProperties.get(sigName);
+        for (String propertyName : propertyNames)
+          addInputs(sigName, propertyName);
+      } else
+        noInputs(sigName);
+
+      if (sigOutputProperties.keySet().contains(sigName)) {
+        Set<String> propertyNames = sigOutputProperties.get(sigName);
+        for (String propertyName : propertyNames)
+          addOutputs(sigName, propertyName);
+      } else
+        noOutputs(sigName);
+    }
+  }
+
+
+  /**
+   * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
+   * 
+   * @param inputs
+   * @param outputs
+   */
+  // public void handleNoInputsOutputs(Set<String> inputs, Set<String> outputs,
+  // Set<String> allClasseNames) {
+  // // Set<String> insAndOuts =
+  // // Stream.of(inputs, outputs).flatMap(x -> x.stream()).collect(Collectors.toSet());
+  // // Set<String> allSigs = allClasses.stream().map(c -> c.getName()).collect(Collectors.toSet());
+  // for (String s : allClasseNames) {
+  // if (!inputs.contains(s))
+  // noInputs(s);
+  // if (!outputs.contains(s))
+  // noOutputs(s);
+  // }
+  // }
 
   // fact {all x: B1 | x.vin=x.vout}
   public void addEqual(PrimSig ownerSig, String fieldName1, String fieldName2) {

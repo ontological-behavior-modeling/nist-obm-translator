@@ -1,6 +1,7 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,15 @@ import edu.mit.csail.sdg.parser.CompUtil;
 
 public class AlloyUtils {
 
+  // TODO? maybe just BehaviorOccurence is ok
+  final static List<String> invalidParentNames;
+  static {
+    invalidParentNames = new ArrayList<>();
+    invalidParentNames.add("BehaviorOccurrence");
+    invalidParentNames.add("Occurrence");
+    invalidParentNames.add("Anything");
+  }
+
   public static CompModule importAlloyModule(File f) {
     return AlloyUtils.importAlloyModule(f.getAbsolutePath());
   }
@@ -39,8 +49,8 @@ public class AlloyUtils {
   }
 
   public static boolean validParent(String parentName) {
-    if (parentName == null || parentName.equals("BehaviorOccurrence")
-        || parentName.equals("Occurrence") || parentName.equals("Anything"))
+    System.out.println(parentName);
+    if (parentName == null || invalidParentNames.contains(parentName))
       return false;
     else
       return true;

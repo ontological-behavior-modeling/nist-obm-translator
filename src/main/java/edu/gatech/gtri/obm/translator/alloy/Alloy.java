@@ -523,6 +523,20 @@ public class Alloy {
         var.join(field).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl));
   }
 
+  // fact {all x: Integer | no steps.x}
+  public void noStepsX(Sig sig) {
+    ExprVar varX = ExprVar.make(null, "x", sig.type());
+    Decl declX = new Decl(null, null, null, List.of(varX), sig.oneOf());
+    addToOverallFact(osteps.call().join(varX).no().forAll(declX));
+  }
+
+  // fact {all x: Integer | no x.steps}
+  public void noSteps(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((var.join(osteps.call()).no()).forAll(decl));
+  }
+
   public void noInputs(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
@@ -541,6 +555,8 @@ public class Alloy {
     if (expr != null) {
       // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
       // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+      // fact {all x: BehaviorWithParamterInOut | x.input in x.inputs}
+      // fact {all x: BehaviorWithParamterInOut | x.inputs in x.input}
       addBothToOverallFact(var, expr, oinputs.call(), decl);
     }
   }
@@ -554,54 +570,32 @@ public class Alloy {
     if (expr != null) {
       // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
       // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+      // fact {all x: BehaviorWithParamterInOut | x.output in x.outputs}
+      // fact {all x: BehaviorWithParamterInOut | x.outputs in x.output}
       addBothToOverallFact(var, expr, ooutputs.call(), decl);
     }
   }
+
 
   private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
     addToOverallFact((expr).in(var.join(varJoinExpr)).forAll(decl));
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
-  // public void addSteps(ExprVar var, Sig ownerSig) {
-  //
-  // // ?? do you need different call?
-  // // steps
-  // Expr ostepsExpr1 = osteps.call();
-  // // Expr ostepsExpr2 = osteps.call();
-  //
-  // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-  // Expr expr = createStepExpr(var, ownerSig);
-  // if (expr != null) {
-  // // addToOverallFact((expr).in(var.join(ostepsExpr1)).forAll(decl));
-  // // addToOverallFact(var.join(ostepsExpr2).in(expr).forAll(decl));
-  // addBothToOverallFact(var, expr, ostepsExpr1, decl);
-  // }
-  // }
-  //
-  // private Expr createStepExpr(ExprVar s, Sig ownerSig) {
-  //
-  // List<String> sortedFieldLabel = new ArrayList<>();
-  // for (Field field : ownerSig.getFields()) {
-  // sortedFieldLabel.add(field.label);
-  // }
-  // Collections.sort(sortedFieldLabel);
-  //
-  // Expr expr = null;
-  //
-  // for (String fieldName : sortedFieldLabel) {
-  // for (Field field : ownerSig.getFields()) {
-  // if (field.label.equals(fieldName)) {
-  // expr = expr == null ? s.join(ownerSig.domain(field))
-  // : expr.plus(s.join(ownerSig.domain(field)));
-  // break;
-  // }
-  // }
-  // }
-  //
-  //
-  // return expr;
-  // }
+
+  /**
+   * Add expression like ... fact {all x: SimpleSequence | no y: Transfer | y in x.steps}
+   * 
+   * @param sig
+   */
+  public void noTransferStep(Sig sig) {
+    ExprVar varX = ExprVar.make(null, "x", sig.type());
+    Decl declX = new Decl(null, null, null, List.of(varX), sig.oneOf());
+    ExprVar varY = ExprVar.make(null, "y", transferSig.type());
+    Decl declY = new Decl(null, null, null, List.of(varY), transferSig.oneOf());
+    Expr ostepsExpr1 = osteps.call();
+    addToOverallFact((varY).in(varX.join(ostepsExpr1)).forNo(declY).forAll(declX));
+  }
 
   public void addSteps(Sig sig, Set<String> stepFields) {
     ExprVar s = ExprVar.make(null, "x", sig.type());

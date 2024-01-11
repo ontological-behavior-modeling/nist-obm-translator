@@ -231,6 +231,7 @@ public class ExpressionComparator {
 
   private boolean compareDecl(Decl d1, Decl d2) {
 
+    System.err.println("Comaring Decl...");
     if (d1 == null && d2 == null) {
       return true;
     }
@@ -279,7 +280,7 @@ public class ExpressionComparator {
       System.err.println();
       return false;
     }
-
+    System.err.println("comparing Decl.expr...");
     if (!compareExpr(d1.expr, d2.expr)) {
       System.err.println("Decl d1 = " + d1);
       System.err.println("Decl d2 = " + d2);
@@ -426,6 +427,10 @@ public class ExpressionComparator {
         return false;
       }
     } else if (expr1.getClass().equals(ExprQt.class)) {
+
+      System.out.println("expr1=" + expr1);
+      System.out.println("expr2=" + expr2);
+
       if (!compareExprQt((ExprQt) expr1, (ExprQt) expr2)) {
         System.err.println("compareExpr: " + "!compareExprQt((ExprQt) expr1, (ExprQt) expr2)");
         System.err.println("expr1=" + expr1);
@@ -705,6 +710,8 @@ public class ExpressionComparator {
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
         // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
         if (compareAsString(expr1.args.get(i), expr2.args.get(j))) {
+          if (i == 26 && j == 10)
+            System.out.println("looking for (" + i + " " + j + ") " + expr1.args.get(i));
           if (!compareExpr(expr1.args.get(i), expr2.args.get(j))) {
             System.err.println(
                 "compareExprList: " + "expr1.args != expr2.args for i = " + i + " j = " + j);
@@ -745,7 +752,11 @@ public class ExpressionComparator {
   private boolean compareAsString(Decl d1, Decl d2) {
     String s1 = d1.names.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
     String s2 = d2.names.toString().replaceAll("this/", "").replaceAll("o/r/", "r/");
-    if (s1.equals(s2)) {
+    System.err.println(s1.equals(s2));
+    System.err.println(s1.compareTo(s2) == 0);
+    System.err.println("s1: " + s1);
+    System.err.println("s2: " + s2);
+    if (s1.compareTo(s2) == 0) {
       return true;
     } else {
       // o/r/acyclic[o/items, o/Transfer]
@@ -1216,7 +1227,7 @@ public class ExpressionComparator {
       if (!found) {
         System.err.println("sig1.Fact: " + next1);
         System.err.println("is not in sig2.Facts: " + sig2.getFacts());
-        System.err.println("!!!!!compareSig: !comparing Facts failed.");
+        System.err.println("compareSig: !comparing Facts failed.");
         return false;
       }
     }
@@ -1230,16 +1241,30 @@ public class ExpressionComparator {
 
     for (Decl decl1 : sig1.getFieldDecls()) {
       found = false;
+      int index = 0;
+      System.out.println(index++);
+      System.out.println("looking for dec1");
+      System.out.println(decl1.names);
       for (Decl decl2 : sig2.getFieldDecls()) {
-        if (compareAsString(decl1, decl2))
+        System.out.println("decl2");
+        System.out.println(decl2.names);
+
+        if (compareAsString(decl1, decl2)) {
+          System.err.println(
+              "Decl1 and Decl2 are having the same string (decl.names).  Comparing decl.expr (i.e., set o/Transfer)...");
           if (compareDecl(decl1, decl2)) {
             found = true;
             break;
           }
+        }
       }
       if (!found) {
+        System.err.println("not found sig1.filedDecls in sig2.filedDecls: ");
         System.err.println("sig1.fieldDecl: " + decl1.names);
-        System.err.println("nout found in sig2.filedDecls: " + sig2.getFieldDecls().toString());
+        for (Decl decl2 : sig2.getFieldDecls()) {
+          System.err.println("sig2.fieldDecl: " + decl2.names);
+          System.out.println("sig2.fieldDecl: " + decl2.names);
+        }
         System.err.println("compareSig: !compareDecl failed");
         return false;
       }

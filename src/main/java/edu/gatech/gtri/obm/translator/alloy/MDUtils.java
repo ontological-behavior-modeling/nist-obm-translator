@@ -10,20 +10,30 @@ public class MDUtils {
 
   /**
    * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence".
-   * Smaller the index, more ancestor
+   * Smaller the index, more ancestor. For example, for 4.2.1 FoodService Control Flow -
+   * BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService where
+   * mainClass passed if for BuffertService
    * 
    * @param mainClass
    * @return
    */
-  public static List<Class> getClassInHierarchy(Class mainClass) {
+  public static List<Class> createListIncludeSelfAndParents(Class mainClass) {
     List<Class> list = new ArrayList<Class>();
     list.add(mainClass);
     while ((mainClass = getParent(mainClass)) != null) {
       list.add(0, mainClass);
     }
+    if (list.size() > 1)
+      System.out.println(list);
     return list;
   }
 
+  /**
+   * return a parent of aClass. Assume only one parent (Alloy allows only one parent to be defined).
+   * 
+   * @param aClass
+   * @return
+   */
   private static Class getParent(Class aClass) {
     EList<Classifier> parents = ((org.eclipse.uml2.uml.Class) aClass).getGenerals();
     if (parents.size() >= 1) {

@@ -33,7 +33,7 @@ public class ExprVisitor extends VisitQuery<String> {
   private boolean isImplicitFact = false;
   private boolean isSigFact = false;
   // used to include disj fields or not
-  // previously all fields with the same type are treated as disjoint fields
+  // disj fields are fields with the same type but not with Parameter stereotype
   private final Set<Sig.Field> parameterFields;
 
 
