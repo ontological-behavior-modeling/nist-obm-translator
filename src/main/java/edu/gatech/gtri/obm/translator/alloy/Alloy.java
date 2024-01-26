@@ -49,8 +49,9 @@ public class Alloy {
   protected static Func inverseFunctionFiltered;
 
   protected static Func osteps;
-  protected static Func oinputs;
-  protected static Func ooutputs;
+  public static Func oinputs;
+  public static Func ooutputs;
+  public static Func oitems;
 
   protected ExprList uniqueFact;
   protected Expr templateFact;
@@ -121,6 +122,7 @@ public class Alloy {
     osteps = AlloyUtils.getFunction(transferModule, "o/steps");
     oinputs = AlloyUtils.getFunction(transferModule, "o/inputs");
     ooutputs = AlloyUtils.getFunction(transferModule, "o/outputs");
+    oitems = AlloyUtils.getFunction(transferModule, "o/items");
 
     transferSig = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
     transferBeforeSig = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
@@ -338,18 +340,18 @@ public class Alloy {
     addToOverallFact(funcFilteredExpr.forAll(decl));
   }
 
-  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
-    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
-
-    Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(),
-        addExprVarToExpr(s, from), addExprVarToExpr(s, to));
-
-
-    List<ExprHasName> names = new ArrayList<>(List.of(s));
-    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-    this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
-  }
+  // public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
+  // Expr to) {
+  // ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+  //
+  // Expr bijectionFilteredExpr = bijectionFiltered.call(happensBefore.call(),
+  // addExprVarToExpr(s, from), addExprVarToExpr(s, to));
+  //
+  //
+  // List<ExprHasName> names = new ArrayList<>(List.of(s));
+  // Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+  // this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
+  // }
 
   // transfer = x.tarnsferSupplierCustomer
   public void createSubSettingItemRuleOverallFact(Sig ownerSig, Expr transfer) {
@@ -537,17 +539,57 @@ public class Alloy {
     addToOverallFact((var.join(osteps.call()).no()).forAll(decl));
   }
 
-  public void noInputs(Sig sig) {
+  // (all x | no x.inputs)
+  public void noXInputs(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
     addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
   }
 
-  public void noOutputs(Sig sig) {
+  // (all x | no x.outputs)
+  public void noXOutputs(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
     addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
   }
+
+  // // (all x | no outputs.x)
+  // public void noOutputs(Sig sig) {
+  // ExprVar var = ExprVar.make(null, "x", sig.type());
+  // Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+  // addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
+  // }
+
+
+  // fact {all x: MultipleObjectFlow | no items.x}
+  public void noInputsBothAndItem(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
+    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
+    addToOverallFact((oitems.call().join(var).no()).forAll(decl));
+  }
+
+  public void noOutputsBoth(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    // fact {all x: MultipleObjectFlow | no outputs.x}
+    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
+    // fact {all x: MultipleObjectFlow | no (x.outputs)}
+    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
+  }
+
+  public void noOutputsBothAndItem(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    // fact {all x: MultipleObjectFlow | no outputs.x}
+    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
+    // fact {all x: MultipleObjectFlow | no (x.outputs)}
+    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
+    addToOverallFact((oitems.call().join(var).no()).forAll(decl));
+  }
+
+
 
   public void addInputs(ExprVar var, Sig ownerSig, Field field) {
     Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
@@ -560,6 +602,7 @@ public class Alloy {
       addBothToOverallFact(var, expr, oinputs.call(), decl);
     }
   }
+
 
   public void addOutputs(ExprVar var, Sig ownerSig, Field field) {
     // Expr ooutExpr1 = ooutputs.call();
@@ -582,6 +625,54 @@ public class Alloy {
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
+  // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
+  // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
+  public void createEqualFieldInputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
+      Sig.Field toField) {
+    createEqualFieldToOverallFact(sig, from, fromField, to, toField, oinputs);
+  }
+
+  // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
+  // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
+  public void createEqualFieldOutputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
+      Sig.Field toField) {
+    createEqualFieldToOverallFact(sig, from, fromField, to, toField, ooutputs);
+  }
+
+  // fact {all x: MultipleObjectFlow | no x.p1.inputs}
+  public void createNoInputsField(Sig sig, Field field) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl declX = new Decl(null, null, null, List.of(var), sig.oneOf());// x: MultipleObjectFlow
+    Expr exprField = var.join(sig.domain(field)); // x.p1
+    addToOverallFact((exprField.join(oinputs.call())/* x.p1.inputs */.no()).forAll(declX));
+  }
+
+  // fact {all x: MultipleObjectFlow | no x.p4.outputs}
+  public void createNoOutputsField(Sig sig, Field field) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl declX = new Decl(null, null, null, List.of(var), sig.oneOf());// x: MultipleObjectFlow
+    Expr exprField = var.join(sig.domain(field)); // x.p4
+    addToOverallFact((exprField.join(ooutputs.call())/* x.p4.outputs */.no()).forAll(declX));
+  }
+
+  private void createEqualFieldToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
+      Sig.Field toField, Func func) {
+
+    // all x: MultipleObjectFlow
+    ExprVar varX = ExprVar.make(null, "x", sig.type());
+    Decl declX = new Decl(null, null, null, List.of(varX), sig.oneOf());
+
+    // all p: x.p1
+    ExprVar varP = ExprVar.make(null, "p", from.type()); // p
+    Expr exprField = varX.join(sig.domain(fromField)); // x.p1
+    Decl declY = new Decl(null, null, null, List.of(varP), exprField);
+
+    // p.i = p.outputs (func = outputs)
+    Expr equalExpr = varP.join(toField).equal(varP.join(func.call()));
+
+    addToOverallFact(equalExpr.forAll(declY).forAll(declX));
+  }
+
 
   /**
    * Add expression like ... fact {all x: SimpleSequence | no y: Transfer | y in x.steps}
@@ -591,10 +682,14 @@ public class Alloy {
   public void noTransferStep(Sig sig) {
     ExprVar varX = ExprVar.make(null, "x", sig.type());
     Decl declX = new Decl(null, null, null, List.of(varX), sig.oneOf());
+
     ExprVar varY = ExprVar.make(null, "y", transferSig.type());
     Decl declY = new Decl(null, null, null, List.of(varY), transferSig.oneOf());
+
     Expr ostepsExpr1 = osteps.call();
-    addToOverallFact((varY).in(varX.join(ostepsExpr1)).forNo(declY).forAll(declX));
+    addToOverallFact((varY).in(varX.join(ostepsExpr1)). /* y in x.steps */forNo(declY)
+        ./* no y: Transfer */ forAll(declX))/* all x: SimpleSequence */;
+
   }
 
   public void addSteps(Sig sig, Set<String> stepFields) {

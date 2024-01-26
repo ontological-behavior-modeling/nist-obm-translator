@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.alloy4.ConstList;
-import edu.mit.csail.sdg.alloy4.Pair;
 import edu.mit.csail.sdg.ast.Browsable;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Decl;
@@ -49,7 +48,7 @@ public class AlloyUtils {
   }
 
   public static boolean validParent(String parentName) {
-    System.out.println(parentName);
+    // System.out.println(parentName);
     if (parentName == null || invalidParentNames.contains(parentName))
       return false;
     else
@@ -71,7 +70,7 @@ public class AlloyUtils {
     }
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
                                  // null
-      System.out.println(sig.parent);
+      // System.out.println(sig.parent);
       Field field = getFieldFromSig(fieldName, sig.parent);
       if (field != null)
         return field;
@@ -98,27 +97,27 @@ public class AlloyUtils {
     return null;
   }
 
-  public static void printAllFunc(Module m) {
-    System.out.println("===========allFunc====================");
-    for (Func f : m.getAllFunc()) {
-      System.out.println(f);
-    }
-
-  }
+  // public static void printAllFunc(Module m) {
+  // System.out.println("===========allFunc====================");
+  // for (Func f : m.getAllFunc()) {
+  // System.out.println(f);
+  // }
+  //
+  // }
 
   /**
    * Prints all the facts in the Module, m.
    *
    * @param m = the module you want to print facts from
    */
-  public static void printAllFact(Module m) {
-    System.out.println("===========Module.AllFact====================");
-    for (Pair<String, Expr> f : m.getAllFacts()) {
-      System.out.println(f.a);
-      System.out.println(f.b);
-    }
-
-  }
+  // public static void printAllFact(Module m) {
+  // System.out.println("===========Module.AllFact====================");
+  // for (Pair<String, Expr> f : m.getAllFacts()) {
+  // System.out.println(f.a);
+  // System.out.println(f.b);
+  // }
+  //
+  // }
 
   public static void getAllCommands(Module m) {
     System.out.println("===========Module.AllCommands====================");
@@ -338,7 +337,6 @@ public class AlloyUtils {
 
   public static Func getFunction(Module module, String lookingForFunctionLabel) {
     for (Func f : module.getAllFunc()) {
-      System.out.println(f.label);
       if (f.label.equals(lookingForFunctionLabel))
         return f;
     }
@@ -386,6 +384,7 @@ public class AlloyUtils {
       // printSubNode(browsable.getSubnodes().get(i), tab + "\t", 0);
     }
   }
+
 
 
 }

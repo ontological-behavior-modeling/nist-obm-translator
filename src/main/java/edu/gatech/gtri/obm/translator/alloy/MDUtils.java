@@ -23,8 +23,8 @@ public class MDUtils {
     while ((mainClass = getParent(mainClass)) != null) {
       list.add(0, mainClass);
     }
-    if (list.size() > 1)
-      System.out.println(list);
+    // if (list.size() > 1)
+    // System.out.println(list);
     return list;
   }
 

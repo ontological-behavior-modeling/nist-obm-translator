@@ -2,6 +2,7 @@ package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class ToAlloy {
       sigByName.put(name, s);
       if (isMainSig)
         // removing "this/" from s.label and assigns as moduleName
-        moduleName = s.label.startsWith("this") ? s.label.substring(5) : s.label;
+        moduleName = (s.label.startsWith("this") ? s.label.substring(5) : s.label) + "Module";
       return s;
     } else // when existing in the sigByName
       return sigByName.get(name);
@@ -126,6 +127,18 @@ public class ToAlloy {
       return null; // this should not happens
     return ps;
 
+  }
+
+  public void createBijectionFilteredInputsAndAddToOverallFact(Sig ownerSig, Expr from,
+      Sig.Field fromField, Expr to, Sig.Field toField) {
+    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.oinputs);
+    alloy.createEqualFieldInputsToOverallFact(ownerSig, from, fromField, to, toField);
+  }
+
+  public void createBijectionFilteredOutputsAndAddToOverallFact(Sig ownerSig, Expr from,
+      Sig.Field fromField, Expr to, Sig.Field toField) {
+    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.ooutputs);
+    alloy.createEqualFieldOutputsToOverallFact(ownerSig, from, fromField, to, toField);
   }
 
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
@@ -221,26 +234,67 @@ public class ToAlloy {
     // fact {all x: ParameterBehavior | isBeforeTarget[x.transferbeforeAB]}//missing
   }
 
-
-
-  public void noInputsOutputs(Sig sig) {
-    alloy.noInputs(sig);
-    alloy.noOutputs(sig);
+  public void createNoInputsField(PrimSig sig, String fieldName) {
+    Sig.Field field = AlloyUtils.getFieldFromSig(fieldName, sig);
+    alloy.createNoInputsField(sig, field);
   }
+
+  public void createNoOutputsField(PrimSig sig, String fieldName) {
+    Sig.Field field = AlloyUtils.getFieldFromSig(fieldName, sig);
+    alloy.createNoOutputsField(sig, field);
+  }
+
+  //
+  // public void noInputsOutputs(Sig sig) {
+  // alloy.noInputs(sig);
+  // alloy.noOutputs(sig);
+  // }
 
   public void noSteps(Sig sig) {
     alloy.noSteps(sig);
   }
 
-  public void noInputs(String sigName) {
+  public void noXInputs(String sigName) {
     Sig sig = sigByName.get(sigName);
-    alloy.noInputs(sig);
+    alloy.noXInputs(sig);
   }
 
-  public void noOutputs(String sigName) {
+  public void noXOutputs(String sigName) {
     Sig sig = sigByName.get(sigName);
-    alloy.noOutputs(sig);
+    alloy.noXOutputs(sig);
   }
+
+  // fact {all x: MultipleObjectFlow | no items.x}
+  public void noInputsBothAndItem(String sigName) {
+    Sig sig = sigByName.get(sigName);
+    alloy.noInputsBothAndItem(sig);
+  }
+
+
+
+  // fact {all x: MultipleObjectFlow | no outputs.x}
+  // fact {all x: MultipleObjectFlow | no (x.outputs)}
+
+  public void noOutputsBoth(String sigName) {
+    Sig sig = sigByName.get(sigName);
+    alloy.noOutputsBoth(sig);
+  }
+
+  public void noOutputsBothAndItem(String sigName) {
+    Sig sig = sigByName.get(sigName);
+    alloy.noOutputsBothAndItem(sig);
+  }
+
+  public void addInputs2(String sigName, String fieldName) {
+    PrimSig sig = sigByName.get(sigName);
+    ExprVar s = ExprVar.make(null, "x", sig.type());
+    Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
+    if (f != null)
+      alloy.addInputs(s, sig, f);
+    else
+      System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+  }
+
 
   public void addInputs(String sigName, String fieldName) {
     PrimSig sig = sigByName.get(sigName);
@@ -294,8 +348,10 @@ public class ToAlloy {
    * @param stepPropertiesBySig
    * @param hasParameterFileld boolean if fields with ParameterField exists or not
    */
-  public void handleSteps(Map<String, Set<String>> stepPropertiesBySig,
+  public Set<Sig> handleSteps(Map<String, Set<String>> stepPropertiesBySig,
       Set<Field> parameterFields) {
+
+    Set<Sig> noStepsSigs = new HashSet<>();
     for (String sigName : stepPropertiesBySig.keySet()) {
       Sig sig = sigByName.get(sigName);
 
@@ -317,38 +373,106 @@ public class ToAlloy {
             break;
           }
         }
-        if (!hasParamterFields)
+        if (!hasParamterFields) {
           alloy.noSteps(sig);
+          noStepsSigs.add(sig);
+        }
       }
-
-
     }
+    return noStepsSigs;
+
   }
 
   /**
    * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
    * 
-   * @param inputs
-   * @param outputs
+   * @param sigInProperties {BehaviorParameterIn=[vin], BehaviorParameterInOut=[vin]}
+   * @param outputs {BehaviorParameterOut=[vout], BehaviorParameterInOut=[vout]}
    */
   public void handleNoInputsOutputs(HashMap<String, Set<String>> sigInputProperties,
       HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
+
+    Set<String> inputFlowFieldTypes = getFlowTypeSig(sigInputProperties); // Sigs [Integer]
+    Set<String> outputFlowFieldTypes = getFlowTypeSig(sigOutputProperties); // Sigs [Integer]
+
     for (String sigName : sigNames) {
+      boolean addItem = false; // to avoid adding "no items.x" with both inputs and outputs filter
       if (sigInputProperties.keySet().contains(sigName)) {
         Set<String> propertyNames = sigInputProperties.get(sigName);
-        for (String propertyName : propertyNames)
+        for (String propertyName : propertyNames) {
+          // ie.,
+          // fact {all x: BehaviorWithParameter | x.i in x.inputs}
+          // fact {all x: BehaviorWithParameter | x.inputs in x.i}
+          // BehavioiurParameterIn, InOut
+          // BehaviorWithParameter
+          // Customer
+          // B2, B, C, B1
           addInputs(sigName, propertyName);
-      } else
-        noInputs(sigName);
-
+        }
+      } else {
+        if (inputFlowFieldTypes.contains(sigName))// Integer is flowing
+          noXInputs(sigName);// fact {all x: Integer | no (x.inputs)}
+        else {
+          noInputsBothAndItem(sigName); // "no x.inputs", "no inputs.x", "no items.x." -
+                                        // BehaviourParameterOut
+          addItem = true;
+        }
+      }
       if (sigOutputProperties.keySet().contains(sigName)) {
-        Set<String> propertyNames = sigOutputProperties.get(sigName);
-        for (String propertyName : propertyNames)
+        Set<String> propertyNames = sigOutputProperties.get(sigName); // [vout]
+        for (String propertyName : propertyNames) {
+          // ie.,
+          // BehaviorWithParameter | "x.i in x.outputs" & "x.outputs in x.i"
+          // BehaviourParemeterout | "x.vouts in x.outputs" & "x.outputs in x.vout"
+          // Out, InOut
+          // Supplier
+          // B2, A, B, B1
           addOutputs(sigName, propertyName);
-      } else
-        noOutputs(sigName);
+        }
+      } else {
+        if (outputFlowFieldTypes.contains(sigName)) // Integer = type of what is flowing
+          noXOutputs(sigName);// fact {all x: Integer | no (x.outputs)}
+        else {
+          if (addItem)
+            noOutputsBoth(sigName); // "no outputs.x" & "no x.outputs
+          else
+            noOutputsBothAndItem(sigName); // "no outputs.x", "no x.outputs" and "no items.x"
+        }
+
+      }
     }
   }
+
+  /**
+   * 
+   * @param inputsOrOutputs
+   * @return Set of PrimSig names
+   */
+  public Set<String> getFlowTypeSig(HashMap<String, Set<String>> inputsOrOutputs) {
+
+    Set<String> flowTypeSig = new HashSet<>();
+    for (String sigName : inputsOrOutputs.keySet()) {
+      PrimSig sig = getSig(sigName);
+      Set<String> fieldNames = inputsOrOutputs.get(sigName);
+      for (String fieldName : fieldNames) {
+        Sig.Field f1 = AlloyUtils.getFieldFromSig(fieldName, sig);
+        edu.mit.csail.sdg.ast.Type type = f1.type();
+        List<List<PrimSig>> folds = type.fold(); // fold contains sig and field's type
+        for (List<PrimSig> lp : folds) {
+          for (PrimSig s : lp) {
+            if (s != sig) {
+              flowTypeSig.add(s.label);
+            }
+          }
+        }
+
+      }
+    }
+    return flowTypeSig;
+
+
+  }
+
 
 
   /**

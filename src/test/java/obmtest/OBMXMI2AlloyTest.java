@@ -42,56 +42,56 @@ class OBMXMI2AlloyTest {
   // order of fields matter
   @CsvSource({
       // model name is different, to fact {all x: AtomicBehavior | no x.steps}
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als,Model::Basic::MultipleObjectFlowAlt",
-      // Fails
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als, Model::Basic::MultipleObjectFlow",
-      // Fails
+      // mw
+      // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als,
+      // Model::Basic::MultipleObjectFlowAlt",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt",
+      // mw
+      // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als,
+      // Model::Basic::MultipleObjectFlow",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als,Model::Basic::MultipleObjectFlow",
 
-      // fact {all x: AtomicBehavior | no y: Transfer | y in x.steps} to fact {all x: AtomicBehavior
-      // | no x.steps}
-      "4.1.5 Multiple Execution Steps - Multiple Control Flow_mw.als,Model::Basic::MultipleControlFlow",
+      // mw
+      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
+      // mw
+      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
+      // order in fields and step matters
+      // mw
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
 
-      // WIP
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow.als, Model::Basic::MultipleControlFlow",
+
+      // mw
       "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als,Model::Realistic::IFFoodService",
-      // modify function & inversefunction and bijectionFiltered
-      "4.1.1 Control Nodes1 - SimpleSequence_mw.als, Model::Basic::SimpleSequence",
+      "4.1.1 Control Nodes1 - SimpleSequence.als, Model::Basic::SimpleSequence",
       "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork",
       "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join",
-      // bijectionFiltered vs. functionFiltered and inverseFunctionFiltered
-      "4.1.1 Control Nodes4 - Decision_mw.als, Model::Basic::Decision",
-      // bijectionFiltered vs. functionFiltered and inverseFunctionFiltered
-      "4.1.1 Control Nodes5 - Merge_mw.als, Model::Basic::Merge",
-      "4.1.1 Control Nodes6 - AllControl.als, Model::Basic::AllControl",
-      "4.1.2 LoopsExamples.als, Model::Basic::Loop",
+      "4.1.1 Control Nodes4 - Decision.als, Model::Basic::Decision",
 
-      // module name CallingBehaviors vs. ComposedBehavior2
-      // sig name ComposedBehavior vs. ComposedBehavior2
-      // NestedBehavior p4, p5 to p1, p2 - change in model?
-      // add fact {all x: NestedBehavior | #(x.p2) = 1}
-      // add fact {all x: ComposedBehavior2 | #(x.p2) = 1}
-      // add fact {all x: ComposedBehavior2 | #(x.p3) = 1}
-      "4.1.3 CallingBehaviors_mw.als, Model::Basic::ComposedBehavior2",
-      // add fact {all x: TransferProduct | no y: Transfer | y in x.steps}
-      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
-      // many difference see the file
-      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
+      "4.1.1 Control Nodes5 - Merge.als, Model::Basic::Merge",
+
+      "4.1.2 Loop.als, Model::Basic::Loop",
+
+      "4.1.3 CallingBehaviors.als, Model::Basic::Composed",
+
+
 
       // // 4.1.6
       // fact {all x: AtomicBehavior | no y: Transfer | y in x.steps} to fact {all x: AtomicBehavior
       // | no x.steps}
       "4.1.6 Unsatisfiable - Asymmetry_mw.als, Model::Basic::UnsatisfiableAsymmetry",
       // not available from jeremy
-      "4.1.6 UnsatisfiableTransitivity.als, Model::Basic::UnsatisfiableTransitivity",
-      "4.1.6 UnsatisfiableMultiplicity.als, Model::Basic::UnsatisfiableMultiplicity",
-      "4.1.6 UnsatisfiableComposition1.als, Model::Basic::UnsatisfiableComposition1",
-      "4.1.6 UnsatisfiableComposition2.als, Model::Basic::UnsatisfiableComposition2",
+      "4.1.6 UnsatisfiableTransitivity_mw.als, Model::Basic::UnsatisfiableTransitivity",
+      "4.1.6 UnsatisfiableMultiplicity_mw.als, Model::Basic::UnsatisfiableMultiplicity",
+      "4.1.6 UnsatisfiableComposition1_mw.als, Model::Basic::UnsatisfiableComposition1",
+      "4.1.6 UnsatisfiableComposition2_mw.als, Model::Basic::UnsatisfiableComposition2",
 
-      "4.2.1 FoodService Control Flow - FoodService.als, Model::Realistic::FoodService",
-      "4.2.1 FoodService Control Flow - SingleFoodService.als,Model::Realistic::SingleFoodService",
-      "4.2.1 FoodService Control Flow - BuffetService.als, Model::Realistic::BuffetService",
-      "4.2.1 FoodService Control Flow - ChurchSupperService.als, Model::Realistic::ChurchSupper",
-      "4.2.1 FoodService Control Flow - FastFoodService.als, Model::Realistic::FastFoodService",
-      "4.2.1 FoodService Control Flow - UsatisfiableFoodService.als,Model::Realistic::UnsatisfiableService",})
+      "4.2.1 FoodService Control Flow - FoodService_mw.als, Model::Realistic::FoodService",
+      "4.2.1 FoodService Control Flow - SingleFoodService_mw.als,Model::Realistic::SingleFoodService",
+      "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::Realistic::BuffetService",
+      "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::Realistic::ChurchSupper",
+      "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService",
+      "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService",})
 
 
   /**

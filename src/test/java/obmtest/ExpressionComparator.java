@@ -710,7 +710,7 @@ public class ExpressionComparator {
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
         // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
         if (compareAsString(expr1.args.get(i), expr2.args.get(j))) {
-          if (i == 26 && j == 10)
+          if (i == 0 && j == 58)
             System.out.println("looking for (" + i + " " + j + ") " + expr1.args.get(i));
           if (!compareExpr(expr1.args.get(i), expr2.args.get(j))) {
             System.err.println(
