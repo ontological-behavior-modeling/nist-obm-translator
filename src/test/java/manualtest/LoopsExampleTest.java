@@ -1,11 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -18,7 +14,12 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class LoopsExampleTest {
 
@@ -52,21 +53,39 @@ class LoopsExampleTest {
         AlloyUtils.getFunction(alloy.transferModule, "o/inverseFunctionFiltered");
     Func stepsFunction = AlloyUtils.getFunction(Alloy.transferModule, "o/steps");
 
-    loopSig.addFact(functionFilteredFunction
-        .call(happensBefore.call(), loopThis.join(loop_p1), loopThis.join(loop_p2))
-        .and(inverseFunctionFilteredFunction.call(happensBefore.call(),
-            loopThis.join(loop_p1).plus(loopThis.join(loop_p2)), loopThis.join(loop_p2)))
-        .and(functionFilteredFunction.call(happensBefore.call(), loopThis.join(loop_p2),
-            loopThis.join(loop_p2).plus(loopThis.join(loop_p3))))
-        .and(inverseFunctionFilteredFunction.call(happensBefore.call(), loopThis.join(loop_p2),
-            loopThis.join(loop_p3)))
-        .and(loopThis.join(loop_p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
-        .and(loopThis.join(loop_p2).cardinality().gte(ExprConstant.makeNUMBER(2)))
-        .and(loopThis.join(loop_p3).cardinality().gte(ExprConstant.makeNUMBER(1)))
-        .and(loopThis.join(loop_p1).plus(loopThis.join(loop_p2)).plus(loopThis.join(loop_p3))
-            .in(loopThis.join(stepsFunction.call()))
-            .and(loopThis.join(stepsFunction.call()).in(loopThis.join(loop_p1)
-                .plus(loopThis.join(loop_p2)).plus(loopThis.join(loop_p3))))));
+    loopSig.addFact(
+        functionFilteredFunction
+            .call(happensBefore.call(), loopThis.join(loop_p1), loopThis.join(loop_p2))
+            .and(
+                inverseFunctionFilteredFunction.call(
+                    happensBefore.call(),
+                    loopThis.join(loop_p1).plus(loopThis.join(loop_p2)),
+                    loopThis.join(loop_p2)))
+            .and(
+                functionFilteredFunction.call(
+                    happensBefore.call(),
+                    loopThis.join(loop_p2),
+                    loopThis.join(loop_p2).plus(loopThis.join(loop_p3))))
+            .and(
+                inverseFunctionFilteredFunction.call(
+                    happensBefore.call(), loopThis.join(loop_p2), loopThis.join(loop_p3)))
+            .and(loopThis.join(loop_p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
+            .and(loopThis.join(loop_p2).cardinality().gte(ExprConstant.makeNUMBER(2)))
+            .and(loopThis.join(loop_p3).cardinality().gte(ExprConstant.makeNUMBER(1)))
+            .and(
+                loopThis
+                    .join(loop_p1)
+                    .plus(loopThis.join(loop_p2))
+                    .plus(loopThis.join(loop_p3))
+                    .in(loopThis.join(stepsFunction.call()))
+                    .and(
+                        loopThis
+                            .join(stepsFunction.call())
+                            .in(
+                                loopThis
+                                    .join(loop_p1)
+                                    .plus(loopThis.join(loop_p2))
+                                    .plus(loopThis.join(loop_p3))))));
 
     // ========== Define functions and predicates ==========
 
@@ -109,10 +128,14 @@ class LoopsExampleTest {
     Expr p4DuringExampleExpression = p4DuringExamplePredicate.call();
 
     // instancesDuringExample
-    Expr instancesDuringExampleBody = p1DuringExampleExpression.and(p2DuringExampleExpression)
-        .and(p3DuringExampleExpression).and(p4DuringExampleExpression);
-    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
-        new ArrayList<>(), null, instancesDuringExampleBody);
+    Expr instancesDuringExampleBody =
+        p1DuringExampleExpression
+            .and(p2DuringExampleExpression)
+            .and(p3DuringExampleExpression)
+            .and(p4DuringExampleExpression);
+    Func instancesDuringExamplePredicate =
+        new Func(
+            null, "instancesDuringExample", new ArrayList<>(), null, instancesDuringExampleBody);
     Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
 
     // instancesDuringExample
@@ -154,12 +177,9 @@ class LoopsExampleTest {
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-
-
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
-
 
     CompModule importedModule = AlloyUtils.importAlloyModule(filename);
 

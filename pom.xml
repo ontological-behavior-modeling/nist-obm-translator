@@ -5,12 +5,12 @@
   <groupId>edu.gatech.gtri.obm</groupId>
   <artifactId>nist-obm-translator</artifactId>
   <version>1.0-SNAPSHOT</version>
-  
+
   <scm>
     <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
     <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</developerConnection>
-    <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
     <tag>HEAD</tag>
+    <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
   </scm>
 
   <distributionManagement>
@@ -129,16 +129,16 @@
 
   <build>
     <plugins>
-	<!-- This plugin enables skipping creation of the normal jar file -->
-	  <plugin>
-		  <groupId>org.apache.maven.plugins</groupId>
-		  <artifactId>maven-jar-plugin</artifactId>
-		  <version>3.3.0</version>
-		  <configuration>
-			  <skip>true</skip>
-		  </configuration>
-	  </plugin>
-	<!-- This plugin enables creation of a jar with depenedencies -->
+      <!-- This plugin enables skipping creation of the normal jar file -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <!-- This plugin enables creation of a jar with depenedencies -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -161,14 +161,14 @@
           </execution>
         </executions>
       </plugin>
-    <!-- This plugin allows for the custom versioning tags (i.e v1.0.0) -->
+      <!-- This plugin allows for the custom versioning tags (i.e v1.0.0) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
         <version>3.0.1</version>
         <configuration>
-		  <tagNameFormat>v@{project.version}</tagNameFormat>
-		  <autoVersionSubmodules>true</autoVersionSubmodules>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
           <checkModificationExcludes>
             <checkModificationExclude>settings.xml</checkModificationExclude>
           </checkModificationExcludes>
@@ -228,21 +228,20 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.6.3</version>
-        <executions>
-          <execution>
-             <id>attach-javadocs</id>
-             <goals>
-                 <goal>jar</goal>
-             </goals>
-         </execution>
-     	</executions>
         <configuration>
           <show>public</show>
           <nohelp>true</nohelp>
         </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
 
 </project>
-

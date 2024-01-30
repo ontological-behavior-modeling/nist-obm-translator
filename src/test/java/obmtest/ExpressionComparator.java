@@ -1,8 +1,5 @@
 package obmtest;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.ast.Attr;
 import edu.mit.csail.sdg.ast.Command;
@@ -22,6 +19,9 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Type;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ExpressionComparator {
 
@@ -61,8 +61,10 @@ public class ExpressionComparator {
 
     // ConstList<Sig> additionalExactScopes
     if (c1.additionalExactScopes.size() != c2.additionalExactScopes.size()) {
-      System.err.println("compareCommand: " + "c1.additionalExactScopes.size() != "
-          + "c2.additionalExactScopes.size()");
+      System.err.println(
+          "compareCommand: "
+              + "c1.additionalExactScopes.size() != "
+              + "c2.additionalExactScopes.size()");
       System.err.println("c1.additionalExactScopes.size()=" + c1.additionalExactScopes.size());
       System.err.println("c2.additionalExactScopes.size()=" + c2.additionalExactScopes.size());
       return false;
@@ -381,8 +383,8 @@ public class ExpressionComparator {
       if (!compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)) {
         System.err.println(expr1);
         System.err.println(expr2);
-        System.err
-            .println("compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)");
+        System.err.println(
+            "compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)");
         System.err.println();
         return false;
       }
@@ -390,8 +392,8 @@ public class ExpressionComparator {
       if (!compareExprCall((ExprCall) expr1, (ExprCall) expr2)) {
         System.err.println(expr1);
         System.err.println(expr2);
-        System.err
-            .println("compareExpr: " + "!compareExprCall((ExprCall) expr1, (ExprCall) expr2)");
+        System.err.println(
+            "compareExpr: " + "!compareExprCall((ExprCall) expr1, (ExprCall) expr2)");
         System.err.println();
         System.err.println("expr1.class=" + expr1.getClass());
         System.err.println("expr2.class=" + expr2.getClass());
@@ -418,8 +420,8 @@ public class ExpressionComparator {
       System.err.println("ExprLet: not implemented");
     } else if (expr1.getClass().equals(ExprList.class)) {
       if (!compareExprList((ExprList) expr1, (ExprList) expr2)) {
-        System.err
-            .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2)");
+        System.err.println(
+            "compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -435,8 +437,8 @@ public class ExpressionComparator {
       }
     } else if (expr1.getClass().equals(ExprUnary.class)) {
       if (!compareExprUnary((ExprUnary) expr1, (ExprUnary) expr2)) {
-        System.err
-            .println("compareExpr: !compareExprUnary(" + "(ExprUnary) expr1, (ExprUnary) expr2)");
+        System.err.println(
+            "compareExpr: !compareExprUnary(" + "(ExprUnary) expr1, (ExprUnary) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -452,8 +454,8 @@ public class ExpressionComparator {
       }
     } else if (expr1.getClass().equals(Sig.Field.class)) {
       if (!compareSigField((Sig.Field) expr1, (Sig.Field) expr2)) {
-        System.err
-            .println("compareExpr: !compareSigField(" + "(Sig.Field) expr1, (Sig.Field) expr2)");
+        System.err.println(
+            "compareExpr: !compareSigField(" + "(Sig.Field) expr1, (Sig.Field) expr2)");
         System.err.println("expr1=" + expr1);
         System.err.println("expr2=" + expr2);
         System.err.println();
@@ -931,8 +933,10 @@ public class ExpressionComparator {
           if (!compareDecl(func1.decls.get(i), func2.decls.get(j))) {
             System.err.println("Func func1: " + func1);
             System.err.println("Func func2: " + func2);
-            System.err.println("compareFunction: !compareDecl("
-                + "func1.decls.get(i), func2.decls.get(i)) for i=" + i);
+            System.err.println(
+                "compareFunction: !compareDecl("
+                    + "func1.decls.get(i), func2.decls.get(i)) for i="
+                    + i);
             System.err.println();
             return false;
           }
@@ -950,24 +954,26 @@ public class ExpressionComparator {
     if (func1.isPrivate == null && func2.isPrivate != null) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err
-          .println("compareFunctions: " + "func1.isPrivate == null && func2.isPrivate != null");
+      System.err.println(
+          "compareFunctions: " + "func1.isPrivate == null && func2.isPrivate != null");
       System.err.println();
       return false;
     }
     if (func1.isPrivate != null && func2.isPrivate == null) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err
-          .println("compareFunctions: " + "func1.isPrivate != null && func2.isPrivate == null");
+      System.err.println(
+          "compareFunctions: " + "func1.isPrivate != null && func2.isPrivate == null");
       System.err.println();
       return false;
     }
     if (!AlloyUtils.removeSlash(func1.label).equals(AlloyUtils.removeSlash(func2.label))) {
       System.err.println("Func func1: " + func1);
       System.err.println("Func func2: " + func2);
-      System.err.println("compareFunctions: " + "!MyAlloyLibrary.removeSlash(func1.label)"
-          + ".equals(MyAlloyLibrary.removeSlash(func2.label))");
+      System.err.println(
+          "compareFunctions: "
+              + "!MyAlloyLibrary.removeSlash(func1.label)"
+              + ".equals(MyAlloyLibrary.removeSlash(func2.label))");
       System.err.println("func1.label: " + func1.label);
       System.err.println("func2.label: " + func2.label);
       System.err.println();
@@ -1000,8 +1006,8 @@ public class ExpressionComparator {
     if (primSig1.children().size() != primSig2.children().size()) {
       System.err.println(primSig1);
       System.err.println(primSig2);
-      System.err
-          .println("comparePrimSig: primSig1.children().size() != primSig2.children().size()");
+      System.err.println(
+          "comparePrimSig: primSig1.children().size() != primSig2.children().size()");
       System.err.println("primSig1.children().size() = " + primSig1.children().size());
       System.err.println("primSig2.children().size() = " + primSig2.children().size());
       System.err.println();
@@ -1027,7 +1033,8 @@ public class ExpressionComparator {
       return false;
     }
 
-    if (sig1 instanceof Sig.PrimSig && sig2 instanceof Sig.PrimSig
+    if (sig1 instanceof Sig.PrimSig
+        && sig2 instanceof Sig.PrimSig
         && !comparePrimSig((Sig.PrimSig) sig1, (Sig.PrimSig) sig2)) {
       return false;
     }

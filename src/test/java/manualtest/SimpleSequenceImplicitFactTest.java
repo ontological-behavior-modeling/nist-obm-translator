@@ -1,12 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -20,7 +15,13 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class SimpleSequenceImplicitFactTest {
 
@@ -56,13 +57,16 @@ class SimpleSequenceImplicitFactTest {
 
     Expr functionFilteredExpression =
         functionFilteredFunction.call(happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
-    Expr inverseFunctionFilteredExpression = inverseFunctionFilteredFunction
-        .call(happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
+    Expr inverseFunctionFilteredExpression =
+        inverseFunctionFilteredFunction.call(
+            happensBefore.call(), thisVar.join(p1), thisVar.join(p2));
 
-    mainSig.addFact(functionFilteredExpression.and(inverseFunctionFilteredExpression)
-        .and(thisVar.join(p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
-        .and(thisVar.join(p1).plus(thisVar.join(p2)).in(thisVar.join(stepsFunction.call())))
-        .and(thisVar.join(stepsFunction.call()).in(thisVar.join(p1).plus(thisVar.join(p2)))));
+    mainSig.addFact(
+        functionFilteredExpression
+            .and(inverseFunctionFilteredExpression)
+            .and(thisVar.join(p1).cardinality().equal(ExprConstant.makeNUMBER(1)))
+            .and(thisVar.join(p1).plus(thisVar.join(p2)).in(thisVar.join(stepsFunction.call())))
+            .and(thisVar.join(stepsFunction.call()).in(thisVar.join(p1).plus(thisVar.join(p2)))));
 
     // ========== Define functions and predicates ==========
 
@@ -90,45 +94,69 @@ class SimpleSequenceImplicitFactTest {
         new Func(null, "p2DuringExample", new ArrayList<>(), null, abSig.in(mainSig.join(p2)));
     Expr p2DuringExampleExpression = p2DuringExamplePredicate.call();
 
-    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
-        new ArrayList<>(), null, p1DuringExampleExpression.and(p2DuringExampleExpression));
+    Func instancesDuringExamplePredicate =
+        new Func(
+            null,
+            "instancesDuringExample",
+            new ArrayList<>(),
+            null,
+            p1DuringExampleExpression.and(p2DuringExampleExpression));
     Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
 
-    Func onlySimpleSequencePredicate = new Func(null, "onlySimpleSequence", new ArrayList<>(), null,
-        mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
+    Func onlySimpleSequencePredicate =
+        new Func(
+            null,
+            "onlySimpleSequence",
+            new ArrayList<>(),
+            null,
+            mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
     Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
 
-    Expr predicates = (suppressTransfersExpression).and(suppressIOExpression)
-        .and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
+    Expr predicates =
+        (suppressTransfersExpression)
+            .and(suppressIOExpression)
+            .and(instancesDuringExampleExpression)
+            .and(onlySimpleSequenceExpression);
 
     // ========== Done creating AST ==========
 
     // ========== Define command ==========
 
-    Expr simpleSequencImplicitFactExpr = (suppressTransfersExpression).and(suppressIOExpression)
-        .and(instancesDuringExampleExpression).and(onlySimpleSequenceExpression);
+    Expr simpleSequencImplicitFactExpr =
+        (suppressTransfersExpression)
+            .and(suppressIOExpression)
+            .and(instancesDuringExampleExpression)
+            .and(onlySimpleSequenceExpression);
 
     Command simpleSequenceImplicitFactCmd =
-        new Command(null, simpleSequencImplicitFactExpr, "SimpleSequence", false, 6, -1, -1, -1,
-            Arrays.asList(new CommandScope[] {}), Arrays.asList(new Sig[] {}),
-            simpleSequencImplicitFactExpr.and(alloy.getOverAllFact()), null);
+        new Command(
+            null,
+            simpleSequencImplicitFactExpr,
+            "SimpleSequence",
+            false,
+            6,
+            -1,
+            -1,
+            -1,
+            Arrays.asList(new CommandScope[] {}),
+            Arrays.asList(new Sig[] {}),
+            simpleSequencImplicitFactExpr.and(alloy.getOverAllFact()),
+            null);
 
     // ========== Write file ==========
 
     Command[] commands = new Command[] {simpleSequenceImplicitFactCmd};
 
-    AlloyModule alloyModule = new AlloyModule("SimpleSequence_ImplicitFact", alloy.getAllSigs(),
-        alloy.getOverAllFact(), commands);
+    AlloyModule alloyModule =
+        new AlloyModule(
+            "SimpleSequence_ImplicitFact", alloy.getAllSigs(), alloy.getOverAllFact(), commands);
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-
-
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
-
 
     CompModule importedModule = AlloyUtils.importAlloyModule(filename);
 
