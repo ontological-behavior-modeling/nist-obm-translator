@@ -186,23 +186,24 @@ public class OBMXMI2Alloy {
     // not in the set
     Set<Sig> sigWithTransferFields = new HashSet<>();
     allClassesConnectedToMainSigByFields = propertiesByClass.keySet();// Suppler, Customer
+    Set<String> sigNameOfSharedFieldType = new HashSet<>(); // ie., BehaviorWithParameter
     for (Class ne : classInHierarchy) {// ParticipantTransfer/TransferProduct? Customer and Supplier
                                        // are children of Product
-      handleClassForProecessConnector(ne, stepPropertiesBySig, inputs, outputs,
-          sigWithTransferFields);
+      sigNameOfSharedFieldType.addAll(handleClassForProecessConnector(ne, stepPropertiesBySig,
+          inputs, outputs, sigWithTransferFields));
       // removing ne
       allClassesConnectedToMainSigByFields.remove(ne);
     }
     for (NamedElement ne : allClassesConnectedToMainSigByFields) {
       if (ne instanceof Class) {// no connector in primitiveType (Real, Integer)
 
-        handleClassForProecessConnector(ne, stepPropertiesBySig, inputs, outputs,
-            sigWithTransferFields);
+        sigNameOfSharedFieldType.addAll(handleClassForProecessConnector(ne, stepPropertiesBySig,
+            inputs, outputs, sigWithTransferFields));
 
       }
     }
     Set<Sig> noStepsSigs = toAlloy.handleSteps(stepPropertiesBySig, parameterFields);
-    // if "no x.steps" and sig with fileds with type Transfer should not have below:
+    // if "no x.steps" and sig with fields with type Transfer should not have below:
     // fact {all x: BehaviorWithParameterOut | no y: Transfer | y in x.steps}
     sigWithTransferFields.addAll(noStepsSigs);
     toAlloy.handleNoTransfer(sigWithTransferFields);
@@ -236,10 +237,15 @@ public class OBMXMI2Alloy {
     // fact {all x: BehaviorWithParameter | x.i in x.outputs}
     // fact {all x: BehaviorWithParameter | x.outputs in x.i}
 
+    // !!!!!!!!!!!!!!
+    toAlloy.handleNoInputsOutputs(inputs, outputs, allClassNames, sigNameOfSharedFieldType);
 
-    toAlloy.handleNoInputsOutputs(inputs, outputs, allClassNames);
+    toAlloy.addBijectionInputsOutputsToContainer(inputs, outputs, allClassNames);
 
-    // fact {all x: Integer | no steps.x}
+
+    // adding no steps.x
+    // fact {all x: Integer | no steps.x}, fact {all x: Real | no steps.x} or {all x: Product | no
+    // steps.x}
     toAlloy.handleStepClosure(this.transferingTypeSig);
     return true;
 
@@ -254,33 +260,38 @@ public class OBMXMI2Alloy {
    * @param sigWithTransferFields
    * 
    */
-  private void handleClassForProecessConnector(NamedElement ne,
+  private Set<String> handleClassForProecessConnector(NamedElement ne,
       Map<String, Set<String>> stepPropertiesBySig, HashMap<String, Set<String>> inputs,
       HashMap<String, Set<String>> outputs, Set<Sig> sigWithTransferFields) {
 
     Set<String> fieldNamesWithInputs = new HashSet<>();
     Set<String> fieldNamesWithOutputs = new HashSet<>();
 
-    PrimSig sigOfNe = processConnector((Class) ne, stepPropertiesBySig.get(ne.getName()), inputs,
-        outputs, sigWithTransferFields, fieldNamesWithInputs, fieldNamesWithOutputs);
+    // ie., BehaviorWithParameter
+    Set<String> sigNameOfSharedFieldType =
+        processConnector((Class) ne, stepPropertiesBySig.get(ne.getName()), inputs, outputs,
+            sigWithTransferFields, fieldNamesWithInputs, fieldNamesWithOutputs);
 
 
-    // sigOfNe is Sig if any of connectorends owned field types are the same (p1, p2:
-    // BehaviorWithParameter), otherwise is null
-    if (sigOfNe != null) {
+    // any of connectorends owned field types are the same (p1, p2:
+    // BehaviorWithParameter)
+    if (sigNameOfSharedFieldType.size() > 0) {
       Set<String> allfieldNames = stepPropertiesBySig.get(ne.getName()).stream()
           .filter(f -> !f.startsWith("transfer")).collect(Collectors.toSet());
       // no inputs
       for (String fieldName : allfieldNames) {
         if (!fieldNamesWithInputs.contains(fieldName)) {
-          toAlloy.createNoInputsField(sigOfNe, fieldName);
+          toAlloy.createNoInputsField(ne.getName(), fieldName);// fact {all x: MultipleObjectFlow |
+                                                               // no
+          // x.p1.inputs}
         }
         if (!fieldNamesWithOutputs.contains(fieldName)) {
-          toAlloy.createNoOutputsField(sigOfNe, fieldName);
+          toAlloy.createNoOutputsField(ne.getName(), fieldName);
         }
       }
-    }
 
+    }
+    return sigNameOfSharedFieldType;
   }
 
   /**
@@ -307,12 +318,20 @@ public class OBMXMI2Alloy {
         for (Property p : propertiesSortedByType) {
           if (p.getName() != null) { // Since MD allow having no name.
             if (p.getRedefinedProperties().size() == 0) {
+              System.out.println("Parameter: " + ne.getName() + "." + p.getName());
+              System.out.println("Step: " + p.getAppliedStereotype(STEREOTYPE_STEP));
+              System.out
+                  .println("ParticipantProperty: " + p.getAppliedStereotype(STEREOTYPE_PATICIPANT));
+              System.out.println("Parameter: " + p.getAppliedStereotype(STEREOTYPE_PAREMETER));
+
               nonRedefinedPropertyInAlphabeticalOrderPerType.add(p.getName());
               if (p.getAppliedStereotype(STEREOTYPE_STEP) != null
                   || p.getAppliedStereotype(STEREOTYPE_PATICIPANT) != null) {
                 stepProperties.add(p.getName());
               } else if (p.getAppliedStereotype(STEREOTYPE_PAREMETER) != null) {
                 parameterProperty.add(p.getName());
+
+                System.out.println("");
               }
 
             }
@@ -373,13 +392,15 @@ public class OBMXMI2Alloy {
    *        p2:BehaviorParameter // the type (BehaviorParameter) is the same so put in
    *        connectorendsFieldTypeOwnerFieldTypeSig
    * 
-   * @return PrimSig if any one of connectorend's belong to have the same type (ie., p1, p2:
-   *         BehaviorWithParameter)
+   * @return Set<String> signame whose (BehaviorWithParameter) connectorend's belong to have the
+   *         same type (ie., p1, p2: BehaviorWithParameter)
    */
-  private PrimSig processConnector(Class ne, /* PrimSig sigOfNamedElement, */
+  private Set<String> processConnector(Class ne, /* PrimSig sigOfNamedElement, */
       Set<String> stepFieldNames, HashMap<String, Set<String>> inputs,
       HashMap<String, Set<String>> outputs, Set<Sig> sigWithTransferFields,
       Set<String> fieldsWithInputs, Set<String> fieldsWithOutputs) {
+
+    Set<String> sigNameOfSharedFieldType = new HashSet<>();
 
     PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
 
@@ -396,7 +417,7 @@ public class OBMXMI2Alloy {
     // connector between p1 and p2 having the same BehaviorWithParameter, then this is set as true
     // boolean oneofConnectorsOwnerFieldTypeAreThesame = false; // default
 
-    boolean isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = false;
+    // boolean isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = false;
 
     // process remaining of connectors
     for (org.eclipse.uml2.uml.Connector cn : connectors) {
@@ -435,7 +456,7 @@ public class OBMXMI2Alloy {
               }
             }
           } else {
-            System.out.println(ce.getDefiningEnd().getName());// transferSource
+            // System.out.println(ce.getDefiningEnd().getName());// transferSource
             String definingEndName = ce.getDefiningEnd().getName();
             edu.umd.omgutil.uml.ConnectorEnd end =
                 (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
@@ -493,13 +514,18 @@ public class OBMXMI2Alloy {
               addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties[1]);
               addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties[0]);
 
+              System.out.println(targetTypeName + " = " + sourceTypeName);
+              boolean addEquals = false;
               if (targetTypeName.equals(sourceTypeName)) {
-                processConnectorInputsOutputs(sigOfNamedElement, source, target, sourceTypeName,
-                    targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
-                    fieldsWithOutputs);
-                isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = true;
-
+                sigNameOfSharedFieldType.add(targetTypeName);
+                addEquals = true;
               }
+              processConnectorInputsOutputs(sigOfNamedElement, source, target, sourceTypeName,
+                  targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
+                  fieldsWithOutputs, addEquals);
+              // isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = true;
+
+
               if (type.getName().equals("Transfer")) {
                 handleTransferFieldAndFn(sigOfNamedElement, source, target, stepFieldNames);
               } else if (type.getName().equals("TransferBefore")) {
@@ -516,9 +542,10 @@ public class OBMXMI2Alloy {
       } // end of Connector
     } // org.eclipse.uml2.uml.Connector
     // handleHappensBefore(ge, thisSig); //getting happens before using graph
-    return isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame == true
-        ? sigOfNamedElement
-        : null;
+    // return isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame == true
+    // ? sigOfNamedElement
+    // : null;
+    return sigNameOfSharedFieldType;
   }
 
   /**
@@ -536,7 +563,7 @@ public class OBMXMI2Alloy {
   private void processConnectorInputsOutputs(PrimSig sigOfNamedElement, String source,
       String target, String sourceTypeName, String targetTypeName,
       String[] sourceOutputAndTargetInputProperties, Set<String> fieldsWithInputs,
-      Set<String> fieldsWithOutputs) {
+      Set<String> fieldsWithOutputs, boolean addEquals) {
 
     // targetTypeName = sourceTypeName (ie., BehaviorWithParameter)
 
@@ -546,13 +573,15 @@ public class OBMXMI2Alloy {
         source + ": " + sourceTypeName + " with " + sourceOutputAndTargetInputProperties[0]);
 
     Field outputFrom = AlloyUtils.getFieldFromSig(source, sigOfNamedElement); // p1
-    if (!fieldsWithOutputs.contains(outputFrom.label)) {// handle duplicate p1 having two outputs
-      fieldsWithOutputs.add(outputFrom.label);
-      Field outputTo = AlloyUtils.getFieldFromSig(sourceOutputAndTargetInputProperties[0],
-          toAlloy.getSig(sourceTypeName));// i
-      // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
-      toAlloy.createBijectionFilteredOutputsAndAddToOverallFact(sigOfNamedElement, outputFrom,
-          outputFrom, outputFrom.join(outputTo), outputTo);
+    if (outputFrom != null) {
+      if (!fieldsWithOutputs.contains(outputFrom.label)) {// handle duplicate p1 having two outputs
+        fieldsWithOutputs.add(outputFrom.label);
+        Field outputTo = AlloyUtils.getFieldFromSig(sourceOutputAndTargetInputProperties[0],
+            toAlloy.getSig(sourceTypeName));// i
+        // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
+        toAlloy.createBijectionFilteredOutputsAndAddToOverallFact(sigOfNamedElement, outputFrom,
+            outputFrom, outputFrom.join(outputTo), outputTo, addEquals);
+      }
     }
 
     // target => inputs
@@ -561,13 +590,15 @@ public class OBMXMI2Alloy {
         target + ": " + targetTypeName + " with " + sourceOutputAndTargetInputProperties[1]);
 
     Field inputFrom = AlloyUtils.getFieldFromSig(target, sigOfNamedElement);// p2
-    if (!fieldsWithInputs.contains(inputFrom.label)) { // handle duplicate p4 is having two inputs
-      fieldsWithInputs.add(inputFrom.label);
-      Field inputTo = AlloyUtils.getFieldFromSig(sourceOutputAndTargetInputProperties[1], // i
-          toAlloy.getSig(targetTypeName));
-      // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
-      toAlloy.createBijectionFilteredInputsAndAddToOverallFact(sigOfNamedElement, inputFrom,
-          inputFrom, inputFrom.join(inputTo), inputTo);
+    if (inputFrom != null) {
+      if (!fieldsWithInputs.contains(inputFrom.label)) { // handle duplicate p4 is having two inputs
+        fieldsWithInputs.add(inputFrom.label);
+        Field inputTo = AlloyUtils.getFieldFromSig(sourceOutputAndTargetInputProperties[1], // i
+            toAlloy.getSig(targetTypeName));
+        // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
+        toAlloy.createBijectionFilteredInputsAndAddToOverallFact(sigOfNamedElement, inputFrom,
+            inputFrom, inputFrom.join(inputTo), inputTo, addEquals);
+      }
     }
 
   }

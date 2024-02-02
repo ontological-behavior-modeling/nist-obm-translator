@@ -368,17 +368,18 @@ public class Alloy {
     this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
   }
 
-  public void createIsAfterSourceOverallFact(Sig ownerSig, Expr transfer) {
-    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
-    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
-    this.addToOverallFact(isAfterSource.call(s.join(transfer)).forAll(decl));
-  }
+  // private void createIsAfterSourceOverallFact(Sig ownerSig, Expr transfer) {
+  // ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+  // Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+  // this.addToOverallFact(isAfterSource.call(s.join(transfer)).forAll(decl));
+  // }
+  //
+  // private void createIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+  // ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+  // Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
+  // this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
+  // }
 
-  public void createIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
-    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
-    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
-    this.addToOverallFact(isBeforeTarget.call(s.join(transfer)).forAll(decl));
-  }
 
   public void createInverseFunctionFilteredAndAddToOverallFact(Sig ownerSig, Expr from, Expr to,
       Func func) {
@@ -409,6 +410,7 @@ public class Alloy {
   /* if from or to is null, use ExprVar x */
   public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
     ExprVar s = ExprVar.make(null, "x", ownerSig.type());
+    Decl decl = new Decl(null, null, null, List.of(s), ownerSig.oneOf());
     Expr fromExpr = null;
     Expr toExpr = null;
 
@@ -428,23 +430,29 @@ public class Alloy {
       fromExpr = addExprVarToExpr(s, from);
 
     Expr funcCall = func.call();
-
     Expr fnc_inversefnc_or_bijection = null;
     if (!justFunction && !justInverseFunction) {
       fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
     } else if (justFunction) {
-      fnc_inversefnc_or_bijection = functionFiltered.call(funcCall, fromExpr, toExpr);
-    } else if (justInverseFunction) {
-      fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
+      // fnc_inversefnc_or_bijection = functionFiltered.call(funcCall, fromExpr, toExpr);
+      fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+      if (func == Alloy.sources) { // {fact {all x: B | isBeforeTarget[x.transferBB1]}
+        this.addToOverallFact(isBeforeTarget.call(fromExpr).forAll(decl));
+      } else if (func == Alloy.targets) {// fact {all x: B | isAfterSource[x.transferB2B]}
+        this.addToOverallFact(isAfterSource.call(fromExpr).forAll(decl));
+      }
     }
-
-    List<ExprHasName> names = new ArrayList<>(List.of(s));
-    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    // else if (justInverseFunction) {
+    // fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
+    // }
     this.addToOverallFact(fnc_inversefnc_or_bijection.forAll(decl));
   }
 
+
+
   /**
-   * Example: all s: FoodService | bijectionFiltered[happensBefore, s.order, s.serve]
+   * used by manual test Example: all s: FoodService | bijectionFiltered[happensBefore, s.order,
+   * s.serve]
    * 
    * @param ownerSig = FoodService
    * @param var = s
@@ -513,10 +521,19 @@ public class Alloy {
 
   // fact {all x: B1 | x.vin=x.vout}
   public void addEqual(Sig ownerSig, Sig.Field field1, Sig.Field field2) {
-    ExprVar s = ExprVar.make(null, "x", ownerSig.type());
-    List<ExprHasName> names = new ArrayList<>(List.of(s));
+    ExprVar x = ExprVar.make(null, "x", ownerSig.type());
+    List<ExprHasName> names = new ArrayList<>(List.of(x));
     Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
-    this.addToOverallFact(s.join(field1).equal(s.join(field2)).forAll(decl));
+    this.addToOverallFact(x.join(field1).equal(x.join(field2)).forAll(decl));
+  }
+
+  // fact {all x: B1 | x.vin = x.inputs}
+  public void addEqual2(Sig ownerSig, Sig.Field field1, Func func) {
+    ExprVar varX = ExprVar.make(null, "x", ownerSig.type());
+    List<ExprHasName> names = new ArrayList<>(List.of(varX));
+    Decl decl = new Decl(null, null, null, names, ownerSig.oneOf());
+    Expr equalExpr = varX.join(field1).equal(varX.join(func.call()));
+    addToOverallFact(equalExpr.forAll(decl));
   }
 
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
@@ -533,7 +550,7 @@ public class Alloy {
   }
 
   // fact {all x: Integer | no x.steps}
-  public void noSteps(Sig sig) {
+  public void noXSteps(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
     addToOverallFact((var.join(osteps.call()).no()).forAll(decl));
@@ -546,12 +563,38 @@ public class Alloy {
     addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
   }
 
+  // all x | no inputs.x
+  public void noInputsX(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
+  }
+
+  // no inputs.x
+  // no x.inputs
+  public void noInputsXAndXInputs(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
+    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
+  }
+
+
+
   // (all x | no x.outputs)
   public void noXOutputs(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
     addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
   }
+
+  // {all x| no outputs.x}
+  public void noOutputsX(Sig sig) {
+    ExprVar var = ExprVar.make(null, "x", sig.type());
+    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
+  }
+
 
   // // (all x | no outputs.x)
   // public void noOutputs(Sig sig) {
@@ -560,64 +603,136 @@ public class Alloy {
   // addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
   // }
 
-
-  // fact {all x: MultipleObjectFlow | no items.x}
-  public void noInputsBothAndItem(Sig sig) {
+  public void noItemsX(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
-    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
-    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
-    addToOverallFact((oitems.call().join(var).no()).forAll(decl));
+    addToOverallFact((oitems.call().join(var).no()).forAll(decl)); // no item.x
   }
 
-  public void noOutputsBoth(Sig sig) {
+  // no x.inputs
+  // no inputs.x
+  // no items.x
+  // public void noInputsBothAndItem(Sig sig) {
+  // ExprVar var = ExprVar.make(null, "x", sig.type());
+  // Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+  // addToOverallFact((var.join(oinputs.call()).no()).forAll(decl)); // no x.inputs
+  // addToOverallFact((oinputs.call().join(var).no()).forAll(decl)); // no inputs.x
+  // addToOverallFact((oitems.call().join(var).no()).forAll(decl)); // no item.x
+  // }
+
+  // no x.outputs
+  // no outputs.x
+  public void noOutputsXAndXOutputs(Sig sig) {
     ExprVar var = ExprVar.make(null, "x", sig.type());
     Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
-    // fact {all x: MultipleObjectFlow | no outputs.x}
     addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
-    // fact {all x: MultipleObjectFlow | no (x.outputs)}
     addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
   }
 
-  public void noOutputsBothAndItem(Sig sig) {
-    ExprVar var = ExprVar.make(null, "x", sig.type());
-    Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
-    // fact {all x: MultipleObjectFlow | no outputs.x}
-    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
-    // fact {all x: MultipleObjectFlow | no (x.outputs)}
-    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
-    addToOverallFact((oitems.call().join(var).no()).forAll(decl));
+  // no x.outputs
+  // no outputs.x
+  // no items.x
+  // public void noOutputsBothAndItem(Sig sig) {
+  // ExprVar var = ExprVar.make(null, "x", sig.type());
+  // Decl decl = new Decl(null, null, null, List.of(var), sig.oneOf());
+  // addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl)); // no x.outputs
+  // addToOverallFact((ooutputs.call().join(var).no()).forAll(decl)); // no outputs.x
+  // addToOverallFact((oitems.call().join(var).no()).forAll(decl)); // no items.x
+  // }
+
+
+
+  // public void addInputs(ExprVar var, Sig ownerSig, Field field) {
+  // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+  // Expr expr = var.join(ownerSig.domain(field));
+  // if (expr != null) {
+  // // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+  // // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+  // // fact {all x: BehaviorWithParamterInOut | x.input in x.inputs}
+  // // fact {all x: BehaviorWithParamterInOut | x.inputs in x.input}
+  // addBothToOverallFact(var, expr, oinputs.call(), decl);
+  // }
+  // }
+  public void addInputsAndNoInputsX(ExprVar var, Sig ownerSig, Field field, boolean addNoInputsX,
+      boolean addEqual) {
+    // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    // Expr expr = var.join(ownerSig.domain(field));
+    // if (expr != null) {
+    // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+    // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+    // fact {all x: BehaviorWithParamterInOut | x.input in x.inputs}
+    // fact {all x: BehaviorWithParamterInOut | x.inputs in x.input}
+    // addBothToOverallFact(var, expr, oinputs.call(), decl);
+
+
+
+    // change to //fact {all x: B1 | bijectionFiltered[inputs, x, x.vin]}
+    // & fact {all x: B1 | x.vin = x.inputs}
+    // createBijectionFilteredAddToOverallFact2(ownerSig, field, Alloy.oinputs);
+    if (addEqual)
+      addEqual2(ownerSig, field, oinputs);
+
+    // TODO combine later
+    if (addNoInputsX)
+      noInputsX(ownerSig);
+
+    // }
+
+  }
+
+  private void createBijectionFilteredAddToOverallFact2(Sig ownerSig, Expr inOrOut, Func func) {
+    ExprVar varX = ExprVar.make(null, "x", ownerSig.type());
+    inOrOut = varX.join(inOrOut);
+    Expr bijectionFilteredExpr = bijectionFiltered.call(func.call(), varX, inOrOut);
+    Decl decl = new Decl(null, null, null, List.of(varX), ownerSig.oneOf());
+    this.addToOverallFact(bijectionFilteredExpr.forAll(decl));
   }
 
 
-
-  public void addInputs(ExprVar var, Sig ownerSig, Field field) {
-    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr = var.join(ownerSig.domain(field));
-    if (expr != null) {
-      // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
-      // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
-      // fact {all x: BehaviorWithParamterInOut | x.input in x.inputs}
-      // fact {all x: BehaviorWithParamterInOut | x.inputs in x.input}
-      addBothToOverallFact(var, expr, oinputs.call(), decl);
-    }
-  }
-
-
-  public void addOutputs(ExprVar var, Sig ownerSig, Field field) {
+  public void addOutputsAndNoOutputsX(ExprVar var, Sig ownerSig, Field field, boolean addNoOutputsX,
+      boolean addEqual) {
     // Expr ooutExpr1 = ooutputs.call();
     // Expr oinputsExpr2 = ooutputs.call();
 
-    Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
-    Expr expr = var.join(ownerSig.domain(field));
-    if (expr != null) {
-      // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
-      // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
-      // fact {all x: BehaviorWithParamterInOut | x.output in x.outputs}
-      // fact {all x: BehaviorWithParamterInOut | x.outputs in x.output}
-      addBothToOverallFact(var, expr, ooutputs.call(), decl);
-    }
+    // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+    // Expr expr = var.join(ownerSig.domain(field));
+    // if (expr != null) {
+    // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+    // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+    // fact {all x: BehaviorWithParamterInOut | x.output in x.outputs}
+    // fact {all x: BehaviorWithParamterInOut | x.outputs in x.output}
+    // addBothToOverallFact(var, expr, ooutputs.call(), decl);
+
+    // change to //fact {all x: B1 | bijectionFiltered[outputs, x, x.out]}
+    // & fact {all x: B1 | x.vout = x.outputs}
+
+    ///
+    // createBijectionFilteredAddToOverallFact2(ownerSig, field, Alloy.ooutputs);
+    if (addEqual)
+      addEqual2(ownerSig, field, ooutputs);
+
+
+
+    // TODO combine later
+    if (addNoOutputsX)
+      noOutputsX(ownerSig);
+    // }
   }
+  // public void addOutputs(ExprVar var, Sig ownerSig, Field field) {
+  // // Expr ooutExpr1 = ooutputs.call();
+  // // Expr oinputsExpr2 = ooutputs.call();
+  //
+  // Decl decl = new Decl(null, null, null, List.of(var), ownerSig.oneOf());
+  // Expr expr = var.join(ownerSig.domain(field));
+  // if (expr != null) {
+  // // addToOverallFact((expr).in(var.join(oinputsExpr1)).forAll(decl));
+  // // addToOverallFact(var.join(oinputsExpr2).in(expr).forAll(decl));
+  // // fact {all x: BehaviorWithParamterInOut | x.output in x.outputs}
+  // // fact {all x: BehaviorWithParamterInOut | x.outputs in x.output}
+  // addBothToOverallFact(var, expr, ooutputs.call(), decl);
+  // }
+  // }
+
 
 
   private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
@@ -625,14 +740,13 @@ public class Alloy {
     addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
   }
 
-  // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
+
   // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
   public void createEqualFieldInputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
       Sig.Field toField) {
     createEqualFieldToOverallFact(sig, from, fromField, to, toField, oinputs);
   }
 
-  // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
   // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
   public void createEqualFieldOutputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
       Sig.Field toField) {
@@ -655,6 +769,9 @@ public class Alloy {
     addToOverallFact((exprField.join(ooutputs.call())/* x.p4.outputs */.no()).forAll(declX));
   }
 
+  // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
+  // or
+  // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
   private void createEqualFieldToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
       Sig.Field toField, Func func) {
 
@@ -672,6 +789,7 @@ public class Alloy {
 
     addToOverallFact(equalExpr.forAll(declY).forAll(declX));
   }
+
 
 
   /**

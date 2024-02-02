@@ -30,6 +30,22 @@ public class AlloyUtils {
     invalidParentNames.add("Anything");
   }
 
+  /**
+   * check if this sig has a field with <<Parameter>> stereotype.
+   * 
+   * @param sig
+   * @param parameterFields
+   * @return
+   */
+  public static boolean hasParameterField(Sig sig, Set<Field> parameterFields) {
+    for (Field f : parameterFields) {
+      if (f.sig == sig) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static CompModule importAlloyModule(File f) {
     return AlloyUtils.importAlloyModule(f.getAbsolutePath());
   }
@@ -53,6 +69,48 @@ public class AlloyUtils {
       return false;
     else
       return true;
+  }
+
+  public static List<Sig.Field> findFieldWithType(Sig ownerSig, String typeName) {
+    List<Sig.Field> ownerSigFields = new ArrayList<>();
+    for (Sig.Field field : ownerSig.getFields()) {
+      List<List<Sig.PrimSig>> folds = field.type().fold();
+      for (List<Sig.PrimSig> typeList : folds) {
+        for (Sig.PrimSig type : typeList) {
+          if (type.label.equals(typeName)) {
+            ownerSigFields.add(field);
+          }
+        }
+      }
+
+    }
+    return ownerSigFields;
+  }
+
+  /**
+   * find if the ownerSig has a field created by connector (ie., transferSupplierCustomer) with type
+   * Transfer. If ownerSig has a field like "transferSupplierCustomer: set Transfer" then return
+   * true, otherwise return false
+   * 
+   * @param ownerSig sig which is checked to have a transfer field
+   * @return true or false
+   */
+  public static boolean hasTransferField(Sig ownerSig) {
+    for (Sig.Field field : ownerSig.getFields()) {
+      if (field.label.startsWith("transfer")) { // transferSupplierCustomer
+        java.util.List<java.util.List<Sig.PrimSig>> folds = field.type().fold();
+        for (java.util.List<Sig.PrimSig> typeList : folds) {// [TransferProduct, o/BinaryLink] when
+                                                            // ownerSig == TransferProduct
+          for (Sig.PrimSig type : typeList) {
+            if (type.children().contains(Alloy.transferSig)) {
+              return true;
+            }
+          }
+        }
+      }
+
+    }
+    return false;
   }
 
   /**

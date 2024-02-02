@@ -42,24 +42,23 @@ class OBMXMI2AlloyTest {
   // order of fields matter
   @CsvSource({
       // model name is different, to fact {all x: AtomicBehavior | no x.steps}
-      // mw
       // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als,
       // Model::Basic::MultipleObjectFlowAlt",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt",
-      // mw
-      // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als,
-      // Model::Basic::MultipleObjectFlow",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als,Model::Basic::MultipleObjectFlow",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt.als, Model::Basic::MultipleObjectFlowAlt",
 
-      // mw
-      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
-      // mw
-      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
+      // Model::Basic::MultipleObjectFlow",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow",
+
       // order in fields and step matters
       // mw
       "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
+      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct",
 
-      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow.als, Model::Basic::MultipleControlFlow",
+      // mw
+      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
+
+      // mw !!!!!!!!!!!!!!!!!! test pass but comparator may be wrong
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow",
 
       // mw
       "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als,Model::Realistic::IFFoodService",
@@ -91,6 +90,7 @@ class OBMXMI2AlloyTest {
       "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::Realistic::BuffetService",
       "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::Realistic::ChurchSupper",
       "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService",
+      "4.2.1 FoodService Control Flow - RestaurantService_mw.als,Model::Realistic::RestaurantService",
       "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService",})
 
 
@@ -138,8 +138,10 @@ class OBMXMI2AlloyTest {
 
     ////////////////////// Set up (Importing Modules) /////////////////////////////////////////
     // API
+    System.out.println("==== Loading api generated file...");
     CompModule apiModule = AlloyUtils.importAlloyModule(apiFile);
     // TEST
+    System.out.println("==== Loading test/manual file...");
     File testFile = new File(output_and_testfiles_dir, manualFileName);
     System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
     CompModule testModule = AlloyUtils.importAlloyModule(testFile);

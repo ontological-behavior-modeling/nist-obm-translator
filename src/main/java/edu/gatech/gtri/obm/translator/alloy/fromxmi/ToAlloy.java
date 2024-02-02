@@ -129,16 +129,37 @@ public class ToAlloy {
 
   }
 
+  /**
+   * 
+   * @param ownerSig
+   * @param from
+   * @param fromField
+   * @param to
+   * @param toField
+   * @param addEqual true if field shared the same type (BehaviorParameter)
+   */
   public void createBijectionFilteredInputsAndAddToOverallFact(Sig ownerSig, Expr from,
-      Sig.Field fromField, Expr to, Sig.Field toField) {
+      Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
     alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.oinputs);
-    alloy.createEqualFieldInputsToOverallFact(ownerSig, from, fromField, to, toField);
+
+    if (addEqual) // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
+      alloy.createEqualFieldInputsToOverallFact(ownerSig, from, fromField, to, toField);
   }
 
+  /**
+   * 
+   * @param ownerSig
+   * @param from
+   * @param fromField
+   * @param to
+   * @param toField
+   * @param addEqual true if field shared the same type (BehaviorParameter)
+   */
   public void createBijectionFilteredOutputsAndAddToOverallFact(Sig ownerSig, Expr from,
-      Sig.Field fromField, Expr to, Sig.Field toField) {
+      Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
     alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.ooutputs);
-    alloy.createEqualFieldOutputsToOverallFact(ownerSig, from, fromField, to, toField);
+    if (addEqual)
+      alloy.createEqualFieldOutputsToOverallFact(ownerSig, from, fromField, to, toField);
   }
 
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
@@ -234,12 +255,14 @@ public class ToAlloy {
     // fact {all x: ParameterBehavior | isBeforeTarget[x.transferbeforeAB]}//missing
   }
 
-  public void createNoInputsField(PrimSig sig, String fieldName) {
+  public void createNoInputsField(String sigName, String fieldName) {
+    PrimSig sig = sigByName.get(sigName);
     Sig.Field field = AlloyUtils.getFieldFromSig(fieldName, sig);
     alloy.createNoInputsField(sig, field);
   }
 
-  public void createNoOutputsField(PrimSig sig, String fieldName) {
+  public void createNoOutputsField(String sigName, String fieldName) {
+    PrimSig sig = sigByName.get(sigName);
     Sig.Field field = AlloyUtils.getFieldFromSig(fieldName, sig);
     alloy.createNoOutputsField(sig, field);
   }
@@ -250,71 +273,63 @@ public class ToAlloy {
   // alloy.noOutputs(sig);
   // }
 
-  public void noSteps(Sig sig) {
-    alloy.noSteps(sig);
-  }
-
-  public void noXInputs(String sigName) {
-    Sig sig = sigByName.get(sigName);
-    alloy.noXInputs(sig);
-  }
-
-  public void noXOutputs(String sigName) {
-    Sig sig = sigByName.get(sigName);
-    alloy.noXOutputs(sig);
-  }
-
-  // fact {all x: MultipleObjectFlow | no items.x}
-  public void noInputsBothAndItem(String sigName) {
-    Sig sig = sigByName.get(sigName);
-    alloy.noInputsBothAndItem(sig);
-  }
 
 
+  // public void noOutputsBothAndItem(String sigName) {
+  // Sig sig = sigByName.get(sigName);
+  // alloy.noOutputsBothAndItem(sig);
+  // }
 
-  // fact {all x: MultipleObjectFlow | no outputs.x}
-  // fact {all x: MultipleObjectFlow | no (x.outputs)}
+  // public void addInputs(String sigName, String fieldName) {
+  // PrimSig sig = sigByName.get(sigName);
+  // ExprVar s = ExprVar.make(null, "x", sig.type());
+  // Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
+  // if (f != null)
+  // alloy.addInputs(s, sig, f);
+  // else
+  // System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+  // }
 
-  public void noOutputsBoth(String sigName) {
-    Sig sig = sigByName.get(sigName);
-    alloy.noOutputsBoth(sig);
-  }
-
-  public void noOutputsBothAndItem(String sigName) {
-    Sig sig = sigByName.get(sigName);
-    alloy.noOutputsBothAndItem(sig);
-  }
-
-  public void addInputs2(String sigName, String fieldName) {
-    PrimSig sig = sigByName.get(sigName);
+  public void addInputsAndNoInputsX(Sig.PrimSig sig, String fieldName, boolean addNoInputsX,
+      boolean addEqual) {
     ExprVar s = ExprVar.make(null, "x", sig.type());
     Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
     if (f != null)
-      alloy.addInputs(s, sig, f);
+      alloy.addInputsAndNoInputsX(s, sig, f, addNoInputsX, addEqual);
     else
-      System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+      System.err.println("No field \"" + fieldName + "\" in sig \"" + sig.label + "\"");
   }
 
+  // public void addInputs(String sigName, String fieldName) {
+  // PrimSig sig = sigByName.get(sigName);
+  // ExprVar s = ExprVar.make(null, "x", sig.type());
+  // Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
+  // if (f != null)
+  // alloy.addInputs(s, sig, f);
+  // else
+  // System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+  // }
 
-  public void addInputs(String sigName, String fieldName) {
-    PrimSig sig = sigByName.get(sigName);
+  // public void addOutputs(String sigName, String fieldName) {
+  // PrimSig sig = sigByName.get(sigName);
+  // ExprVar s = ExprVar.make(null, "x", sig.type());
+  // Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
+  // if (f != null)
+  // alloy.addOutputs(s, sig, f);
+  // else
+  // System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+  // }
+
+  public void addOutputsAndNoOutputsX(PrimSig sig, String fieldName, boolean addNoOutputsX,
+      boolean addEqual) {
     ExprVar s = ExprVar.make(null, "x", sig.type());
     Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
     if (f != null)
-      alloy.addInputs(s, sig, f);
+      alloy.addOutputsAndNoOutputsX(s, sig, f, addNoOutputsX, addEqual);
     else
-      System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
+      System.err.println("No field \"" + fieldName + "\" in sig \"" + sig.label + "\"");
   }
 
-  public void addOutputs(String sigName, String fieldName) {
-    PrimSig sig = sigByName.get(sigName);
-    ExprVar s = ExprVar.make(null, "x", sig.type());
-    Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
-    if (f != null)
-      alloy.addOutputs(s, sig, f);
-    else
-      System.err.println("No field \"" + fieldName + "\" in sig \"" + sigName + "\"");
-  }
 
   public void handleNoTransfer(Set<Sig> sigWithTransferFields) {
 
@@ -354,7 +369,36 @@ public class ToAlloy {
     Set<Sig> noStepsSigs = new HashSet<>();
     for (String sigName : stepPropertiesBySig.keySet()) {
       Sig sig = sigByName.get(sigName);
+      System.out.println(sigName);
 
+      if (stepPropertiesBySig.get(sigName).size() > 0) {
+        alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
+        // alloy.noTransferStep(sig); // i.e., fact {all x: SimpleSequence | no y: Transfer | y in
+        // x.steps}
+        // } else if (parameterFields.size() == 0) { // parameterFields is for entire model
+        // alloy.noSteps(sig); // add like fact {all x: AtomicBehavior | no x.steps}
+      } else {
+        // boolean hasParamterFields = AlloyUtils.hasParameterField(sig, parameterFields);
+        // if (!hasParamterFields) {
+        alloy.noXSteps(sig);
+        noStepsSigs.add(sig);
+        // } else {
+        // // alloy.noStepsX(sig);// "no steps.x"
+        // noStepsSigs.add(sig);
+        // }
+      }
+    }
+    return noStepsSigs;
+
+  }
+
+  public Set<Sig> handleStepsOriginal(Map<String, Set<String>> stepPropertiesBySig,
+      Set<Field> parameterFields) {
+
+    Set<Sig> noStepsSigs = new HashSet<>();
+    for (String sigName : stepPropertiesBySig.keySet()) {
+      Sig sig = sigByName.get(sigName);
+      System.out.println(sigName);
       if (stepPropertiesBySig.get(sigName).size() > 0) {
         alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
         // alloy.noTransferStep(sig); // i.e., fact {all x: SimpleSequence | no y: Transfer | y in
@@ -364,6 +408,7 @@ public class ToAlloy {
       } else {
         boolean hasParamterFields = false;
         for (Field f : parameterFields) {
+          System.out.println(f.label);
           if (f.sig == sig) {
             // alloy.noTransferStep(sig); // {all x: BehaviorWithParameterInOut | no y: Transfer | y
             // in
@@ -374,7 +419,7 @@ public class ToAlloy {
           }
         }
         if (!hasParamterFields) {
-          alloy.noSteps(sig);
+          alloy.noXSteps(sig);
           noStepsSigs.add(sig);
         }
       }
@@ -384,21 +429,74 @@ public class ToAlloy {
   }
 
   /**
+   * 
+   * @param sigInputProperties key = ownerSigName, value = field of the ownerSig
+   * @param sigOutputProperties
+   * @param sigNames
+   */
+  public void addBijectionInputsOutputsToContainer(HashMap<String, Set<String>> sigInputProperties,
+      HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
+    for (String sigName : sigNames) {
+      Sig ownerSig = sigByName.get(sigName);
+      if (AlloyUtils.hasTransferField(ownerSig)) {
+
+        Set<String> inputChildSigTypeNames = sigInputProperties.keySet();
+        for (String inputChildSigTypeName : inputChildSigTypeNames) {
+          List<Sig.Field> inputOwnerSigFields =
+              AlloyUtils.findFieldWithType(ownerSig, inputChildSigTypeName);
+          for (Sig.Field inputOwnerSigField : inputOwnerSigFields) {
+            System.out.println("bijection Inputs");
+            System.out.println(inputOwnerSigField.label);
+            for (String sigInputPropertyForChildSig : sigInputProperties.get(inputChildSigTypeName))
+              System.out.println(sigInputPropertyForChildSig);
+          }
+        }
+
+        Set<String> outputChildSigTypeNames = sigOutputProperties.keySet();
+        for (String outputChildSigTypeName : outputChildSigTypeNames) {
+          List<Sig.Field> outputOwnerSigFields =
+              AlloyUtils.findFieldWithType(ownerSig, outputChildSigTypeName);
+          for (Sig.Field outputOwnerSigField : outputOwnerSigFields) {
+            System.out.println("bijection Outputs");
+            System.out.println(outputOwnerSigField.label);
+            for (String sigOutputPropertyForChildSig : sigOutputProperties
+                .get(outputChildSigTypeName))
+              System.out.println(sigOutputPropertyForChildSig);
+          }
+        }
+
+      }
+    }
+  }
+
+  /**
    * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
    * 
    * @param sigInProperties {BehaviorParameterIn=[vin], BehaviorParameterInOut=[vin]}
    * @param outputs {BehaviorParameterOut=[vout], BehaviorParameterInOut=[vout]}
    */
   public void handleNoInputsOutputs(HashMap<String, Set<String>> sigInputProperties,
-      HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
+      HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames,
+      Set<String> sigNameOfSharedFieldType) {
+
 
     Set<String> inputFlowFieldTypes = getFlowTypeSig(sigInputProperties); // Sigs [Integer]
     Set<String> outputFlowFieldTypes = getFlowTypeSig(sigOutputProperties); // Sigs [Integer]
+    Set<String> inputOrOutputFlowFieldTypes = new HashSet<String>();
+    inputOrOutputFlowFieldTypes.addAll(inputFlowFieldTypes);
+    inputOrOutputFlowFieldTypes.addAll(outputFlowFieldTypes);
 
     for (String sigName : sigNames) {
-      boolean addItem = false; // to avoid adding "no items.x" with both inputs and outputs filter
+      Sig.PrimSig sig = sigByName.get(sigName);
+
+      if (!inputOrOutputFlowFieldTypes.contains(sigName))
+        alloy.noItemsX(sig);
+
+      // boolean addItem = false; // to avoid adding "no items.x" with both inputs and outputs
+      // filter
       if (sigInputProperties.keySet().contains(sigName)) {
         Set<String> propertyNames = sigInputProperties.get(sigName);
+        boolean addNoInputsX = true;
         for (String propertyName : propertyNames) {
           // ie.,
           // fact {all x: BehaviorWithParameter | x.i in x.inputs}
@@ -406,37 +504,58 @@ public class ToAlloy {
           // BehavioiurParameterIn, InOut
           // BehaviorWithParameter
           // Customer
+          // fact {all x: Customer | x.receivedProduct in x.inputs}
+          // fact {all x: Customer | x.inputs in x.receivedProduct}
+          // &&&
+          // fact {all x: Customer | no inputs.x}
           // B2, B, C, B1
-          addInputs(sigName, propertyName);
+
+          boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
+          addInputsAndNoInputsX(sig, propertyName, addNoInputsX, addEqual);
+          // addInputs(sigName, propertyName);
+          addNoInputsX = false; // so when propertyNames.length != 1 (vin, vout), not to add "no
+          // inputs.x" more then one time
         }
       } else {
         if (inputFlowFieldTypes.contains(sigName))// Integer is flowing
-          noXInputs(sigName);// fact {all x: Integer | no (x.inputs)}
+          alloy.noXInputs(sig);// fact {all x: Integer | no (x.inputs)}
         else {
-          noInputsBothAndItem(sigName); // "no x.inputs", "no inputs.x", "no items.x." -
-                                        // BehaviourParameterOut
-          addItem = true;
+          // addItem = true;
+          // noInputsBothAndItem(sigName); // "no x.inputs", "no inputs.x", "no items.x." -
+          // BehaviourParameterOut
+
+          // if removed "no x.inputs" from child remove also from container that should not happens
+          // !!!!!!!!!!!!!! or from AutomicBehavior or SimpleSequence....
+          alloy.noInputsXAndXInputs(sig);
+          // alloy.noInputsX(sig); //"no inputs.x" only
+
         }
       }
       if (sigOutputProperties.keySet().contains(sigName)) {
         Set<String> propertyNames = sigOutputProperties.get(sigName); // [vout]
+        boolean addNoOutputsX = true;
         for (String propertyName : propertyNames) {
           // ie.,
           // BehaviorWithParameter | "x.i in x.outputs" & "x.outputs in x.i"
           // BehaviourParemeterout | "x.vouts in x.outputs" & "x.outputs in x.vout"
-          // Out, InOut
+          // InOut
           // Supplier
           // B2, A, B, B1
-          addOutputs(sigName, propertyName);
+          // addOutputs(sigName, propertyName);
+          boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
+          addOutputsAndNoOutputsX(sig, propertyName, addNoOutputsX, addEqual);
+          addNoOutputsX = false;
         }
       } else {
         if (outputFlowFieldTypes.contains(sigName)) // Integer = type of what is flowing
-          noXOutputs(sigName);// fact {all x: Integer | no (x.outputs)}
+          alloy.noXOutputs(sig);// fact {all x: Integer | no (x.outputs)}
         else {
-          if (addItem)
-            noOutputsBoth(sigName); // "no outputs.x" & "no x.outputs
-          else
-            noOutputsBothAndItem(sigName); // "no outputs.x", "no x.outputs" and "no items.x"
+          // alloy.noOutputsX(sig); //"no outputs.x" only
+          alloy.noOutputsXAndXOutputs(sig); // both "no outputs.x" & "no x.outputs"
+          // if (addItem)
+          // noOutputsXAndXOutputs(sigName); // "no outputs.x" & "no x.outputs
+          // else
+          // noOutputsBothAndItem(sigName); // "no outputs.x", "no x.outputs" and "no items.x"
         }
 
       }
