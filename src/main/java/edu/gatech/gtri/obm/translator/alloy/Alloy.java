@@ -669,8 +669,12 @@ public class Alloy {
     // change to //fact {all x: B1 | bijectionFiltered[inputs, x, x.vin]}
     // & fact {all x: B1 | x.vin = x.inputs}
     // createBijectionFilteredAddToOverallFact2(ownerSig, field, Alloy.oinputs);
-    if (addEqual)
+
+
+    // fact {all x: B | x.vout = x.inputs}
+    if (addEqual) {
       addEqual2(ownerSig, field, oinputs);
+    }
 
     // TODO combine later
     if (addNoInputsX)

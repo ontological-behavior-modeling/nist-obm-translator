@@ -511,8 +511,8 @@ public class OBMXMI2Alloy {
               String[] sourceOutputAndTargetInputProperties =
                   handleTransferAndTransferBeforeInputsAndOutputs(cn);
               sigWithTransferFields.add(sigOfNamedElement);
-              addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties[1]);
-              addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties[0]);
+              addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties[1]); // "targetInputProperty"
+              addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties[0]);// "sourceOutputProperty",
 
               System.out.println(targetTypeName + " = " + sourceTypeName);
               boolean addEquals = false;
@@ -928,37 +928,63 @@ public class OBMXMI2Alloy {
     List<Property> tis = null;
 
     if (stTagObjectFlowValues != null) {
-      sos = stTagObjectFlowValues.get(stTagNames[0]);
-      tis = stTagObjectFlowValues.get(stTagNames[1]);
+      sos = stTagObjectFlowValues.get(stTagNames[0]); // sourceOutputProperty
+      tis = stTagObjectFlowValues.get(stTagNames[1]); // targetInputProperty
       System.out.println("ObjectFlow");
-      System.out.println(sos);
-      System.out.println(tis);
+      System.out.println(sos); // = x.outputs
+      System.out.println(tis); // = x.inputs
     }
 
     if (stTagItemFlowValues != null) {
-      sos = stTagItemFlowValues.get(stTagNames[0]);
-      tis = stTagItemFlowValues.get(stTagNames[1]); // name is "receivedProduct"
+      sos = stTagItemFlowValues.get(stTagNames[0]); // sourceOutputProperty
+      tis = stTagItemFlowValues.get(stTagNames[1]); // targetInputProperty - name is
+                                                    // "receivedProduct"
       System.out.println("ItemFlow");
       System.out.println(sos);
       System.out.println(tis);
     }
+    Class sosOwner = null;
+    Class tisOwner = null;
     if (sos != null && tis != null) {
       for (Property p : sos) {
+        sosOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
         String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
-        System.out.println("output: " + p.getName() + "owner: " + owner);
+        System.out.println(owner + " | x." + p.getName() + "= x.output");
+        // B2 | x.vout= x.output
         // toAlloy.addOutputs(owner, /* "Supplier" */ p.getName() /* "suppliedProduct" */);
-        sourceOutputAndTargetInputProperties[0] = p.getName();
+        sourceOutputAndTargetInputProperties[0] = p.getName(); // = x.outputs
         transferingTypeSig.add(p.getType().getName());
         break; // assumption is having only one
       }
       for (Property p : tis) {
+        tisOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
         String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
-        System.out.println("input: " + p.getName() + "owner: " + owner);
+        System.out.println(owner + " | x." + p.getName() + "= x.input: " + p.getName());
+        // B | x.voutzzzzz= x.input
         // toAlloy.addInputs(owner, /* "Customer" */p.getName() /* "receivedProduct" */);
         transferingTypeSig.add(p.getType().getName());
-        sourceOutputAndTargetInputProperties[1] = p.getName();
+        sourceOutputAndTargetInputProperties[1] = p.getName(); // = x.inputs
         break; // assumption is having only one
       }
+      // preventing fact {all x:B| x.vin = x.output}} to be generated from <<ItemFlow>> between
+      // B.vin and b1.vin.
+      // but having fact {all x: B1| x.vin = x.inputs} is ok
+      EList<Property> atts = sosOwner.getAttributes();
+      for (Property att : atts)
+        if (att.getType() == tisOwner) {
+          sourceOutputAndTargetInputProperties[0] = null; // overwrite
+          break;
+        }
+      // preventing fact {all x: B |x.vout = x.inputs} - to be generated from <<ItemFlow>> between
+      // B.vout and b2.vout
+      // but having fact {all x: B2|x.vout = x.outputs} is ok
+      atts = tisOwner.getAttributes();
+      for (Property att : atts)
+        if (att.getType() == sosOwner) {
+          sourceOutputAndTargetInputProperties[1] = null; // overwrite
+          break;
+        }
+
     }
     return sourceOutputAndTargetInputProperties;
   }
@@ -1026,6 +1052,8 @@ public class OBMXMI2Alloy {
   }
 
   public static void addToHashMap(HashMap<String, Set<String>> map, String key, String value) {
+    if (value == null)
+      return;
     Set<String> vs;
     if (map.containsKey(key))
       vs = map.get(key);
