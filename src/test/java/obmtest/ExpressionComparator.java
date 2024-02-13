@@ -2,6 +2,7 @@ package obmtest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1280,15 +1281,15 @@ public class ExpressionComparator {
    * @return List<List<Expr>> List of List <Expr.toString()>
    */
   private static List<List<Expr>> sortExprList(ExprList e1) {
-    Set<String> keys = new HashSet<>();
+    List<String> keys = new ArrayList<>();
     // key = expr.toString(), value is List<Expr> because the same expr.toString() may exists for
     // different sigs (ie., no inputs.x)
     Map<String, List<Expr>> sortedMap = new HashMap<>();
     for (int i = 0; i < e1.args.size(); i++) {
       Expr expr = e1.args.get(i);
       String key = expr.toString();
-      keys.add(key);
       if (!sortedMap.containsKey(key)) {
+        keys.add(key);
         sortedMap.put(key, new ArrayList<Expr>(Arrays.asList(expr)));
       } else {
         List<Expr> l = sortedMap.get(key);
@@ -1296,20 +1297,13 @@ public class ExpressionComparator {
         sortedMap.put(key, l);
       }
     }
-
-    // convert Set<String> to String[] to sort
-    String[] arrayKey = new String[keys.size()];
-    int i = 0;
-    for (String key : keys) {
-      arrayKey[i++] = key;
-    }
-    // sort expr.toString()
-    Arrays.sort(arrayKey);
+    // sort keys
+    Collections.sort(keys);
 
     List<List<Expr>> sortedList = new ArrayList<List<Expr>>();
-    for (i = 0; i < arrayKey.length; i++) {
-      sortedList.add(sortedMap.get(arrayKey[i]));
-    }
+    for (String key : keys)
+      sortedList.add(sortedMap.get(key));
+
     return sortedList;
   }
 
