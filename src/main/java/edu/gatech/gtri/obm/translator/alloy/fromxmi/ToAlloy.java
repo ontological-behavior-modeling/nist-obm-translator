@@ -12,7 +12,6 @@ import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
@@ -98,11 +97,6 @@ public class ToAlloy {
   }
 
 
-  // create field with Transfer type
-  public Field addAlloyTransferField(String fieldName, Sig ownerSig) {
-    // Sig transferSig = alloy.getTransferSig();
-    return FuncUtils.addField(fieldName, ownerSig, Alloy.transferSig);
-  }
 
   // create field with TransferBefore type
   // public Field addAlloyTransferBeforeField(String fieldName, Sig ownerSig) {
@@ -292,10 +286,9 @@ public class ToAlloy {
 
   public void addInputsAndNoInputsX(Sig.PrimSig sig, String fieldName, boolean addNoInputsX,
       boolean addEqual) {
-    ExprVar s = ExprVar.make(null, "x", sig.type());
     Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
     if (f != null)
-      alloy.addInputsAndNoInputsX(s, sig, f, addNoInputsX, addEqual);
+      alloy.addInputsAndNoInputsX(sig, f, addNoInputsX, addEqual);
     else
       System.err.println("No field \"" + fieldName + "\" in sig \"" + sig.label + "\"");
   }
@@ -322,17 +315,16 @@ public class ToAlloy {
 
   public void addOutputsAndNoOutputsX(PrimSig sig, String fieldName, boolean addNoOutputsX,
       boolean addEqual) {
-    ExprVar s = ExprVar.make(null, "x", sig.type());
+
     Field f = AlloyUtils.getFieldFromSig(fieldName, sig);
     if (f != null)
-      alloy.addOutputsAndNoOutputsX(s, sig, f, addNoOutputsX, addEqual);
+      alloy.addOutputsAndNoOutputsX(sig, f, addNoOutputsX, addEqual);
     else
       System.err.println("No field \"" + fieldName + "\" in sig \"" + sig.label + "\"");
   }
 
 
   public void handleNoTransfer(Set<Sig> sigWithTransferFields) {
-
     Object[] sigs =
         sigByName.values().stream().filter(sig -> !sigWithTransferFields.contains(sig)).toArray();
     for (Object sig : sigs) {
@@ -392,41 +384,41 @@ public class ToAlloy {
 
   }
 
-  public Set<Sig> handleStepsOriginal(Map<String, Set<String>> stepPropertiesBySig,
-      Set<Field> parameterFields) {
-
-    Set<Sig> noStepsSigs = new HashSet<>();
-    for (String sigName : stepPropertiesBySig.keySet()) {
-      Sig sig = sigByName.get(sigName);
-      System.out.println(sigName);
-      if (stepPropertiesBySig.get(sigName).size() > 0) {
-        alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
-        // alloy.noTransferStep(sig); // i.e., fact {all x: SimpleSequence | no y: Transfer | y in
-        // x.steps}
-        // } else if (parameterFields.size() == 0) { // parameterFields is for entire model
-        // alloy.noSteps(sig); // add like fact {all x: AtomicBehavior | no x.steps}
-      } else {
-        boolean hasParamterFields = false;
-        for (Field f : parameterFields) {
-          System.out.println(f.label);
-          if (f.sig == sig) {
-            // alloy.noTransferStep(sig); // {all x: BehaviorWithParameterInOut | no y: Transfer | y
-            // in
-            // x.steps}
-
-            hasParamterFields = true;
-            break;
-          }
-        }
-        if (!hasParamterFields) {
-          alloy.noXSteps(sig);
-          noStepsSigs.add(sig);
-        }
-      }
-    }
-    return noStepsSigs;
-
-  }
+  // public Set<Sig> handleStepsOriginal(Map<String, Set<String>> stepPropertiesBySig,
+  // Set<Field> parameterFields) {
+  //
+  // Set<Sig> noStepsSigs = new HashSet<>();
+  // for (String sigName : stepPropertiesBySig.keySet()) {
+  // Sig sig = sigByName.get(sigName);
+  // System.out.println(sigName);
+  // if (stepPropertiesBySig.get(sigName).size() > 0) {
+  // alloy.addSteps(sig, stepPropertiesBySig.get(sigName));
+  // // alloy.noTransferStep(sig); // i.e., fact {all x: SimpleSequence | no y: Transfer | y in
+  // // x.steps}
+  // // } else if (parameterFields.size() == 0) { // parameterFields is for entire model
+  // // alloy.noSteps(sig); // add like fact {all x: AtomicBehavior | no x.steps}
+  // } else {
+  // boolean hasParamterFields = false;
+  // for (Field f : parameterFields) {
+  // System.out.println(f.label);
+  // if (f.sig == sig) {
+  // // alloy.noTransferStep(sig); // {all x: BehaviorWithParameterInOut | no y: Transfer | y
+  // // in
+  // // x.steps}
+  //
+  // hasParamterFields = true;
+  // break;
+  // }
+  // }
+  // if (!hasParamterFields) {
+  // alloy.noXSteps(sig);
+  // noStepsSigs.add(sig);
+  // }
+  // }
+  // }
+  // return noStepsSigs;
+  //
+  // }
 
   /**
    * 
@@ -434,40 +426,41 @@ public class ToAlloy {
    * @param sigOutputProperties
    * @param sigNames
    */
-  public void addBijectionInputsOutputsToContainer(HashMap<String, Set<String>> sigInputProperties,
-      HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
-    for (String sigName : sigNames) {
-      Sig ownerSig = sigByName.get(sigName);
-      if (AlloyUtils.hasTransferField(ownerSig)) {
-
-        Set<String> inputChildSigTypeNames = sigInputProperties.keySet();
-        for (String inputChildSigTypeName : inputChildSigTypeNames) {
-          List<Sig.Field> inputOwnerSigFields =
-              AlloyUtils.findFieldWithType(ownerSig, inputChildSigTypeName);
-          for (Sig.Field inputOwnerSigField : inputOwnerSigFields) {
-            System.out.println("bijection Inputs");
-            System.out.println(inputOwnerSigField.label);
-            for (String sigInputPropertyForChildSig : sigInputProperties.get(inputChildSigTypeName))
-              System.out.println(sigInputPropertyForChildSig);
-          }
-        }
-
-        Set<String> outputChildSigTypeNames = sigOutputProperties.keySet();
-        for (String outputChildSigTypeName : outputChildSigTypeNames) {
-          List<Sig.Field> outputOwnerSigFields =
-              AlloyUtils.findFieldWithType(ownerSig, outputChildSigTypeName);
-          for (Sig.Field outputOwnerSigField : outputOwnerSigFields) {
-            System.out.println("bijection Outputs");
-            System.out.println(outputOwnerSigField.label);
-            for (String sigOutputPropertyForChildSig : sigOutputProperties
-                .get(outputChildSigTypeName))
-              System.out.println(sigOutputPropertyForChildSig);
-          }
-        }
-
-      }
-    }
-  }
+  // public void addBijectionInputsOutputsToContainer(HashMap<String, Set<String>>
+  // sigInputProperties,
+  // HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames) {
+  // for (String sigName : sigNames) {
+  // Sig ownerSig = sigByName.get(sigName);
+  // if (AlloyUtils.hasTransferField(ownerSig)) {
+  //
+  // Set<String> inputChildSigTypeNames = sigInputProperties.keySet();
+  // for (String inputChildSigTypeName : inputChildSigTypeNames) {
+  // List<Sig.Field> inputOwnerSigFields =
+  // AlloyUtils.findFieldWithType(ownerSig, inputChildSigTypeName);
+  // for (Sig.Field inputOwnerSigField : inputOwnerSigFields) {
+  // System.out.println("bijection Inputs");
+  // System.out.println(inputOwnerSigField.label);
+  // for (String sigInputPropertyForChildSig : sigInputProperties.get(inputChildSigTypeName))
+  // System.out.println(sigInputPropertyForChildSig);
+  // }
+  // }
+  //
+  // Set<String> outputChildSigTypeNames = sigOutputProperties.keySet();
+  // for (String outputChildSigTypeName : outputChildSigTypeNames) {
+  // List<Sig.Field> outputOwnerSigFields =
+  // AlloyUtils.findFieldWithType(ownerSig, outputChildSigTypeName);
+  // for (Sig.Field outputOwnerSigField : outputOwnerSigFields) {
+  // System.out.println("bijection Outputs");
+  // System.out.println(outputOwnerSigField.label);
+  // for (String sigOutputPropertyForChildSig : sigOutputProperties
+  // .get(outputChildSigTypeName))
+  // System.out.println(sigOutputPropertyForChildSig);
+  // }
+  // }
+  //
+  // }
+  // }
+  // }
 
   /**
    * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
@@ -646,5 +639,12 @@ public class ToAlloy {
     return "No outputfile ";
   }
 
+
+
+  // create field with Transfer type
+  public static Field addAlloyTransferField(String fieldName, Sig ownerSig) {
+    // Sig transferSig = alloy.getTransferSig();
+    return FuncUtils.addField(fieldName, ownerSig, Alloy.transferSig);
+  }
 
 }

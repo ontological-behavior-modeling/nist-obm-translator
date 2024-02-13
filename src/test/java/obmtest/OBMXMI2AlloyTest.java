@@ -4,7 +4,6 @@ import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,29 +38,32 @@ class OBMXMI2AlloyTest {
 
   @ParameterizedTest
 
-  // order of fields matter
+  // order of fields matter?
   @CsvSource({
-      // model name is different, to fact {all x: AtomicBehavior | no x.steps}
-      // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als,
-      // Model::Basic::MultipleObjectFlowAlt",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt.als, Model::Basic::MultipleObjectFlowAlt",
-
-      // Model::Basic::MultipleObjectFlow",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow",
 
       // order in fields and step matters
-      // mw
-      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
-      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct",
 
-      // mw
-      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
-
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
       // mw !!!!!!!!!!!!!!!!!! test pass but comparator may be wrong
       "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow",
 
+
       // mw
-      "4.2.2 FoodService Object Flow - IFSingleFoodService - OFFoodService_mw.als,Model::Realistic::IFFoodService",
+      "4.2.2 FoodService Object Flow - IFFoodService_mw.als,Model::Realistic::IFFoodService",
+      "4.2.2 FoodService Object Flow - IFSingleFoodService_mw.als,Model::Realistic::IFSingleFoodService",
+      "4.2.2 FoodService Object Flow - IFParallelFoodService_mw.als,Model::Realistic::IFParallelFoodService",
+      "4.2.2 FoodService Object Flow - IFLoopFoodService_mw.als,Model::Realistic::IFLoopFoodService",
+
+
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt.als, Model::Basic::MultipleObjectFlowAlt",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow",
+
+      // mw
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
+      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct",
+      // mw
+      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
+
       "4.1.1 Control Nodes1 - SimpleSequence.als, Model::Basic::SimpleSequence",
       "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork",
       "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join",
@@ -94,6 +96,7 @@ class OBMXMI2AlloyTest {
       "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService",})
 
 
+
   /**
    * create an alloy file from a class named sysMLClassQualifiedName from Obm xmi file using Alloy
    * API. The created alloy file is imported using Alloy API again to find AllReachableFacts and
@@ -119,8 +122,8 @@ class OBMXMI2AlloyTest {
     File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
 
     // setting any errors to be in error file
-    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
-    System.setErr(o);
+    // PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
+    // System.setErr(o);
 
     File apiFile = new File(output_and_testfiles_dir, manualFileName + "_Generated-"
         + sysMLClassQualifiedName.replaceAll("::", "_") /* alloyModule.getModuleName() */ + ".als");
@@ -149,13 +152,14 @@ class OBMXMI2AlloyTest {
 
     //////////////////////// Comparing Reachable Facts ////////////////////////////////
     // API
+    System.out.println("Comparing Reachable facts.....");
     Expr api_reachableFacts = apiModule.getAllReachableFacts();// test.getOverallFacts();
     System.out.println(api_reachableFacts);
     // TEST
     Expr test_reachableFacts = testModule.getAllReachableFacts();
     System.out.println(test_reachableFacts);
     // Compare
-    assertTrue(ec.compareTwoExpressions(api_reachableFacts, test_reachableFacts));
+    assertTrue(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
 
     ///////////////////////// Comparing Sigs ////////////////////
     // API
@@ -178,7 +182,7 @@ class OBMXMI2AlloyTest {
     for (String sigName : api_SigByName.keySet()) {
       Sig alloyFileSig = test_SigByName.get(sigName);
       Sig apiSig = api_SigByName.get(sigName);
-      assertTrue(ec.compareTwoExpressions(alloyFileSig, apiSig));
+      assertTrue(ec.compareTwoExpressionsSigs(alloyFileSig, apiSig));
     }
   }
 }

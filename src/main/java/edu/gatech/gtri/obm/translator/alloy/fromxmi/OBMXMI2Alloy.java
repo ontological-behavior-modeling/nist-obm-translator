@@ -240,7 +240,7 @@ public class OBMXMI2Alloy {
     // !!!!!!!!!!!!!!
     toAlloy.handleNoInputsOutputs(inputs, outputs, allClassNames, sigNameOfSharedFieldType);
 
-    toAlloy.addBijectionInputsOutputsToContainer(inputs, outputs, allClassNames);
+    // toAlloy.addBijectionInputsOutputsToContainer(inputs, outputs, allClassNames);
 
 
     // adding no steps.x
@@ -603,11 +603,11 @@ public class OBMXMI2Alloy {
 
   }
 
-  private Sig.Field handTransferFieldAndFnPrep(PrimSig sig, String source, String target,
+  private static Sig.Field handTransferFieldAndFnPrep(PrimSig sig, String source, String target,
       Set<String> stepFieldNames) {
     String fieldName = "transfer" + firstCharUpper(source) + firstCharUpper(target);
     stepFieldNames.add(fieldName);
-    Sig.Field transferField = toAlloy.addAlloyTransferField(fieldName, sig);
+    Sig.Field transferField = ToAlloy.addAlloyTransferField(fieldName, sig);
     return transferField;
   }
 
