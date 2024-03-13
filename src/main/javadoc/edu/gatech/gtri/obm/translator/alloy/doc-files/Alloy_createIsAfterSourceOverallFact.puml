@@ -1,0 +1,8 @@
+@startuml
+start
+:Make ExprVar;
+:Create new Declaration;
+:Call isAfterSource;
+:Add isAfterSource to Overall Fact;
+stop
+@enduml

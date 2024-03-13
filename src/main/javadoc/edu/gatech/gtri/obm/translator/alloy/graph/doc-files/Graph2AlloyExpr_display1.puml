@@ -1,0 +1,17 @@
+@startuml
+start
+:Set Graph styleSheet Attribute
+to //styleSheet//;
+while(For Each Node in //graph//)
+:Set Node Label to Node Name;
+endwhile
+while(For Each Edge in //graph//)
+if(Edge has OneOf Attribute) then (yes)
+:Set Edge Label to oneOf;
+else(no)
+:Set Edge Label to Empty String;
+endif
+endwhile
+:Display Graph;
+stop
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+participant UserInterface [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/userinterface/UserInterface.html]]
+participant OBMXMI2Alloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/OBMXMI2Alloy.html]]
+participant ToAlloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/ToAlloy.html]]
+participant Alloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/Alloy.html]]
+participant Translator [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/Translator.html]]
+UserInterface -> OBMXMI2Alloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/OBMXMI2Alloy.html#%3Cinit%3E(java.lang.String)]]: Construct OBMXMI2Alloy Class
+OBMXMI2Alloy -> ToAlloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/ToAlloy.html#%3Cinit%3E(java.lang.String)]]: Construct ToAlloy Class
+ToAlloy -> Alloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/Alloy.html#%3Cinit%3E(java.lang.String)]]: Construct Alloy Class
+Alloy --> ToAlloy
+ToAlloy --> OBMXMI2Alloy
+OBMXMI2Alloy --> UserInterface
+
+UserInterface -> OBMXMI2Alloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/OBMXMI2Alloy.html#createAlloyFile(java.io.File,java.lang.String,java.io.File)]]: Create Alloy File
+OBMXMI2Alloy -> ToAlloy [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/ToAlloy.html#createAlloyFile(java.io.File,java.util.Set)]]: Create File Content
+ToAlloy -> Translator [[https://ontological-behavior-modeling.github.io/tester/edu/gatech/gtri/obm/translator/alloy/fromxmi/Translator.html#generateAlsFileContents(edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule,java.lang.String)]]: Write Content to File
+Translator --> ToAlloy
+ToAlloy --> OBMXMI2Alloy
+OBMXMI2Alloy --> UserInterface
+@enduml

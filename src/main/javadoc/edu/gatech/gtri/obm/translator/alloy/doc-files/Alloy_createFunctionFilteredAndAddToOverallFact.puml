@@ -1,0 +1,17 @@
+@startuml
+start
+:Make ExprVar;
+if (to == null) then (yes)
+:to = ExprVar;
+else (no)
+endif
+if(from == null) then (yes)
+:from = ExprVar;
+else(no)
+endif
+:Call FunctionFiltered;
+:Create new ArrayList;
+:Create new Declaration;
+:Add Called Function to Overall Fact;
+stop
+@enduml

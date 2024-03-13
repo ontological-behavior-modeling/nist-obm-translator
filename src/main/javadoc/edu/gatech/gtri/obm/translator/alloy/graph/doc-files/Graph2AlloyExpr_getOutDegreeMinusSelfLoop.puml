@@ -1,0 +1,13 @@
+@startuml
+start
+:Create int //numOfSelfLoop//;
+:Create Edge Iterator from //node// Leaving Edges;
+while(Iterator has Next)
+if(Next Edge's Target Node == //node//) then (yes)
+:Increment //numOfSelfLoop//;
+endif
+endwhile
+:Return Difference between //numOfSelfLoop//
+and //node// Leaving Edges;
+stop
+@enduml

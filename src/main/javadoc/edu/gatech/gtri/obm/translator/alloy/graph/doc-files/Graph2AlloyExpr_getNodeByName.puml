@@ -1,0 +1,11 @@
+@startuml
+start
+while(For Each Node in //graph//)
+if(Current Node Name Equals //_nodeName//) then (yes)
+:Return Current Node;
+stop
+endif
+endwhile
+:Return null;
+stop
+@enduml

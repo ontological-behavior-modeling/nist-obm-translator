@@ -1,0 +1,13 @@
+@startuml
+start
+:Create Osteps;
+:Create Expression e;
+while(For Size of Fields List)
+:Join Current Field to Signature;
+:Add expression to e with Plus Operator;
+endwhile
+:Join Osteps to signature;
+:Create oSteps in Expression e;;
+:Return expression e;
+stop
+@enduml

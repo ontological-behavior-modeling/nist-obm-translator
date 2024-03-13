@@ -1,0 +1,9 @@
+@startuml
+start
+:Print //_map//;
+:Get Function String;
+while(For Each Function in //_map//)
+:Print Function and Number;
+endwhile
+stop
+@enduml

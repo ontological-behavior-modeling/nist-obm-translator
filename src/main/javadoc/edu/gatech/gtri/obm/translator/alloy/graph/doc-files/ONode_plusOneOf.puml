@@ -1,0 +1,6 @@
+@startuml
+start
+:Increment //numOneOf//;
+:Return //numOneOf//;
+stop
+@enduml

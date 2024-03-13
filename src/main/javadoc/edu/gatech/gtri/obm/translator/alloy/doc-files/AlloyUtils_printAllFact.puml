@@ -1,0 +1,9 @@
+@startuml
+start
+:Print title Module.AllFact;
+while(for All Module Fact Pairs)
+:Print First Half of Pair;
+:Print Second Half of Pair;
+endwhile
+stop
+@enduml

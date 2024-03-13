@@ -1,0 +1,5 @@
+@startuml
+start
+:Sleep for 1000 Milliseconds;
+stop
+@enduml

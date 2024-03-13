@@ -1,0 +1,10 @@
+@startuml
+start
+:Set //isRootSig// to false;
+if(//ignoredExpr// contains ExprVar) then (yes)
+:Return "";
+else(no)
+:Return ExprVar Label;
+endif
+stop
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return "";
+stop
+endif
+:Set //isRootSig// to false;
+if(isRootExprList or
+isSigFact) then (yes)
+:Set //isRootExprList// to false;
+:Create StringBuilder;
+while( For Each Arg is ExprList)
+if(//ignoredExprs// contains Current Arg)
+break
+endif
+:Turn Current Arg into String;
+if(Is Not Implicit Fact)
+:Append Fact with Fact Title to StringBuilder;
+elseif (Is Implicit Fact)
+:Append Fact with '/t';
+endif
+endwhile
+:Return StringBuilder toString;
+stop
+endif
+:Create String Array from 
+ExprList Args Size;
+while(For Each Arg in String Array)
+:Add ExprList Arg to String Array;
+endwhile
+:Create new StringBuilder for 
+Operations;
+:Append ExprList Operations to 
+StringBuilder;
+:Remove Empty Strings from String Array;
+:Return Operations Joined to Args;
+stop
+@enduml

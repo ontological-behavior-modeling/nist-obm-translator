@@ -1,0 +1,8 @@
+@startuml
+start
+while(stepPropertiesBySig has another value?)
+:Get Signature;
+:Add Steps;
+endwhile
+stop
+@enduml

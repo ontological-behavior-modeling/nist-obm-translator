@@ -1,0 +1,9 @@
+@startuml
+start
+:Create Expression e;
+while(For Size of Expression List);
+:Add Current Expression with Expression e 
+using AND Operator;
+endwhile
+stop
+@enduml

@@ -1,0 +1,7 @@
+@startuml
+start
+:Make ExprVar noInputs;
+:Create new Declaration;
+:Add noInputs to Overall Fact;
+stop
+@enduml

@@ -1,0 +1,15 @@
+@startuml
+start
+:Create Command;
+:Add Command to Array;
+:Construct AlloyModule;
+:Construct Translator;
+if (outputFile != null)
+:Get File Absolute Path;
+:Generate File Contents;
+:Return OutputFileName;
+stop
+endif
+:Return "No outputfile";
+stop
+@enduml

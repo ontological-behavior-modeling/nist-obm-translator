@@ -1,0 +1,21 @@
+@startuml
+start
+ if (Sig Does Not Exist) then (yes)
+ :Create PrimSig;
+ if (Sig Does Not Have Parent) then (yes)
+ :Create Sig as 
+ Child of Occurence;
+ else(no)
+ :Create Sig as 
+ Child of Parent;
+ endif
+ if(Sig is Main Sig) then (yes)
+ :Set moduleName Parameter;
+ endif
+ :Return Signature;
+ stop
+ else(no)
+ :Return Signature from List;
+
+stop
+@enduml
