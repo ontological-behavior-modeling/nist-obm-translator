@@ -1,21 +1,25 @@
-name: Publish package to GitHub Packages
+name: Release New Version
 
 on:
-  push:
-    branches:
-      - develop_jn
+  workflow_run:
+   workflows: ["Generate PlantUML Images"]
+   types: [completed]
       
 permissions:
   contents: write
   packages: write
   
 jobs:
-  release:
-    runs-on: ubuntu-latest
+ on-success:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:        
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
@@ -31,28 +35,49 @@ jobs:
 
       - name: Copy settings.xml
         run: cp ./.github/Maven/settings.xml $HOME/.m2/settings.xml
-       
+
+      - name: Prepare Version
+        run: mvn versions:set -DremoveSnapshot
+
+      - name: Setup Graphviz for UML in Javadocs
+        uses: ts-graphviz/setup-graphviz@v2
+
+      - name: Generate Javadocs
+        run: mvn javadoc:javadoc
+        env:
+          GITHUB_TOKEN: ${{ secrets.JN_TOKEN }}
+
+      - name: Deploy Javadocs to Branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+           github_token: ${{ secrets.JN_TOKEN }}
+           publish_dir: ./target/site/apidocs
+
+      - name: Prepare Version
+        run: mvn versions:revert
+        
       - name: Prepare Maven Release
         run: |
-          mvn release:clean release:prepare -B -DdryRun
+          mvn release:clean release:prepare -B
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.JN_TOKEN }}
 
       - name: Perform Maven Release
         run: |
-          mvn release:perform -B -DdryRun
+          mvn release:perform -B
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.JN_TOKEN }}
 
       - name: Read Current Maven Version
         id: mvn_version
         run: echo "tag=$(git describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
         
-      #- name: Create new Github Release
-      #  id: create_release
-      #  uses: softprops/action-gh-release@v1
-      #  with:
-      #    files: target/*-with-dependencies.jar
-      #    tag_name: ${{ steps.mvn_version.outputs.tag }}
-      #    body: |
-      #      Release ${{ steps.mvn_release.output.tag }}
+      - name: Create new Github Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: target/*-with-dependencies.jar
+          tag_name: ${{ steps.mvn_version.outputs.tag }}
+          body: |
+            Release ${{ steps.mvn_release.output.tag }}
+
