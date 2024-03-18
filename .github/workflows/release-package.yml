@@ -2,7 +2,7 @@ name: Release New Version
 
 on:
   workflow_run:
-   workflows: ["Generate PlantUML Images"]
+   workflows: ["Start Workflows"]
    types: [completed]
       
 permissions:
@@ -10,13 +10,8 @@ permissions:
   packages: write
   
 jobs:
- on-success:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
+  build:
+    runs-on: ubuntu-latest
     steps:        
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -31,7 +26,7 @@ jobs:
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "Github Actions"
-          # git config --global url.https://${{ secrets.JN_TOKEN }}@github.com/.insteadOf https://github.com/ # Use this line in private repo
+          # git config --global url.https://${{ secrets.GITHUB_TOKEN }}@github.com/.insteadOf https://github.com/ # Use this line in private repo
 
       - name: Copy settings.xml
         run: cp ./.github/Maven/settings.xml $HOME/.m2/settings.xml
@@ -50,12 +45,12 @@ jobs:
       - name: Deploy Javadocs to Branch
         uses: peaceiris/actions-gh-pages@v3
         with:
-           github_token: ${{ secrets.JN_TOKEN }}
+           github_token: ${{ secrets.GITHUB_TOKEN }}
            publish_dir: ./target/site/apidocs
 
       - name: Prepare Version
         run: mvn versions:revert
-        
+
       - name: Prepare Maven Release
         run: |
           mvn release:clean release:prepare -B
@@ -80,4 +75,3 @@ jobs:
           tag_name: ${{ steps.mvn_version.outputs.tag }}
           body: |
             Release ${{ steps.mvn_release.output.tag }}
-
