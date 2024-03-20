@@ -1,10 +1,10 @@
 @startuml
 start
-:Print title All Sigs;
+:Print Title All Sigs;
 :Print List of Signatures;
 while (for Every Signature)
 :Print Signature Label;
-while(for every Signature Field)
+while(For Every Signature Field)
 :Print Signature Field;
 endwhile
 endwhile

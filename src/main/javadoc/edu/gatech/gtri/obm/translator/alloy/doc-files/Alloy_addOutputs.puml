@@ -1,6 +1,6 @@
 @startuml
 start
-:Create new Declaration;
+:Create New Declaration;
 :Join Signature to ExprVar;
 if (Expr != null)
 :Add Both to Overall Fact;

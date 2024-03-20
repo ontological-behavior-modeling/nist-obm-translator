@@ -1,7 +1,7 @@
 @startuml
 start
-:Print allFunc title line;
-while(for all Module Functions)
+:Print allFunc Title Line;
+while(For all Module Functions)
 :Print Function;
 endwhile
 stop

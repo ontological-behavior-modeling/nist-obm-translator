@@ -4,7 +4,7 @@
 
   <groupId>edu.gatech.gtri.obm</groupId>
   <artifactId>nist-obm-translator</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.0.1-SNAPSHOT</version>
 
   <scm>
     <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
@@ -99,6 +99,21 @@
     </dependency>
   </dependencies>
 
+  <!-- <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration>
+          <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+          <show>public</show>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+ -->
+
   <repositories>
     <repository>
       <releases>
@@ -167,6 +182,7 @@
         <artifactId>maven-release-plugin</artifactId>
         <version>3.0.1</version>
         <configuration>
+          <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
           <tagNameFormat>v@{project.version}</tagNameFormat>
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <checkModificationExcludes>
@@ -230,7 +246,15 @@
         <version>3.6.3</version>
         <configuration>
           <show>public</show>
+          <doclint>none</doclint>
+          <javadocDirectory>${basedir}/src/main/javadoc</javadocDirectory>
           <nohelp>true</nohelp>
+          <doclet>nl.talsmasoftware.umldoclet.UMLDoclet</doclet>
+          <docletArtifact>
+            <groupId>nl.talsmasoftware</groupId>
+            <artifactId>umldoclet</artifactId>
+            <version>2.1.1</version>
+          </docletArtifact>
         </configuration>
         <executions>
           <execution>

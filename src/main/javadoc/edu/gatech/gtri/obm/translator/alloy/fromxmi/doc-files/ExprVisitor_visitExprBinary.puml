@@ -1,7 +1,7 @@
 @startuml
 start
 if(//ignoredExpr// contains ExprBinary) then (yes)
-:Return "";
+:Return Empty String;
 stop
 endif
 :Set isRootSig to false;

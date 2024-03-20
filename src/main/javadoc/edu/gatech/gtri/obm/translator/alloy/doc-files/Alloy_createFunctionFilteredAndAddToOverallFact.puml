@@ -10,8 +10,8 @@ if(from == null) then (yes)
 else(no)
 endif
 :Call FunctionFiltered;
-:Create new ArrayList;
-:Create new Declaration;
+:Create New ArrayList;
+:Create New Declaration;
 :Add Called Function to Overall Fact;
 stop
 @enduml

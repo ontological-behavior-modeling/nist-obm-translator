@@ -3,7 +3,7 @@ start
 :Make ExprVar;
 :Call osteps Function;
 :Create New Declaration;
-:Create new Array List;
+:Create New Array List;
 :Sort Step Fields;
 while(For all Step Fields)
 while(For All Signature Fields)

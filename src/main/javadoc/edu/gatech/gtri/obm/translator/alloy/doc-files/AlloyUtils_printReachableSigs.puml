@@ -1,7 +1,7 @@
 @startuml
 start
-:Print title Reachable Sigs;
-while(for All Signatures in Module)
+:Print Title Reachable Sigs;
+while(For All Signatures in Module)
 :Print Signature and Attributes;
 endwhile
 stop

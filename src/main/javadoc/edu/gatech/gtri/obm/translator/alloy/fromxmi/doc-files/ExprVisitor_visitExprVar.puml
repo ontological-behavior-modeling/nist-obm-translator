@@ -2,7 +2,7 @@
 start
 :Set //isRootSig// to false;
 if(//ignoredExpr// contains ExprVar) then (yes)
-:Return "";
+:Return Empty String;
 else(no)
 :Return ExprVar Label;
 endif

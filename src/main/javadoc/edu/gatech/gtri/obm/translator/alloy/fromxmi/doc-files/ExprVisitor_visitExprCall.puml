@@ -1,7 +1,7 @@
 @startuml
 start
 if(//ignoredExpr// contains ExprCall) then (yes)
-:Return "";
+:Return Empty String;
 stop
 endif
 :Set isRootSig to false;

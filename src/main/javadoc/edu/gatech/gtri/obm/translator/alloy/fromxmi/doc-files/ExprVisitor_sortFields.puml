@@ -11,11 +11,12 @@ Declaration Expression;
 if(//map// Contains //type//) then (yes)
 :Set //fs// to //map// at //type//;
 else(no)
-:Set //fs// to new ArrayList;
+:Set //fs// to New ArrayList;
 :Put //type// and //fs// into //map//;
 endif
 :Add Field to //fs//;
 endif
 :Return //map//;
+
 stop
 @enduml

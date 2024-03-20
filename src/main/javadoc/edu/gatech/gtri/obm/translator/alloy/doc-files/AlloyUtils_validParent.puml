@@ -4,9 +4,9 @@ if(parentName == null or
 parentName == "BehaviorOccurence" or
 parentName == "Occurrence" or
 parentName == "Anything") then (yes)
-:Return false;
+:Return False;
 else(no)
-:Return true;
+:Return True;
 endif
 stop
 @enduml

@@ -1,7 +1,7 @@
 @startuml
 start
 :Make ExprVar;
-:Create new Declaration;
+:Create New Declaration;
 :Call isAfterSource;
 :Add isAfterSource to Overall Fact;
 :Call isBeforeTarget;
