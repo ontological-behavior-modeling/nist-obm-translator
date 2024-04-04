@@ -43,24 +43,26 @@ class OBMXMI2AlloyTest {
 
       // order in fields and step matters
 
+      // mw
+      "4.2.2 FoodService Object Flow - OFFoodService_mw.als,Model::FoodService::OFFoodService",
+      "4.2.2 FoodService Object Flow - OFSingleFoodService_mw.als,Model::FoodService::OFSingleFoodService",
+      "4.2.2 FoodService Object Flow - OFParallelFoodService_mw.als,Model::FoodService::OFParallelFoodService",
+      "4.2.2 FoodService Object Flow - OFLoopFoodService_mw.als,Model::FoodService::OFLoopFoodService",
+
+
       "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
       // mw !!!!!!!!!!!!!!!!!! test pass but comparator may be wrong
       "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow",
 
 
       // mw
-      "4.2.2 FoodService Object Flow - IFFoodService_mw.als,Model::Realistic::IFFoodService",
-      "4.2.2 FoodService Object Flow - IFSingleFoodService_mw.als,Model::Realistic::IFSingleFoodService",
-      "4.2.2 FoodService Object Flow - IFParallelFoodService_mw.als,Model::Realistic::IFParallelFoodService",
-      "4.2.2 FoodService Object Flow - IFLoopFoodService_mw.als,Model::Realistic::IFLoopFoodService",
-
-
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt.als, Model::Basic::MultipleObjectFlowAlt",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt",
       "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow",
 
-      // mw
+      // mw ????????????????
       "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
-      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct",
+      // mw change = x.inputs to in x.inputs
+      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
       // mw
       "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
 

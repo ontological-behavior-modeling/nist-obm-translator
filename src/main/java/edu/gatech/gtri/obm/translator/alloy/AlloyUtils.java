@@ -2,9 +2,14 @@ package edu.gatech.gtri.obm.translator.alloy;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.eclipse.uml2.uml.Class;
+import org.eclipse.uml2.uml.NamedElement;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.ast.Browsable;
@@ -87,6 +92,8 @@ public class AlloyUtils {
     return ownerSigFields;
   }
 
+
+
   /**
    * find if the ownerSig has a field created by connector (ie., transferSupplierCustomer) with type
    * Transfer. If ownerSig has a field like "transferSupplierCustomer: set Transfer" then return
@@ -113,23 +120,32 @@ public class AlloyUtils {
     return false;
   }
 
+  public static Sig.Field getFieldFromSig(String fieldNameLookingFor, PrimSig sig) {
+    for (Sig.Field field : sig.getFields()) {
+      if (field.label.equals(fieldNameLookingFor))
+        return field;
+    }
+    return null;
+  }
+
+
   /**
    * Find Field from sig by fieldName. If not find in the sig, try to find in its parent
    * recursively.
    * 
-   * @param fieldName field's name looking for
+   * @param fieldNameLookingFor field's name looking for
    * @param sig PrimSig sig supposed to having the field
    * @return Field if found, otherwise return null
    */
-  public static Sig.Field getFieldFromSig(String fieldName, PrimSig sig) {
+  public static Sig.Field getFieldFromSigOrItsParents(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) {
-      if (field.label.equals(fieldName))
+      if (field.label.equals(fieldNameLookingFor))
         return field;
     }
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
                                  // null
       // System.out.println(sig.parent);
-      Field field = getFieldFromSig(fieldName, sig.parent);
+      Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
       if (field != null)
         return field;
       else {
@@ -138,6 +154,42 @@ public class AlloyUtils {
     }
     return null;
   }
+
+  public static Sig.Field getFieldFromParentSig(String fieldNameLookingFor, PrimSig sig) {
+    while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
+                                 // null
+      // System.out.println(sig.parent);
+      Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
+      if (field != null)
+        return field;
+      else {
+        sig = sig.parent; // reset
+      }
+    }
+    return null;
+  }
+
+  // sig.domain(sigField) or parentSig.domain(parentSigField)
+  public static Expr getSigDomainFileld(String fieldNameLookingFor, PrimSig sig) {
+    for (Sig.Field field : sig.getFields()) {
+      if (field.label.equals(fieldNameLookingFor))
+        return sig.domain(field);
+    }
+    while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
+                                 // null
+      Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
+      if (field != null)
+        // return sig.domain(field);
+        // return sig.parent.domain(field);
+        return field;
+      else {
+        sig = sig.parent; // reset
+      }
+    }
+    return null;
+  }
+
+
 
   // Assume only one field with the same type
   // not searching through inherited fields
@@ -443,6 +495,23 @@ public class AlloyUtils {
     }
   }
 
+  public static Set<Field> getInheritedFields(PrimSig sig,
+      HashMap<String, Set<String>> inputsOrOutputsPersig,
+      Map<String, NamedElement> namedElementsBySigName) {
+
+    List<Class> classInHierarchy =
+        MDUtils.createListIncludeSelfAndParents((Class) namedElementsBySigName.get(sig.label));
+
+    Set<Field> inputsOrOutputsFields = new HashSet<>();
+    for (int i = 0; i < classInHierarchy.size() - 1; i++) {
+      Set<String> fieldNames = inputsOrOutputsPersig.get(classInHierarchy.get(i).getName());
+      if (fieldNames != null)
+        for (String fieldName : fieldNames)
+          inputsOrOutputsFields.add(AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig));
+    }
+
+    return inputsOrOutputsFields;
+  }
 
 
 }

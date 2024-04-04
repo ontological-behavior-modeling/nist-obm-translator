@@ -1,12 +1,42 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
+import org.eclipse.uml2.uml.NamedElement;
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.ToAlloy;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
 public class MDUtils {
+
+  public static Set<PrimSig> toSigs(Set<NamedElement> nes, ToAlloy toAlloy) {
+    Set<PrimSig> sigs = new HashSet<>();
+    for (NamedElement ne : nes) {
+      sigs.add(toAlloy.getSig(ne.getName()));
+    }
+    return sigs;
+  }
+
+  public static Set<NamedElement> findLeafClass(Set<NamedElement> allNEs) {
+    Set<NamedElement> leafClasses = new HashSet<>();
+    Set<Classifier> parentClasses = new HashSet<>();
+    for (NamedElement ne : allNEs) {
+      System.out.println(ne.getName());
+      leafClasses.add(ne);
+      if (ne instanceof Class) {
+        List<Classifier> parents = ((Class) ne).getGenerals();
+        parentClasses.addAll(parents);
+      }
+    }
+    leafClasses.removeAll(parentClasses);
+    return leafClasses;
+  }
+
+
 
   /**
    * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence".
@@ -14,17 +44,15 @@ public class MDUtils {
    * BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService where
    * mainClass passed if for BuffertService
    * 
-   * @param mainClass
+   * @param aClass
    * @return
    */
-  public static List<Class> createListIncludeSelfAndParents(Class mainClass) {
+  public static List<Class> createListIncludeSelfAndParents(Class aClass) {
     List<Class> list = new ArrayList<Class>();
-    list.add(mainClass);
-    while ((mainClass = getParent(mainClass)) != null) {
-      list.add(0, mainClass);
+    list.add(aClass);
+    while ((aClass = getParent(aClass)) != null) {
+      list.add(0, aClass);
     }
-    // if (list.size() > 1)
-    // System.out.println(list);
     return list;
   }
 

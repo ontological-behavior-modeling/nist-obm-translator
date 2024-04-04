@@ -269,10 +269,8 @@ public class ExprVisitor extends VisitQuery<String> {
       int numberOfFields = x.getFields().size();
 
       if (numberOfFields > 0) {
-
-        // String[] fields = new String[numberOfFields];
+        sb.append("\n");
         fieldAfterSig = true;
-
 
         Map<String, List<Sig.Field>> fieldByType = new HashMap<>(); // x.decl().expr.accept(this)
         for (Sig.Field f : x.getFields()) {
@@ -287,7 +285,7 @@ public class ExprVisitor extends VisitQuery<String> {
         for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
           if (fs.size() == 1) {
-            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n "))
                 .append(AlloyUtils.removeSlash(fs.get(0).label)).append(": ").append(type)
                 .toString();
           } else { // have to be > 1
@@ -301,10 +299,10 @@ public class ExprVisitor extends VisitQuery<String> {
               labels[i] = AlloyUtils.removeSlash(fs.get(i).label);
             }
             if (isdisj)
-              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")).append("disj ")
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n ")).append("disj ")
                   .append(String.join(", ", labels)).append(": ").append(type).toString();
             else
-              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n "))
                   .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
@@ -317,10 +315,11 @@ public class ExprVisitor extends VisitQuery<String> {
         //
         // }
         // sb.append(String.join(",", fields)).append(' ');
-        sb.append(fields).append(' ');
-      }
+        sb.append(fields).append('\n');
+        sb.append("}\n");
+      } else
+        sb.append("}\n");
 
-      sb.append("}\n");
       fieldAfterSig = false;
 
       // ========== End: signature fields ==========

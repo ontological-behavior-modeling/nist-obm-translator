@@ -351,18 +351,31 @@ public class Alloy {
   // }
 
   // transfer = x.tarnsferSupplierCustomer
-  public void createSubSettingItemRuleOverallFact(Sig ownerSig, Expr transfer) {
+  public Set<Expr> createSubSettingItemRuleOverallFact(Sig ownerSig, Expr transfer) {
+    Set<Expr> factsAdded = new HashSet<>();
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
     this.addToOverallFact(subsettingItemRuleForSources.call(varX.join(transfer)).forAll(decl));
     this.addToOverallFact(subsettingItemRuleForTargets.call(varX.join(transfer)).forAll(decl));
+
+    factsAdded.add(subsettingItemRuleForSources.call(varX.join(transfer)));
+    factsAdded.add(subsettingItemRuleForTargets.call(varX.join(transfer)));
+    return factsAdded;
   }
 
-  public void createIsAfterSourceIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+  public Set<Expr> createIsAfterSourceIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
+
+    System.out.println("????????????: " + transfer);
+
+    Set<Expr> factsAdded = new HashSet<>();
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
     this.addToOverallFact(isAfterSource.call(varX.join(transfer)).forAll(decl));
     this.addToOverallFact(isBeforeTarget.call(varX.join(transfer)).forAll(decl));
+    factsAdded.add(isAfterSource.call(varX.join(transfer)));
+    factsAdded.add(isBeforeTarget.call(varX.join(transfer)));
+    return factsAdded;
+
   }
 
   // private void createIsAfterSourceOverallFact(Sig ownerSig, Expr transfer) {
@@ -401,8 +414,18 @@ public class Alloy {
   // this.addToOverallFact(funcFilteredExpr.forAll(decl));
   // }
 
+  public void addFacts(Sig ownerSig, Set<Expr> facts) {
+    Decl decl = makeDecl(makeVarX(ownerSig), ownerSig);
+    for (Expr fact : facts)
+      this.addToOverallFact(fact.forAll(decl));
+  }
+
   /* if from or to is null, use ExprVar x */
-  public void createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to, Func func) {
+  public Set<Expr> createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to,
+      Func func) {
+
+    Set<Expr> factsAdded = new HashSet<>();
+
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
 
@@ -433,14 +456,19 @@ public class Alloy {
       fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
       if (func == Alloy.sources) { // {fact {all x: B | isBeforeTarget[x.transferBB1]}
         this.addToOverallFact(isBeforeTarget.call(fromExpr).forAll(decl));
+        factsAdded.add(isBeforeTarget.call(fromExpr));
       } else if (func == Alloy.targets) {// fact {all x: B | isAfterSource[x.transferB2B]}
         this.addToOverallFact(isAfterSource.call(fromExpr).forAll(decl));
+        factsAdded.add(isAfterSource.call(fromExpr));
       }
     }
     // else if (justInverseFunction) {
     // fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
     // }
     this.addToOverallFact(fnc_inversefnc_or_bijection.forAll(decl));
+    factsAdded.add(fnc_inversefnc_or_bijection);
+
+    return factsAdded;
   }
 
 
@@ -515,12 +543,29 @@ public class Alloy {
   }
 
   // fact {all x: B1 | x.vin = x.inputs}
-  public void addEqual2(Sig ownerSig, Sig.Field field1, Func func) {
+  // change to {all x: B1 | x.vin in x.inputs}
+  public void addEqual2(PrimSig ownerSig, List<Sig.Field> sortedFields, Func func) {
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
-    Expr equalExpr = varX.join(field1).equal(varX.join(func.call()));
+    Expr fieldsExpr = null;
+    for (Field field : sortedFields) {
+      // sig.domain(field) or sig.parent.domain(sig.parent.field)
+      Expr sigDomainField = AlloyUtils.getSigDomainFileld(field.label, ownerSig);
+      if (sigDomainField != null)
+        fieldsExpr = fieldsExpr == null ? varX.join(sigDomainField)
+            : fieldsExpr.plus(varX.join(sigDomainField));
+    }
+
+    // .... in x.inputs
+    Expr equalExpr = fieldsExpr.in(varX.join(func.call()));
     addToOverallFact(equalExpr.forAll(decl));
+
+    // x.inputs in ....
+    Expr equalExprclosure = (varX.join(func.call())).in(fieldsExpr);
+    addToOverallFact(equalExprclosure.forAll(decl));
   }
+
+
 
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
     Decl decl = makeDecl(var, ownerSig);
@@ -597,41 +642,42 @@ public class Alloy {
     addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
   }
 
-  public void addInputsAndNoInputsX(Sig ownerSig, Field field, boolean addNoInputsX,
+  public boolean addInputsAndNoInputsX(PrimSig ownerSig, List<Field> fields, boolean addNoInputsX,
       boolean addEqual) {
-    if (addEqual)
-      addEqual2(ownerSig, field, oinputs);
+    if (addEqual) {
+      addEqual2(ownerSig, fields, oinputs);
+      return true;
+    }
     if (addNoInputsX)
       noInputsX(ownerSig);
+    return false;
   }
 
 
-  public void addOutputsAndNoOutputsX(Sig ownerSig, Field field, boolean addNoOutputsX,
-      boolean addEqual) {
+  public boolean addOutputsAndNoOutputsX(PrimSig ownerSig, List<Field> fields,
+      boolean addNoOutputsX, boolean addEqual) {
     // createBijectionFilteredAddToOverallFact2(ownerSig, field, Alloy.ooutputs);
-    if (addEqual)
-      addEqual2(ownerSig, field, ooutputs);
+    if (addEqual) {
+      addEqual2(ownerSig, fields, ooutputs);
+      return true;
+    }
     if (addNoOutputsX)
       noOutputsX(ownerSig);
-  }
-
-  private void addBothToOverallFact(ExprVar var, Expr expr, Expr varJoinExpr, Decl decl) {
-    addToOverallFact((expr).in(var.join(varJoinExpr)).forAll(decl));
-    addToOverallFact(var.join(varJoinExpr).in(expr).forAll(decl));
+    return false;
   }
 
 
   // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
-  public void createEqualFieldInputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
-      Sig.Field toField) {
-    createEqualFieldToOverallFact(sig, from, fromField, to, toField, oinputs);
-  }
-
-  // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-  public void createEqualFieldOutputsToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
-      Sig.Field toField) {
-    createEqualFieldToOverallFact(sig, from, fromField, to, toField, ooutputs);
-  }
+  // public void createEqualFieldInputsToOverallFact(Sig sig, Sig.Field fromField, Expr to,
+  // Sig.Field toField) {
+  // createEqualFieldToOverallFact(sig, fromField, fromField, to, toField, oinputs);
+  // }
+  //
+  // // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
+  // public void createEqualFieldOutputsToOverallFact(Sig sig, Sig.Field fromField, Expr to,
+  // Sig.Field toField) {
+  // createEqualFieldToOverallFact(sig, fromField, fromField, to, toField, ooutputs);
+  // }
 
   // fact {all x: MultipleObjectFlow | no x.p1.inputs}
   public void createNoInputsField(Sig sig, Field field) {
@@ -652,7 +698,7 @@ public class Alloy {
   // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
   // or
   // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-  private void createEqualFieldToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
+  public void createEqualFieldToOverallFact(Sig sig, Expr from, Sig.Field fromField, Expr to,
       Sig.Field toField, Func func) {
 
     // all x: MultipleObjectFlow
@@ -690,7 +736,8 @@ public class Alloy {
 
   }
 
-  public void addSteps(Sig sig, Set<String> stepFields) {
+  public void addSteps(PrimSig sig, Set<String> stepFields, boolean addInXSteps,
+      boolean addXStepsIn) {
     ExprVar varX = makeVarX(sig);
     Decl decl = makeDecl(varX, sig);
     Expr ostepsExpr1 = osteps.call();
@@ -702,18 +749,30 @@ public class Alloy {
 
     Expr expr = null;
     for (String fieldName : sortedFieldLabel) {
-      for (Field field : sig.getFields()) {
-        if (field.label.equals(fieldName)) {
-          expr =
-              expr == null ? varX.join(sig.domain(field)) : expr.plus(varX.join(sig.domain(field)));
-          break;
-        }
-      }
+      // sig.domain(field) or sig.parent.domain(sig.parent.field)
+      Expr sigDomainField = AlloyUtils.getSigDomainFileld(fieldName, sig);
+      if (sigDomainField != null)
+        expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
     }
     if (expr != null) {
-      addBothToOverallFact(varX, expr, ostepsExpr1, decl);
+      if (addInXSteps) // all of them
+        addToOverallFact((expr).in(varX.join(ostepsExpr1)).forAll(decl)); // .... in x.steps
+      if (addXStepsIn) // to only leaf
+        addToOverallFact(varX.join(ostepsExpr1).in(expr).forAll(decl)); // x.steps in .....
     }
   }
+
+  // fact {all x: OFFoodService | x.eat in OFEat }
+  // sig = OFFoodService, field eat, typeSig = OFEat
+  public void addRedefinedSubsettingAsFact(Sig sig, Field field, Sig typeSig) {
+    System.err.println(sig.label + " " + field.label + " " + typeSig.label);
+
+    ExprVar varX = makeVarX(sig);
+    Decl decl = makeDecl(varX, sig);
+    addToOverallFact(varX.join(field).in(typeSig).forAll(decl));
+  }
+
+
 
   private static ExprVar makeVarX(Sig sig) {
     return ExprVar.make(null, "x", sig.type());
