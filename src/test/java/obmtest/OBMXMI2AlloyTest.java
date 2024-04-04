@@ -1,9 +1,11 @@
 package obmtest;
 
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,85 +19,71 @@ import edu.mit.csail.sdg.parser.CompModule;
 import edu.umd.omgutil.UMLModelErrorException;
 
 /*
- * Testing set up ===============
- * 
- * als files
- * 
- * from:Box\NIST OBM Translator\Alloy Models\obm-alloy-code_2023-09-25. zip\obm\*
- * 
- * to:obm-alloy-code_2023-09-25\obm
- * 
- * xmi files
- * 
- * from:Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25.
- * zip\obmsmttrans\samples\OBMModel.xmi Box\NIST OBM Translator\NIST UML-SysML OBM
- * Models\obmsmttrans_2023-09-25. zip\obmsmttrans\samples\OBM.xmi
- * 
- * to:obm-alloy-code_2023-09-25\obm
+ * Testing set up
  */
-
 class OBMXMI2AlloyTest {
 
   @ParameterizedTest
 
-  // order of fields matter?
+  // The order of fields in sig does not matter even trasfer (ie., transferP1P3)
+  // The order of fact fields matter (ie., fact {all x: SimpleSequence | x.p1 + x.p2 in x.steps}
+  // pass and fact {all x: SimpleSequence | x.p2 + x.p1 in x.steps} fails
   @CsvSource({
 
       // order in fields and step matters
+      // mw
+      "4.2.2 FoodService Object Flow - OFFoodService_mw.als,Model::FoodService::OFFoodService, true",
+      "4.2.2 FoodService Object Flow - OFSingleFoodService_mw.als,Model::FoodService::OFSingleFoodService,true",
+      "4.2.2 FoodService Object Flow - OFParallelFoodService_mw.als,Model::FoodService::OFParallelFoodService,true",
+      "4.2.2 FoodService Object Flow - OFLoopFoodService_mw.als,Model::FoodService::OFLoopFoodService,true",
+
+      // mw !!!!!!!!!!!!!!!!!! test pass but must be fail - bug
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, fail",
+
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow, true",
+
 
       // mw
-      "4.2.2 FoodService Object Flow - OFFoodService_mw.als,Model::FoodService::OFFoodService",
-      "4.2.2 FoodService Object Flow - OFSingleFoodService_mw.als,Model::FoodService::OFSingleFoodService",
-      "4.2.2 FoodService Object Flow - OFParallelFoodService_mw.als,Model::FoodService::OFParallelFoodService",
-      "4.2.2 FoodService Object Flow - OFLoopFoodService_mw.als,Model::FoodService::OFLoopFoodService",
-
-
-      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
-      // mw !!!!!!!!!!!!!!!!!! test pass but comparator may be wrong
-      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow",
-
-
-      // mw
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt,true",
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow,true",
 
       // mw ????????????????
-      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior",
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior,true",
       // mw change = x.inputs to in x.inputs
-      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct",
+      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct,true",
       // mw
-      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl",
+      "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl,true",
 
-      "4.1.1 Control Nodes1 - SimpleSequence.als, Model::Basic::SimpleSequence",
-      "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork",
-      "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join",
-      "4.1.1 Control Nodes4 - Decision.als, Model::Basic::Decision",
+      "4.1.1 Control Nodes1 - SimpleSequence.als, Model::Basic::SimpleSequence,true",
+      "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork,true",
+      "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join,true",
+      "4.1.1 Control Nodes4 - Decision.als, Model::Basic::Decision,true",
 
-      "4.1.1 Control Nodes5 - Merge.als, Model::Basic::Merge",
+      "4.1.1 Control Nodes5 - Merge.als, Model::Basic::Merge,true",
 
-      "4.1.2 Loop.als, Model::Basic::Loop",
+      "4.1.2 Loop.als, Model::Basic::Loop,true",
 
-      "4.1.3 CallingBehaviors.als, Model::Basic::Composed",
+      "4.1.3 CallingBehaviors.als, Model::Basic::Composed,true",
 
 
 
       // // 4.1.6
       // fact {all x: AtomicBehavior | no y: Transfer | y in x.steps} to fact {all x: AtomicBehavior
       // | no x.steps}
-      "4.1.6 Unsatisfiable - Asymmetry_mw.als, Model::Basic::UnsatisfiableAsymmetry",
+      "4.1.6 Unsatisfiable - Asymmetry_mw.als, Model::Basic::UnsatisfiableAsymmetry, true",
       // not available from jeremy
-      "4.1.6 UnsatisfiableTransitivity_mw.als, Model::Basic::UnsatisfiableTransitivity",
-      "4.1.6 UnsatisfiableMultiplicity_mw.als, Model::Basic::UnsatisfiableMultiplicity",
-      "4.1.6 UnsatisfiableComposition1_mw.als, Model::Basic::UnsatisfiableComposition1",
-      "4.1.6 UnsatisfiableComposition2_mw.als, Model::Basic::UnsatisfiableComposition2",
+      "4.1.6 UnsatisfiableTransitivity_mw.als, Model::Basic::UnsatisfiableTransitivity, true",
+      "4.1.6 UnsatisfiableMultiplicity_mw.als, Model::Basic::UnsatisfiableMultiplicity, true",
+      "4.1.6 UnsatisfiableComposition1_mw.als, Model::Basic::UnsatisfiableComposition1, true",
+      "4.1.6 UnsatisfiableComposition2_mw.als, Model::Basic::UnsatisfiableComposition2, true",
 
-      "4.2.1 FoodService Control Flow - FoodService_mw.als, Model::Realistic::FoodService",
-      "4.2.1 FoodService Control Flow - SingleFoodService_mw.als,Model::Realistic::SingleFoodService",
-      "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::Realistic::BuffetService",
-      "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::Realistic::ChurchSupper",
-      "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService",
-      "4.2.1 FoodService Control Flow - RestaurantService_mw.als,Model::Realistic::RestaurantService",
-      "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService",})
+      "4.2.1 FoodService Control Flow - FoodService_mw.als, Model::Realistic::FoodService, true",
+      "4.2.1 FoodService Control Flow - SingleFoodService_mw.als,Model::Realistic::SingleFoodService, true",
+      "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::Realistic::BuffetService, true",
+      "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::Realistic::ChurchSupper, true",
+      "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService, true",
+      "4.2.1 FoodService Control Flow - RestaurantService_mw.als,Model::Realistic::RestaurantService, true",
+      "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService, true",})
 
 
 
@@ -108,10 +96,12 @@ class OBMXMI2AlloyTest {
    * 
    * @param manualFileName
    * @param sysMLClassQualifiedName
+   * @param expctedResult boolean - true if expected to pass the test, false if expected to fail the
+   *        test
    * @throws FileNotFoundException
    * @throws UMLModelErrorException
    */
-  void compare(String manualFileName, String sysMLClassQualifiedName)
+  void compare(String manualFileName, String sysMLClassQualifiedName, boolean expectedResult)
       throws FileNotFoundException, UMLModelErrorException {
 
     System.out.println("Manually created alloy file = " + manualFileName);
@@ -123,12 +113,12 @@ class OBMXMI2AlloyTest {
     String output_and_testfiles_dir = "src/test/resources";
     File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
 
-    // setting any errors to be in error file
-    // PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
-    // System.setErr(o);
+    // write any errors to be in error file
+    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
+    System.setErr(o);
 
-    File apiFile = new File(output_and_testfiles_dir, manualFileName + "_Generated-"
-        + sysMLClassQualifiedName.replaceAll("::", "_") /* alloyModule.getModuleName() */ + ".als");
+    File apiFile = new File(output_and_testfiles_dir,
+        manualFileName + "_Generated-" + sysMLClassQualifiedName.replaceAll("::", "_") + ".als");
 
 
     OBMXMI2Alloy test = new OBMXMI2Alloy(output_and_testfiles_dir);
@@ -160,8 +150,13 @@ class OBMXMI2AlloyTest {
     // TEST
     Expr test_reachableFacts = testModule.getAllReachableFacts();
     System.out.println(test_reachableFacts);
+
     // Compare
-    assertTrue(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
+    if (expectedResult)
+      assertTrue(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
+    else
+      assertFalse(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
+
 
     ///////////////////////// Comparing Sigs ////////////////////
     // API

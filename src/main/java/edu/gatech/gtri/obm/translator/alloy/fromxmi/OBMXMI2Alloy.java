@@ -221,9 +221,6 @@ public class OBMXMI2Alloy {
     allClassesConnectedToMainSigByFields = propertiesByClass.keySet();// Suppler,
                                                                       // Customer
     Set<String> sigNameOfSharedFieldType = new HashSet<>(); // ie., BehaviorWithParameter
-    // for (Class ne : classInHierarchy) {// ParticipantTransfer/TransferProduct? Customer and
-    // Supplier
-    // are children of Product
 
     // from child to parent so that redefinedconnector is not created by parents
     // during handlClassForProcessConnector this.sigToTransferFieldMap is created
@@ -242,13 +239,11 @@ public class OBMXMI2Alloy {
       }
     }
 
-    System.out.println(sigToFactsMap);
-    System.out.println(sigToTransferFieldMap);
-    // ?????????????????????? here only inherited by mainSig. The mainSig's parent should inherited
-    // from mainSig's grandparent if transferField exists?
-    // ??????????????? !!!!!!!!!!!!!!!!!!!!!!!!!! in here may need add transfer field of parent
-    // (ie., IFFoodService.transferOrderServe to step properties of IFSingleFoodService)
-    // loop through mainSig's parent to collect transferSigs
+    // using sigToFactsMap and sigToTransferFieldMap to add transferFields to mainSig.
+    // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
+    // Note: Only supporting transferFields inherited to mainSig.
+    // If maingSig has a parent who inherited tranferFields, currently the translator is not
+    // supported to handle the inherited transfer fields.
     Set<String> mainSigInheritingTransferFields = new HashSet<>();
     // i.e.,
     // o/isBeforeTarget[x . (IFFoodService <: transferOrderServe)]

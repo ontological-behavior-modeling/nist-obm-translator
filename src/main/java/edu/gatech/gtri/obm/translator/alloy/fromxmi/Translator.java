@@ -5,43 +5,42 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.mit.csail.sdg.ast.Command;
-import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 
 public class Translator {
 
   private final ExprVisitor exprVisitor;
-  private final Set<Func> ignoredFuncs;
+  // private final Set<Func> ignoredFuncs;
   private final Set<Sig> ignoredSigs;
 
-  public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs) {
-    this(ignoredExprs, ignoredFuncs, ignoredSigs, (Set<Sig.Field>) new HashSet<Sig.Field>());
-  }
+  // public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs) {
+  // this(ignoredExprs, /* ignoredFuncs, */ ignoredSigs, (Set<Sig.Field>) new HashSet<Sig.Field>());
+  // }
 
-  public Translator(Set<Expr> ignoredExprs, Set<Func> ignoredFuncs, Set<Sig> ignoredSigs,
+  public Translator(Set<Expr> ignoredExprs, /* Set<Func> ignoredFuncs, */ Set<Sig> ignoredSigs,
       Set<Sig.Field> parameterFields) {
     exprVisitor = new ExprVisitor(ignoredExprs, parameterFields);
-    this.ignoredFuncs = ignoredFuncs;
+    // this.ignoredFuncs = ignoredFuncs;
     this.ignoredSigs = ignoredSigs;
   }
 
+  /**
+   * 
+   * @param alloyModule
+   * @param outFilename absolute filename to be written
+   */
   public void generateAlsFileContents(AlloyModule alloyModule, String outFilename) {
     StringBuilder sb = new StringBuilder();
 
-    sb.append("// This file is created with code.\n\n").append("module ")
+    sb.append("// This file is created with NIST OBM to Alloy Translator.\n\n").append("module ")
         .append(alloyModule.getModuleName()).append('\n').append("open Transfer[Occurrence] as o\n")
-        .append("open utilities/types/relation as r\n").append("abstract sig Occurrence {}\n\n")
-        .append("// Signatures:\n");
+        .append("open utilities/types/relation as r\n").append("abstract sig Occurrence {}\n\n");
 
     Map<String, String> sigs = new HashMap<>();
     for (Sig sig : alloyModule.getSignatures()) {
@@ -52,86 +51,83 @@ public class Translator {
       }
     }
 
-    // sb.append("\n// Facts:\n");
-
-
     String s = exprVisitor.visitThis(alloyModule.getFacts());
     String formats = format(s, sigs);
     sb.append(formats);
 
     // sb.append("\n// Functions and predicates:\n");
 
-    Command[] commands = alloyModule.getCommands();
-    Set<String> visitedFuncs = new HashSet<>();
-
-    // Get the functions and predicates from the commands.
-    for (Command command : commands) {
-
-      for (Func func : command.formula.findAllFunctions()) {
-
-        if (ignoredFuncs.contains(func) || visitedFuncs.contains(func.toString())) {
-          continue;
-        }
-
-        visitedFuncs.add(func.toString());
-
-        if (func.isPred) {
-          sb.append("pred ").append(AlloyUtils.removeSlash(func.label));
-
-          if (!func.decls.isEmpty()) {
-            sb.append('[');
-
-            for (int j = 0; j < func.decls.size(); j++) {
-              Decl decl = func.decls.get(j);
-              String[] declarations = new String[decl.names.size()];
-              for (int i = 0; i < decl.names.size(); i++) {
-                declarations[i] = decl.names.get(i).toString();
-              }
-              sb.append(String.join(",", declarations));
-              sb.append(": ");
-              sb.append(exprVisitor.visitThis(decl.expr));
-
-              if (j != func.decls.size() - 1) {
-                sb.append(", ");
-              }
-            }
-
-            sb.append(']');
-          }
-
-          sb.append('{').append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
-              .append("}\n");
-
-        } else if (!func.isPred) {
-          sb.append("fun ").append(AlloyUtils.removeSlash(func.label));
-
-          if (!func.decls.isEmpty()) {
-            sb.append('[');
-
-            for (int j = 0; j < func.decls.size(); j++) {
-              Decl decl = func.decls.get(j);
-              String[] declarations = new String[decl.names.size()];
-              for (int i = 0; i < decl.names.size(); i++) {
-                declarations[i] = decl.names.get(i).toString();
-              }
-              sb.append(String.join(",", declarations));
-              sb.append(": ");
-              sb.append(exprVisitor.visitThis(decl.expr));
-
-              if (j != func.decls.size() - 1) {
-                sb.append(", ");
-              }
-            }
-
-            sb.append(']');
-          }
-
-          sb.append(": ").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.returnDecl)))
-              .append(" {").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
-              .append("}\n");
-        }
-      }
-    }
+    // Command[] commands = alloyModule.getCommands();
+    // Set<String> visitedFuncs = new HashSet<>();
+    //
+    // // Get the functions and predicates from the commands.
+    // for (Command command : commands) {
+    //
+    // for (Func func : command.formula.findAllFunctions()) {
+    //
+    // if (ignoredFuncs.contains(func) || visitedFuncs.contains(func.toString())) {
+    // continue;
+    // }
+    //
+    // visitedFuncs.add(func.toString());
+    //
+    // if (func.isPred) {
+    // sb.append("pred ").append(AlloyUtils.removeSlash(func.label));
+    //
+    // if (!func.decls.isEmpty()) {
+    // sb.append('[');
+    //
+    // for (int j = 0; j < func.decls.size(); j++) {
+    // Decl decl = func.decls.get(j);
+    // String[] declarations = new String[decl.names.size()];
+    // for (int i = 0; i < decl.names.size(); i++) {
+    // declarations[i] = decl.names.get(i).toString();
+    // }
+    // sb.append(String.join(",", declarations));
+    // sb.append(": ");
+    // sb.append(exprVisitor.visitThis(decl.expr));
+    //
+    // if (j != func.decls.size() - 1) {
+    // sb.append(", ");
+    // }
+    // }
+    //
+    // sb.append(']');
+    // }
+    //
+    // sb.append('{').append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
+    // .append("}\n");
+    //
+    // } else if (!func.isPred) {
+    // sb.append("fun ").append(AlloyUtils.removeSlash(func.label));
+    //
+    // if (!func.decls.isEmpty()) {
+    // sb.append('[');
+    //
+    // for (int j = 0; j < func.decls.size(); j++) {
+    // Decl decl = func.decls.get(j);
+    // String[] declarations = new String[decl.names.size()];
+    // for (int i = 0; i < decl.names.size(); i++) {
+    // declarations[i] = decl.names.get(i).toString();
+    // }
+    // sb.append(String.join(",", declarations));
+    // sb.append(": ");
+    // sb.append(exprVisitor.visitThis(decl.expr));
+    //
+    // if (j != func.decls.size() - 1) {
+    // sb.append(", ");
+    // }
+    // }
+    //
+    // sb.append(']');
+    // }
+    //
+    // sb.append(": ").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.returnDecl)))
+    // .append(" {").append(AlloyUtils.removeSlash(exprVisitor.visitThis(func.getBody())))
+    // .append("}\n");
+    // }
+    // }
+    // }
 
     // sb.append("\n// Commands:\n");
     //
