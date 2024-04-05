@@ -10,10 +10,7 @@
   <profiles>
     <profile>
       <id>github</id>
-	  <properties>
-		<nistobmtranslator.home>C:/Users/mw107/Documents/Projects/NIST OBM/GIT/NIST-OBM-Translator.git/develop_mw/lib</nistobmtranslator.home>
-	  </properties>
-      <repositories>
+	  <repositories>
         <repository>
           <id>central</id>
           <url>https://repo1.maven.org/maven2</url>
@@ -38,7 +35,3 @@
   </servers>
 </settings>
 
-<!-- reference: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry --> 
-<!-- modify your username and token and combine with your local settings.xml in C:\Users\<loginname>\.m2\settings.xml -->
-<!-- modify nistobmtranslator.home to your absolute path containing graphstream jar files -->
-<!-- how to create github token: https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens -->
