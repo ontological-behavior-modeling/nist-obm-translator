@@ -1,12 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -22,7 +17,13 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class CallingBehaviorsTest {
 
@@ -71,18 +72,35 @@ class CallingBehaviorsTest {
     Decl decl3 = new Decl(null, null, null, names3, nestedBehaviorSig.oneOf());
     Decl decl4 = new Decl(null, null, null, names4, nestedBehaviorSig.oneOf());
 
-    alloy.addToOverallFact((bijectionFilteredFunction.call(happensBeforeFunction.call(),
-        nestedBehaviorSig.join(nestedBehavior_p4), nestedBehaviorSig.join(nestedBehavior_p5))
-        .forAll(decl1))
-            .and(nestedBehaviorSig.join(nestedBehavior_p4).cardinality()
-                .equal(ExprConstant.makeNUMBER(1)).forAll(decl2))
-            .and(nestedBehaviorSig.join(nestedBehaviorSig.domain(nestedBehavior_p4))
-                .plus(nestedBehaviorSig.join(nestedBehaviorSig.domain(nestedBehavior_p5)))
-                .in(nestedBehaviorSig.join(stepsFunction.call())).forAll(decl3))
-            .and(nestedBehaviorSig.join(stepsFunction.call())
-                .in(nestedBehaviorSig.join(nestedBehaviorSig.domain(nestedBehavior_p4))
-                    .plus(nestedBehaviorSig.join(nestedBehaviorSig.domain(nestedBehavior_p5))))
-                .forAll(decl4)));
+    alloy.addToOverallFact(
+        (bijectionFilteredFunction
+                .call(
+                    happensBeforeFunction.call(),
+                    nestedBehaviorSig.join(nestedBehavior_p4),
+                    nestedBehaviorSig.join(nestedBehavior_p5))
+                .forAll(decl1))
+            .and(
+                nestedBehaviorSig
+                    .join(nestedBehavior_p4)
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(decl2))
+            .and(
+                nestedBehaviorSig
+                    .join(nestedBehaviorSig.domain(nestedBehavior_p4))
+                    .plus(nestedBehaviorSig.join(nestedBehaviorSig.domain(nestedBehavior_p5)))
+                    .in(nestedBehaviorSig.join(stepsFunction.call()))
+                    .forAll(decl3))
+            .and(
+                nestedBehaviorSig
+                    .join(stepsFunction.call())
+                    .in(
+                        nestedBehaviorSig
+                            .join(nestedBehaviorSig.domain(nestedBehavior_p4))
+                            .plus(
+                                nestedBehaviorSig.join(
+                                    nestedBehaviorSig.domain(nestedBehavior_p5))))
+                    .forAll(decl4)));
 
     // ComposedBehavior
     ExprVar c_s1 = ExprVar.make(null, "x", composedBehaviorSig.type());
@@ -103,28 +121,46 @@ class CallingBehaviorsTest {
     Decl c_decl4 = new Decl(null, null, null, c_names4, composedBehaviorSig.oneOf());
     Decl c_decl5 = new Decl(null, null, null, c_names5, composedBehaviorSig.oneOf());
 
-    alloy.addToOverallFact((bijectionFilteredFunction
-        .call(happensBeforeFunction.call(),
-            composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p1)),
-            composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)))
-        .forAll(c_decl1))
-            .and(bijectionFilteredFunction
-                .call(happensBeforeFunction.call(),
-                    composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)),
-                    composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p3)))
-                .forAll(c_decl2))
-            .and(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p1))
-                .cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(c_decl3))
-            .and(composedBehaviorSig.join(composedBehavior_p1)
-                .plus(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)))
-                .plus(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p3)))
-                .in(composedBehaviorSig.join(stepsFunction.call())).forAll(c_decl4))
-            .and(composedBehaviorSig.join(stepsFunction.call())
-                .in(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p1))
+    alloy.addToOverallFact(
+        (bijectionFilteredFunction
+                .call(
+                    happensBeforeFunction.call(),
+                    composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p1)),
+                    composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)))
+                .forAll(c_decl1))
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBeforeFunction.call(),
+                        composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)),
+                        composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p3)))
+                    .forAll(c_decl2))
+            .and(
+                composedBehaviorSig
+                    .join(composedBehaviorSig.domain(composedBehavior_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(c_decl3))
+            .and(
+                composedBehaviorSig
+                    .join(composedBehavior_p1)
                     .plus(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p2)))
-                    .plus(
-                        composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p3))))
-                .forAll(c_decl5)));
+                    .plus(composedBehaviorSig.join(composedBehaviorSig.domain(composedBehavior_p3)))
+                    .in(composedBehaviorSig.join(stepsFunction.call()))
+                    .forAll(c_decl4))
+            .and(
+                composedBehaviorSig
+                    .join(stepsFunction.call())
+                    .in(
+                        composedBehaviorSig
+                            .join(composedBehaviorSig.domain(composedBehavior_p1))
+                            .plus(
+                                composedBehaviorSig.join(
+                                    composedBehaviorSig.domain(composedBehavior_p2)))
+                            .plus(
+                                composedBehaviorSig.join(
+                                    composedBehaviorSig.domain(composedBehavior_p3))))
+                    .forAll(c_decl5)));
 
     // ========== Define functions and predicates ==========
 
@@ -174,10 +210,14 @@ class CallingBehaviorsTest {
 
     // instancesDuringExample
     Expr instancesDuringExampleBody =
-        p1DuringExampleExpression.and(p2DuringExampleExpression).and(p3DuringExampleExpression)
-            .and(p4DuringExampleExpression).and(p5DuringExampleExpression);
-    Func instancesDuringExampleFunction = new Func(null, "instancesDuringExample",
-        new ArrayList<>(), null, instancesDuringExampleBody);
+        p1DuringExampleExpression
+            .and(p2DuringExampleExpression)
+            .and(p3DuringExampleExpression)
+            .and(p4DuringExampleExpression)
+            .and(p5DuringExampleExpression);
+    Func instancesDuringExampleFunction =
+        new Func(
+            null, "instancesDuringExample", new ArrayList<>(), null, instancesDuringExampleBody);
     Expr instancesDuringExampleExpression = instancesDuringExampleFunction.call();
 
     // onlyComposedBehavior
@@ -193,22 +233,39 @@ class CallingBehaviorsTest {
     // Expr nonZeroDurationOnlyExpression = nonZeroDurationOnlyFunction.call();
 
     // ========== Define command ==========
-    Expr composedBehaviorCmdExpr = (suppressTransfersExpression).and(suppressIOExpression)
-        .and(instancesDuringExampleExpression).and(onlyComposedBehaviorExpression);
-    Command composedBehaviorCmd = new Command(null, composedBehaviorCmdExpr, "composedBehavior",
-        false, 6, -1, -1, -1, Arrays.asList(new CommandScope[] {}), Arrays.asList(new Sig[] {}),
-        composedBehaviorCmdExpr.and(alloy.getOverAllFact()), null);
+    Expr composedBehaviorCmdExpr =
+        (suppressTransfersExpression)
+            .and(suppressIOExpression)
+            .and(instancesDuringExampleExpression)
+            .and(onlyComposedBehaviorExpression);
+    Command composedBehaviorCmd =
+        new Command(
+            null,
+            composedBehaviorCmdExpr,
+            "composedBehavior",
+            false,
+            6,
+            -1,
+            -1,
+            -1,
+            Arrays.asList(new CommandScope[] {}),
+            Arrays.asList(new Sig[] {}),
+            composedBehaviorCmdExpr.and(alloy.getOverAllFact()),
+            null);
 
     // ========== Write file ==========
-    AlloyModule alloyModule = new AlloyModule("CallingBehaviors", alloy.getAllSigs(),
-        alloy.getOverAllFact(), new Command[] {composedBehaviorCmd});
+    AlloyModule alloyModule =
+        new AlloyModule(
+            "CallingBehaviors",
+            alloy.getAllSigs(),
+            alloy.getOverAllFact(),
+            new Command[] {composedBehaviorCmd});
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
     String outFileName = "src/test/resources/generated-" + alloyModule.getModuleName() + ".als";
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Create Alloy file version ==========
-
 
     CompModule importedModule = AlloyUtils.importAlloyModule(manualfile);
 

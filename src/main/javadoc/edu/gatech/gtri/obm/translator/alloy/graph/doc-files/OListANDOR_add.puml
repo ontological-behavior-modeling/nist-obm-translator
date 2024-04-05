@@ -1,0 +1,5 @@
+@startuml
+start
+:Add IObject //_o// to //list//;
+stop
+@enduml

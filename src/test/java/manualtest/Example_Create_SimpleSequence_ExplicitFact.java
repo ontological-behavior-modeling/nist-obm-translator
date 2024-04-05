@@ -1,11 +1,5 @@
 package manualtest;
 
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -23,6 +17,11 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Module;
 import edu.mit.csail.sdg.ast.Sig;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Example_Create_SimpleSequence_ExplicitFact {
 
@@ -74,7 +73,6 @@ public class Example_Create_SimpleSequence_ExplicitFact {
     Expr ostepsExpr1 = osteps.call();
     Expr ostepsExpr2 = osteps.call();
 
-
     ExprVar s1 = ExprVar.make(null, "s", mainSig.type());
     List<ExprHasName> names1 = new ArrayList<>(List.of(s1));
 
@@ -90,29 +88,34 @@ public class Example_Create_SimpleSequence_ExplicitFact {
     ExprVar s5 = ExprVar.make(null, "s", mainSig.type());
     List<ExprHasName> names5 = new ArrayList<>(List.of(s5));
 
-
     Decl decl1 = new Decl(null, null, null, names1, mainSig.oneOf());
     Decl decl2 = new Decl(null, null, null, names2, mainSig.oneOf());
     Decl decl3 = new Decl(null, null, null, names3, mainSig.oneOf());
     Decl decl4 = new Decl(null, null, null, names4, mainSig.oneOf());
     Decl decl5 = new Decl(null, null, null, names5, mainSig.oneOf());
 
-
-    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), s4.join(mainSig.domain(p1)),
-        s4.join(mainSig.domain(p2)));
-    Expr inverseFuncFilteredExpr = inverseFuncFiltered.call(happensBefore.call(),
-        s5.join(mainSig.domain(p1)), s5.join(mainSig.domain(p2)));
+    Expr funcFilteredExpr =
+        funcFiltered.call(
+            happensBefore.call(), s4.join(mainSig.domain(p1)), s4.join(mainSig.domain(p2)));
+    Expr inverseFuncFilteredExpr =
+        inverseFuncFiltered.call(
+            happensBefore.call(), s5.join(mainSig.domain(p1)), s5.join(mainSig.domain(p2)));
 
     sst.addToOverallFact(
-        s1.join(mainSig.domain(p1)).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl1)
-            .and(s2.join(mainSig.domain(p1)).plus(s2.join(mainSig.domain(p2)))
-                .in(s2.join(ostepsExpr1)).forAll(decl2))
-
-            .and(s3.join(ostepsExpr2)
-                .in(s3.join(mainSig.domain(p1)).plus(s3.join(mainSig.domain(p2)))).forAll(decl3))
-
+        s1.join(mainSig.domain(p1))
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .forAll(decl1)
+            .and(
+                s2.join(mainSig.domain(p1))
+                    .plus(s2.join(mainSig.domain(p2)))
+                    .in(s2.join(ostepsExpr1))
+                    .forAll(decl2))
+            .and(
+                s3.join(ostepsExpr2)
+                    .in(s3.join(mainSig.domain(p1)).plus(s3.join(mainSig.domain(p2))))
+                    .forAll(decl3))
             .and(funcFilteredExpr.forAll(decl4))
-
             .and(inverseFuncFilteredExpr.forAll(decl5)));
 
     Func nonZeroDurationOnlyFunction =
@@ -143,17 +146,29 @@ public class Example_Create_SimpleSequence_ExplicitFact {
         new Func(null, "p2DuringExample", new ArrayList<>(), null, p2Sig.in(mainSig.join(p2)));
     Expr p2DuringExampleExpression = p2DuringExamplePredicate.call();
 
-    Func instancesDuringExamplePredicate = new Func(null, "instancesDuringExample",
-        new ArrayList<>(), null, p1DuringExampleExpression.and(p2DuringExampleExpression));
+    Func instancesDuringExamplePredicate =
+        new Func(
+            null,
+            "instancesDuringExample",
+            new ArrayList<>(),
+            null,
+            p1DuringExampleExpression.and(p2DuringExampleExpression));
     Expr instancesDuringExampleExpression = instancesDuringExamplePredicate.call();
 
-    Func onlySimpleSequencePredicate = new Func(null, "onlySimpleSequence", new ArrayList<>(), null,
-        mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
+    Func onlySimpleSequencePredicate =
+        new Func(
+            null,
+            "onlySimpleSequence",
+            new ArrayList<>(),
+            null,
+            mainSig.cardinality().equal(ExprConstant.makeNUMBER(1)));
     Expr onlySimpleSequenceExpression = onlySimpleSequencePredicate.call();
-    Expr _nameExpr = nonZeroDurationOnlyFunctionExpression.and(suppressTransfersExpression)
-        .and(suppressIOExpression).and(instancesDuringExampleExpression)
-        .and(onlySimpleSequenceExpression);
-
+    Expr _nameExpr =
+        nonZeroDurationOnlyFunctionExpression
+            .and(suppressTransfersExpression)
+            .and(suppressIOExpression)
+            .and(instancesDuringExampleExpression)
+            .and(onlySimpleSequenceExpression);
 
     Pos _pos = null;
     String _label = "SimpleSequence";
@@ -169,8 +184,20 @@ public class Example_Create_SimpleSequence_ExplicitFact {
 
     // ========== Define command ==========
 
-    Command command = new Command(_pos, _nameExpr, _label, _check, _overall, _bitwidth, _maxseq,
-        _expects, _scope, _additionalExactSig, _formula, _parent);
+    Command command =
+        new Command(
+            _pos,
+            _nameExpr,
+            _label,
+            _check,
+            _overall,
+            _bitwidth,
+            _maxseq,
+            _expects,
+            _scope,
+            _additionalExactSig,
+            _formula,
+            _parent);
     Command[] commands = {command};
 
     AlloyModule alloyModule =
@@ -181,4 +208,3 @@ public class Example_Create_SimpleSequence_ExplicitFact {
     translator.generateAlsFileContents(alloyModule, outFileName);
   }
 }
-

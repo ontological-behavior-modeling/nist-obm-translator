@@ -1,0 +1,16 @@
+@startuml
+start
+:Create nonZeroDurationOnly;
+:Create supressTransfers;
+:Create supressIO;
+:Create new ArrayList;
+while(For size of fields List)
+:Get During Example Expression 
+with Current Field;
+:Add Expression to ArrayList;
+endwhile
+:Create instancesDuringExample;
+:Create onlySig;
+:Return Added Expressions;
+stop
+@enduml

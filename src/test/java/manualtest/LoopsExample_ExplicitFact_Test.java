@@ -1,10 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -18,7 +15,11 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class LoopsExample_ExplicitFact_Test {
 
@@ -49,12 +50,12 @@ class LoopsExample_ExplicitFact_Test {
     alloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(loopSig, loop_p1, loop_p2);
 
     // inverseFunctionFiltered[happensBefore, s.p1 + s.p2, s.p2]
-    alloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(loopSig,
-        new Expr[] {loop_p1, loop_p2}, new Expr[] {loop_p2});
+    alloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(
+        loopSig, new Expr[] {loop_p1, loop_p2}, new Expr[] {loop_p2});
 
     // functionFiltered[happensBefore, s.p2, s.p2 + s.p3]
-    alloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(loopSig, new Expr[] {loop_p2},
-        new Expr[] {loop_p2, loop_p3});
+    alloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(
+        loopSig, new Expr[] {loop_p2}, new Expr[] {loop_p2, loop_p3});
 
     // inverseFunctionFiltered[happensBefore, s.p2, s.p3]
     alloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(loopSig, loop_p2, loop_p3);
@@ -87,15 +88,21 @@ class LoopsExample_ExplicitFact_Test {
 
     Func stepFunctions = AlloyUtils.getFunction(Alloy.transferModule, "o/steps");
 
-    alloy.addToOverallFact(s4.join(loop_p1).plus(s4.join(loop_p2)).plus(s4.join(loop_p3))
-        .in(s4.join(stepFunctions.call())).forAll(decl4));
+    alloy.addToOverallFact(
+        s4.join(loop_p1)
+            .plus(s4.join(loop_p2))
+            .plus(s4.join(loop_p3))
+            .in(s4.join(stepFunctions.call()))
+            .forAll(decl4));
 
     // s.steps in s.p1 + s.p2 + s.p3
     ExprVar s5 = ExprVar.make(null, "s", loopSig.type());
     Decl decl5 = new Decl(null, null, null, List.of(s5), loopSig.oneOf());
 
-    alloy.addToOverallFact(s5.join(stepFunctions.call())
-        .in(s5.join(loop_p1).plus(s5.join(loop_p2)).plus(s5.join(loop_p3))).forAll(decl5));
+    alloy.addToOverallFact(
+        s5.join(stepFunctions.call())
+            .in(s5.join(loop_p1).plus(s5.join(loop_p2)).plus(s5.join(loop_p3)))
+            .forAll(decl5));
 
     // ========== Define command(s) ==========
 
@@ -163,8 +170,6 @@ class LoopsExample_ExplicitFact_Test {
 
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
-
-
 
     translator.generateAlsFileContents(alloyModule, outFileName);
 

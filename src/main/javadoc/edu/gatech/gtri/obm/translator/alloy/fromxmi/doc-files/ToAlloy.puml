@@ -1,0 +1,7 @@
+@startuml
+start
+-> File Path: String;
+:Construct Alloy Class;
+:Create HashMap sigByName;
+stop
+@enduml

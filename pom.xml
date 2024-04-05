@@ -3,11 +3,25 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.gatech.gtri.obm</groupId>
-  <artifactId>NIST-OBM-Translator</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>nist-obm-translator</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+
+  <scm>
+    <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
+    <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</developerConnection>
+    <tag>HEAD</tag>
+    <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <url>https://maven.pkg.github.com/ontological-behavior-modeling/nist-obm-translator</url>
+    </repository>
+  </distributionManagement>
 
   <properties>
-    <alloy.version>5.1.0</alloy.version>
+    <alloy.version>5.1.0-SNAPSHOT</alloy.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <pomsort.version>3.2.1</pomsort.version>
@@ -49,7 +63,7 @@
     <dependency>
       <groupId>org.alloytools</groupId>
       <artifactId>org.alloytools.alloy.application</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>${alloy.version}</version>
     </dependency>
     <!-- see for documentation and configuration information: https://github.com/Ekryd/sortpom -->
     <dependency>
@@ -85,11 +99,22 @@
     </dependency>
   </dependencies>
 
+  <!-- <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration>
+          <stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+          <show>public</show>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+ -->
+
   <repositories>
-    <!--<repository>  The jitpack 'repo' is an on-the-fly build service for Github (and other code repos). 
-	    <id>jitpack.io</id>
-	    <url>https://jitpack.io</url> 
-	</repository>-->
     <repository>
       <releases>
         <enabled>true</enabled>
@@ -119,6 +144,16 @@
 
   <build>
     <plugins>
+      <!-- This plugin enables skipping creation of the normal jar file -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <!-- This plugin enables creation of a jar with depenedencies -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -134,14 +169,26 @@
         <executions>
           <execution>
             <id>make-assembly</id>
-            <!-- bind to the packaging phase -->
             <goals>
               <goal>single</goal>
             </goals>
-            <!-- this is used for inheritance merges -->
             <phase>package</phase>
           </execution>
         </executions>
+      </plugin>
+      <!-- This plugin allows for the custom versioning tags (i.e v1.0.0) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>3.0.1</version>
+        <configuration>
+          <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <checkModificationExcludes>
+            <checkModificationExclude>settings.xml</checkModificationExclude>
+          </checkModificationExcludes>
+        </configuration>
       </plugin>
       <plugin>
         <!-- see for documentation and configuration information: https://github.com/Ekryd/sortpom -->
@@ -193,8 +240,32 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration>
+          <show>public</show>
+          <doclint>none</doclint>
+          <javadocDirectory>${basedir}/src/main/javadoc</javadocDirectory>
+          <nohelp>true</nohelp>
+          <doclet>nl.talsmasoftware.umldoclet.UMLDoclet</doclet>
+          <docletArtifact>
+            <groupId>nl.talsmasoftware</groupId>
+            <artifactId>umldoclet</artifactId>
+            <version>2.1.1</version>
+          </docletArtifact>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
 </project>
-

@@ -1,0 +1,49 @@
+@startuml
+start
+if(//source// is an Instance of ONode) then (yes)
+:Get Source Node;
+:Print //source//;
+:Add //sourceNode// to Visited Nodes;
+:Create Optional Edge //oneOfEdges//;
+if(//onOfEdges// has a Value) then (yes)
+if(//sourceNode// has 1 Leaving Edge) then (yes)
+:Create OListOR;
+:Get Target Node
+(API to GraphStream);
+while(For Each Edge in the Target Node)
+:Get the Edge's Source Node;
+if(Current Source Node =! Target Node)
+:Add Current Source Node to //visited//;
+:Add Current Source Node to //sourceOR//;
+endif
+endwhile
+:Put //sourceOR// and //targetNode// in 
+IObject Map //hb//;
+else(no)
+:Create OListOR //targetOR//;
+while(For Each Edge in //sourceNode//)
+:Get Edge's Target Node
+(API to GraphStream);
+:Add //targetNode// to //targetOR//;
+endwhile
+:Put //source// and //targetOR//
+in IObject Map //hb//;
+endif
+else(no)
+if(//sourceNode// has 1 Leaving Edge) then (yes)
+:Get Target Node from //sourceNode//;
+:Put //source// and Target Node in
+IObject Map //hb//;
+elseif(//sourceNode// has greater than 1 Leaving Edges) then (yes)
+:Create OListAND //targetAND//;
+while(For Each Edge in //sourceNode//)
+:Get Edge's Target Node;
+:Add Target Node to //targetAND//;
+endwhile
+:Put //source// and //targetAND// in
+IObject Map //hb//;
+endif
+endif
+endif
+stop
+@enduml

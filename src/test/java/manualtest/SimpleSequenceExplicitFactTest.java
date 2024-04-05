@@ -1,11 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -20,7 +16,12 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class SimpleSequenceExplicitFactTest {
 
@@ -73,20 +74,34 @@ class SimpleSequenceExplicitFactTest {
     Decl decl5 = new Decl(null, null, null, names5, mainSig.oneOf());
     Decl decl6 = new Decl(null, null, null, names6, mainSig.oneOf());
 
-    Expr funcFilteredExpr = funcFiltered.call(happensBefore.call(), s4.join(mainSig.domain(p1)),
-        s4.join(mainSig.domain(p2)));
-    Expr inverseFuncFilteredExpr = inverseFuncFiltered.call(happensBefore.call(),
-        s5.join(mainSig.domain(p1)), s5.join(mainSig.domain(p2)));
+    Expr funcFilteredExpr =
+        funcFiltered.call(
+            happensBefore.call(), s4.join(mainSig.domain(p1)), s4.join(mainSig.domain(p2)));
+    Expr inverseFuncFilteredExpr =
+        inverseFuncFiltered.call(
+            happensBefore.call(), s5.join(mainSig.domain(p1)), s5.join(mainSig.domain(p2)));
 
     alloy.addToOverallFact(
-        s1.join(mainSig.domain(p1)).cardinality().equal(ExprConstant.makeNUMBER(1)).forAll(decl1)
-            .and(s6.join(mainSig.domain(p2)).cardinality().equal(ExprConstant.makeNUMBER(1))
-                .forAll(decl6))
-            .and(s2.join(mainSig.domain(p1)).plus(s2.join(mainSig.domain(p2)))
-                .in(s2.join(ostepsExpr1)).forAll(decl2))
-            .and(s3.join(ostepsExpr2)
-                .in(s3.join(mainSig.domain(p1)).plus(s3.join(mainSig.domain(p2)))).forAll(decl3))
-            .and(funcFilteredExpr.forAll(decl4)).and(inverseFuncFilteredExpr.forAll(decl5)));
+        s1.join(mainSig.domain(p1))
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .forAll(decl1)
+            .and(
+                s6.join(mainSig.domain(p2))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(decl6))
+            .and(
+                s2.join(mainSig.domain(p1))
+                    .plus(s2.join(mainSig.domain(p2)))
+                    .in(s2.join(ostepsExpr1))
+                    .forAll(decl2))
+            .and(
+                s3.join(ostepsExpr2)
+                    .in(s3.join(mainSig.domain(p1)).plus(s3.join(mainSig.domain(p2))))
+                    .forAll(decl3))
+            .and(funcFilteredExpr.forAll(decl4))
+            .and(inverseFuncFilteredExpr.forAll(decl5)));
 
     // Func nonZeroDurationOnlyFunction =
     // Helper.getFunction(Alloy.transferModule, "o/nonZeroDurationOnly");
@@ -151,12 +166,9 @@ class SimpleSequenceExplicitFactTest {
     Translator translator =
         new Translator(alloy.getIgnoredExprs(), alloy.getIgnoredFuncs(), alloy.getIgnoredSigs());
 
-
-
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Create Alloy file version ==========
-
 
     CompModule importedModule = AlloyUtils.importAlloyModule(filename);
 

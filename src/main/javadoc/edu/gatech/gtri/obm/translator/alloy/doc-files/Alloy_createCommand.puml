@@ -1,0 +1,7 @@
+@startuml
+start
+:Define Command Attributes;
+:Construct Command;
+:Return Command;
+stop
+@enduml

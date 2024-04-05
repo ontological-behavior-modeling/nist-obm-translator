@@ -1,11 +1,7 @@
 package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -20,7 +16,12 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class ControlNodesTest {
 
@@ -103,25 +104,42 @@ class ControlNodesTest {
     Decl decl5 = new Decl(null, null, null, names5, simpleSequenceSig.oneOf());
     Decl decl6 = new Decl(null, null, null, names6, simpleSequenceSig.oneOf());
 
-    Expr functionFilteredExpr = functionFilteredFunction.call(happensBefore.call(),
-        s1.join(simpleSequenceSig.domain(simpleSequence_p1)),
-        s1.join(simpleSequenceSig.domain(simpleSequence_p2)));
+    Expr functionFilteredExpr =
+        functionFilteredFunction.call(
+            happensBefore.call(),
+            s1.join(simpleSequenceSig.domain(simpleSequence_p1)),
+            s1.join(simpleSequenceSig.domain(simpleSequence_p2)));
 
-    Expr inverseFunctionFilteredExpr = inverseFunctionFilteredFunction.call(happensBefore.call(),
-        s2.join(simpleSequenceSig.domain(simpleSequence_p1)),
-        s2.join(simpleSequenceSig.domain(simpleSequence_p2)));
+    Expr inverseFunctionFilteredExpr =
+        inverseFunctionFilteredFunction.call(
+            happensBefore.call(),
+            s2.join(simpleSequenceSig.domain(simpleSequence_p1)),
+            s2.join(simpleSequenceSig.domain(simpleSequence_p2)));
 
-    alloy.addToOverallFact((functionFilteredExpr.forAll(decl1))
-        .and(inverseFunctionFilteredExpr.forAll(decl2))
-        .and(s3.join(simpleSequenceSig.domain(simpleSequence_p1)).cardinality()
-            .equal(ExprConstant.makeNUMBER(1)).forAll(decl3))
-        .and(s4.join(simpleSequenceSig.domain(simpleSequence_p2)).cardinality()
-            .equal(ExprConstant.makeNUMBER(1)).forAll(decl4))
-        .and(s5.join(simpleSequenceSig.domain(simpleSequence_p1)).plus(s5.join(simpleSequence_p2))
-            .in(s5.join(stepsFunction.call())).forAll(decl5))
-        .and(s6.join(stepsFunction.call()).in(
-            s6.join(simpleSequenceSig.domain(simpleSequence_p1)).plus(s6.join(simpleSequence_p2)))
-            .forAll(decl6)));
+    alloy.addToOverallFact(
+        (functionFilteredExpr.forAll(decl1))
+            .and(inverseFunctionFilteredExpr.forAll(decl2))
+            .and(
+                s3.join(simpleSequenceSig.domain(simpleSequence_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(decl3))
+            .and(
+                s4.join(simpleSequenceSig.domain(simpleSequence_p2))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(decl4))
+            .and(
+                s5.join(simpleSequenceSig.domain(simpleSequence_p1))
+                    .plus(s5.join(simpleSequence_p2))
+                    .in(s5.join(stepsFunction.call()))
+                    .forAll(decl5))
+            .and(
+                s6.join(stepsFunction.call())
+                    .in(
+                        s6.join(simpleSequenceSig.domain(simpleSequence_p1))
+                            .plus(s6.join(simpleSequence_p2)))
+                    .forAll(decl6)));
 
     // // Fork
 
@@ -148,21 +166,38 @@ class ControlNodesTest {
     Decl f_decl4 = new Decl(null, null, null, f_names4, forkSig.oneOf());
     Decl f_decl5 = new Decl(null, null, null, f_names5, forkSig.oneOf());
 
-    Expr bijectionFilteredExpr1 = bijectionFilteredFunction.call(happensBefore.call(),
-        f_s1.join(forkSig.domain(fork_p1)), f_s1.join(forkSig.domain(fork_p2)));
-    Expr bijectionFilteredExpr2 = bijectionFilteredFunction.call(happensBefore.call(),
-        f_s2.join(forkSig.domain(fork_p1)), f_s2.join(forkSig.domain(fork_p3)));
+    Expr bijectionFilteredExpr1 =
+        bijectionFilteredFunction.call(
+            happensBefore.call(),
+            f_s1.join(forkSig.domain(fork_p1)),
+            f_s1.join(forkSig.domain(fork_p2)));
+    Expr bijectionFilteredExpr2 =
+        bijectionFilteredFunction.call(
+            happensBefore.call(),
+            f_s2.join(forkSig.domain(fork_p1)),
+            f_s2.join(forkSig.domain(fork_p3)));
 
     alloy.addToOverallFact(
-        (bijectionFilteredExpr1.forAll(f_decl1)).and(bijectionFilteredExpr2.forAll(f_decl2))
-            .and(f_s3.join(forkSig.domain(fork_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
-                .forAll(f_decl3))
-            .and(f_s4.join(forkSig.domain(fork_p1)).plus(f_s3.join(forkSig.domain(fork_p2)))
-                .plus(f_s3.join(forkSig.domain(fork_p3))).in(f_s3.join(stepsFunction.call()))
-                .forAll(f_decl4))
-            .and(f_s5.join(stepsFunction.call()).in(f_s5.join(forkSig.domain(fork_p1))
-                .plus(f_s5.join(forkSig.domain(fork_p2))).plus(f_s5.join(forkSig.domain(fork_p3))))
-                .forAll(f_decl5)));
+        (bijectionFilteredExpr1.forAll(f_decl1))
+            .and(bijectionFilteredExpr2.forAll(f_decl2))
+            .and(
+                f_s3.join(forkSig.domain(fork_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(f_decl3))
+            .and(
+                f_s4.join(forkSig.domain(fork_p1))
+                    .plus(f_s3.join(forkSig.domain(fork_p2)))
+                    .plus(f_s3.join(forkSig.domain(fork_p3)))
+                    .in(f_s3.join(stepsFunction.call()))
+                    .forAll(f_decl4))
+            .and(
+                f_s5.join(stepsFunction.call())
+                    .in(
+                        f_s5.join(forkSig.domain(fork_p1))
+                            .plus(f_s5.join(forkSig.domain(fork_p2)))
+                            .plus(f_s5.join(forkSig.domain(fork_p3))))
+                    .forAll(f_decl5)));
 
     // Join
 
@@ -189,23 +224,43 @@ class ControlNodesTest {
     Decl j_decl5 = new Decl(null, null, null, j_names5, joinSig.oneOf());
     Decl j_decl6 = new Decl(null, null, null, j_names6, joinSig.oneOf());
 
-    Expr bijectionFilteredExpr3 = bijectionFilteredFunction.call(happensBefore.call(),
-        j_s1.join(joinSig.domain(join_p1)), j_s1.join(joinSig.domain(join_p3)));
-    Expr bijectionFilteredExpr4 = bijectionFilteredFunction.call(happensBefore.call(),
-        j_s2.join(joinSig.domain(join_p2)), j_s2.join(joinSig.domain(join_p3)));
+    Expr bijectionFilteredExpr3 =
+        bijectionFilteredFunction.call(
+            happensBefore.call(),
+            j_s1.join(joinSig.domain(join_p1)),
+            j_s1.join(joinSig.domain(join_p3)));
+    Expr bijectionFilteredExpr4 =
+        bijectionFilteredFunction.call(
+            happensBefore.call(),
+            j_s2.join(joinSig.domain(join_p2)),
+            j_s2.join(joinSig.domain(join_p3)));
 
     alloy.addToOverallFact(
-        (bijectionFilteredExpr3.forAll(j_decl1)).and(bijectionFilteredExpr4.forAll(j_decl2))
-            .and(j_s3.join(joinSig.domain(join_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
-                .forAll(j_decl3))
-            .and(j_s4.join(joinSig.domain(join_p2)).cardinality().equal(ExprConstant.makeNUMBER(1))
-                .forAll(j_decl4))
-            .and(j_s5.join(joinSig.domain(join_p1)).plus(j_s5.join(joinSig.domain(join_p2)))
-                .plus(j_s5.join(joinSig.domain(join_p3))).in(j_s5.join(stepsFunction.call()))
-                .forAll(j_decl5))
-            .and(j_s6.join(stepsFunction.call()).in(j_s6.join(joinSig.domain(join_p1))
-                .plus(j_s6.join(joinSig.domain(join_p2))).plus(j_s6.join(joinSig.domain(join_p3))))
-                .forAll(j_decl6)));
+        (bijectionFilteredExpr3.forAll(j_decl1))
+            .and(bijectionFilteredExpr4.forAll(j_decl2))
+            .and(
+                j_s3.join(joinSig.domain(join_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(j_decl3))
+            .and(
+                j_s4.join(joinSig.domain(join_p2))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(j_decl4))
+            .and(
+                j_s5.join(joinSig.domain(join_p1))
+                    .plus(j_s5.join(joinSig.domain(join_p2)))
+                    .plus(j_s5.join(joinSig.domain(join_p3)))
+                    .in(j_s5.join(stepsFunction.call()))
+                    .forAll(j_decl5))
+            .and(
+                j_s6.join(stepsFunction.call())
+                    .in(
+                        j_s6.join(joinSig.domain(join_p1))
+                            .plus(j_s6.join(joinSig.domain(join_p2)))
+                            .plus(j_s6.join(joinSig.domain(join_p3))))
+                    .forAll(j_decl6)));
 
     // Decision
     ExprVar d_s1 = ExprVar.make(null, "x", decisionSig.type());
@@ -229,27 +284,41 @@ class ControlNodesTest {
     Decl d_decl5 = new Decl(null, null, null, d_names5, decisionSig.oneOf());
     Decl d_decl6 = new Decl(null, null, null, d_names6, decisionSig.oneOf());
 
-    Expr functionFilteredExpr2 = functionFilteredFunction.call(happensBefore.call(),
-        d_s1.join(decisionSig.domain(decision_p1)), (d_s1.join(decisionSig.domain(decision_p2)))
-            .plus(d_s1.join(decisionSig.domain(decision_p3))));
+    Expr functionFilteredExpr2 =
+        functionFilteredFunction.call(
+            happensBefore.call(),
+            d_s1.join(decisionSig.domain(decision_p1)),
+            (d_s1.join(decisionSig.domain(decision_p2)))
+                .plus(d_s1.join(decisionSig.domain(decision_p3))));
 
-    Expr inverseFunctionFilteredExpr2 = inverseFunctionFilteredFunction.call(happensBefore.call(),
-        d_s2.join(decisionSig.domain(decision_p1)), (d_s2.join(decisionSig.domain(decision_p2)))
-            .plus(d_s2.join(decisionSig.domain(decision_p3))));
+    Expr inverseFunctionFilteredExpr2 =
+        inverseFunctionFilteredFunction.call(
+            happensBefore.call(),
+            d_s2.join(decisionSig.domain(decision_p1)),
+            (d_s2.join(decisionSig.domain(decision_p2)))
+                .plus(d_s2.join(decisionSig.domain(decision_p3))));
 
     alloy.addToOverallFact(
-        (functionFilteredExpr2.forAll(d_decl2)).and(inverseFunctionFilteredExpr2.forAll(d_decl2))
-            .and(d_s3.join(decisionSig.domain(decision_p1)).cardinality()
-                .equal(ExprConstant.makeNUMBER(1)).forAll(d_decl3))
-            .and(d_s4.join(decisionSig.domain(decision_p1))
-                .plus(d_s4.join(decisionSig.domain(decision_p2)))
-                .plus(d_s4.join(decisionSig.domain(decision_p3)))
-                .in(d_s4.join(stepsFunction.call())).forAll(d_decl4))
-            .and(d_s5.join(stepsFunction.call())
-                .in(d_s5.join(decisionSig.domain(decision_p1))
-                    .plus(d_s5.join(decisionSig.domain(decision_p2)))
-                    .plus(d_s5.join(decisionSig.domain(decision_p3))))
-                .forAll(d_decl5)));
+        (functionFilteredExpr2.forAll(d_decl2))
+            .and(inverseFunctionFilteredExpr2.forAll(d_decl2))
+            .and(
+                d_s3.join(decisionSig.domain(decision_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(d_decl3))
+            .and(
+                d_s4.join(decisionSig.domain(decision_p1))
+                    .plus(d_s4.join(decisionSig.domain(decision_p2)))
+                    .plus(d_s4.join(decisionSig.domain(decision_p3)))
+                    .in(d_s4.join(stepsFunction.call()))
+                    .forAll(d_decl4))
+            .and(
+                d_s5.join(stepsFunction.call())
+                    .in(
+                        d_s5.join(decisionSig.domain(decision_p1))
+                            .plus(d_s5.join(decisionSig.domain(decision_p2)))
+                            .plus(d_s5.join(decisionSig.domain(decision_p3))))
+                    .forAll(d_decl5)));
 
     // Merge
 
@@ -274,26 +343,44 @@ class ControlNodesTest {
     Decl m_decl5 = new Decl(null, null, null, m_names5, mergeSig.oneOf());
     Decl m_decl6 = new Decl(null, null, null, m_names6, mergeSig.oneOf());
 
-    Expr functionFilteredExpr3 = functionFilteredFunction.call(happensBefore.call(),
-        m_s1.join(mergeSig.domain(merge_p1)).plus(m_s1.join(mergeSig.domain(merge_p2))),
-        (m_s1.join(mergeSig.domain(merge_p3))));
+    Expr functionFilteredExpr3 =
+        functionFilteredFunction.call(
+            happensBefore.call(),
+            m_s1.join(mergeSig.domain(merge_p1)).plus(m_s1.join(mergeSig.domain(merge_p2))),
+            (m_s1.join(mergeSig.domain(merge_p3))));
 
-    Expr inverseFunctionFilteredExpr3 = inverseFunctionFilteredFunction.call(happensBefore.call(),
-        m_s2.join(mergeSig.domain(merge_p1)).plus(m_s2.join(mergeSig.domain(merge_p2))),
-        (m_s2.join(mergeSig.domain(merge_p3))));
+    Expr inverseFunctionFilteredExpr3 =
+        inverseFunctionFilteredFunction.call(
+            happensBefore.call(),
+            m_s2.join(mergeSig.domain(merge_p1)).plus(m_s2.join(mergeSig.domain(merge_p2))),
+            (m_s2.join(mergeSig.domain(merge_p3))));
 
-    alloy.addToOverallFact((functionFilteredExpr3.forAll(m_decl1))
-        .and(inverseFunctionFilteredExpr3.forAll(m_decl2))
-        .and(m_s3.join(mergeSig.domain(merge_p1)).cardinality().equal(ExprConstant.makeNUMBER(1))
-            .forAll(m_decl3))
-        .and(m_s4.join(mergeSig.domain(merge_p2)).cardinality().equal(ExprConstant.makeNUMBER(1))
-            .forAll(m_decl4))
-        .and(m_s5.join(mergeSig.domain(merge_p1)).plus(m_s5.join(mergeSig.domain(merge_p2)))
-            .plus(m_s5.join(mergeSig.domain(merge_p3))).in(m_s5.join(stepsFunction.call()))
-            .forAll(m_decl5))
-        .and(m_s6.join(stepsFunction.call()).in(m_s6.join(mergeSig.domain(merge_p1))
-            .plus(m_s6.join(mergeSig.domain(merge_p2))).plus(m_s6.join(mergeSig.domain(merge_p3))))
-            .forAll(m_decl6)));
+    alloy.addToOverallFact(
+        (functionFilteredExpr3.forAll(m_decl1))
+            .and(inverseFunctionFilteredExpr3.forAll(m_decl2))
+            .and(
+                m_s3.join(mergeSig.domain(merge_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(m_decl3))
+            .and(
+                m_s4.join(mergeSig.domain(merge_p2))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(m_decl4))
+            .and(
+                m_s5.join(mergeSig.domain(merge_p1))
+                    .plus(m_s5.join(mergeSig.domain(merge_p2)))
+                    .plus(m_s5.join(mergeSig.domain(merge_p3)))
+                    .in(m_s5.join(stepsFunction.call()))
+                    .forAll(m_decl5))
+            .and(
+                m_s6.join(stepsFunction.call())
+                    .in(
+                        m_s6.join(mergeSig.domain(merge_p1))
+                            .plus(m_s6.join(mergeSig.domain(merge_p2)))
+                            .plus(m_s6.join(mergeSig.domain(merge_p3))))
+                    .forAll(m_decl6)));
 
     // AllControl
     ExprVar ac_s1 = ExprVar.make(null, "x", allControlSig.type());
@@ -326,52 +413,81 @@ class ControlNodesTest {
     Decl ac_decl8 = new Decl(null, null, null, ac_names8, allControlSig.oneOf());
     Decl ac_decl9 = new Decl(null, null, null, ac_names9, allControlSig.oneOf());
 
-    alloy
-        .addToOverallFact((bijectionFilteredFunction
-            .call(happensBefore.call(), ac_s1.join(allControlSig.domain(allControl_p1)),
-                ac_s1.join(allControlSig.domain(allControl_p2)))
-            .forAll(ac_decl1))
-                .and(bijectionFilteredFunction
-                    .call(happensBefore.call(), ac_s2.join(allControlSig.domain(allControl_p1)),
+    alloy.addToOverallFact(
+        (bijectionFilteredFunction
+                .call(
+                    happensBefore.call(),
+                    ac_s1.join(allControlSig.domain(allControl_p1)),
+                    ac_s1.join(allControlSig.domain(allControl_p2)))
+                .forAll(ac_decl1))
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBefore.call(),
+                        ac_s2.join(allControlSig.domain(allControl_p1)),
                         ac_s2.join(allControlSig.domain(allControl_p3)))
                     .forAll(ac_decl2))
-                .and(bijectionFilteredFunction
-                    .call(happensBefore.call(), ac_s3.join(allControlSig.domain(allControl_p2)),
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBefore.call(),
+                        ac_s3.join(allControlSig.domain(allControl_p2)),
                         ac_s3.join(allControlSig.domain(allControl_p4)))
                     .forAll(ac_decl3))
-                .and(
-                    bijectionFilteredFunction
-                        .call(happensBefore.call(), ac_s4.join(allControlSig.domain(allControl_p3)),
-                            ac_s4.join(allControlSig.domain(allControl_p4)))
-                        .forAll(ac_decl4))
-                .and(
-                    bijectionFilteredFunction
-                        .call(happensBefore.call(), ac_s5.join(allControlSig.domain(allControl_p4)),
-                            ac_s5.join(allControlSig.domain(allControl_p5))
-                                .plus(ac_s5.join(allControlSig.domain(allControl_p6))))
-                        .forAll(ac_decl5))
-                .and(bijectionFilteredFunction.call(happensBefore.call(),
-                    ac_s6.join(allControlSig.domain(allControl_p5))
-                        .plus(ac_s6.join(allControlSig.domain(allControl_p6))),
-                    ac_s6.join(allControlSig.domain(allControl_p7))).forAll(ac_decl6))
-                .and(ac_s7.join(allControlSig.domain(allControl_p1)).cardinality()
-                    .equal(ExprConstant.makeNUMBER(1)).forAll(ac_decl7))
-                .and(ac_s8.join(allControlSig.domain(allControl_p1))
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBefore.call(),
+                        ac_s4.join(allControlSig.domain(allControl_p3)),
+                        ac_s4.join(allControlSig.domain(allControl_p4)))
+                    .forAll(ac_decl4))
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBefore.call(),
+                        ac_s5.join(allControlSig.domain(allControl_p4)),
+                        ac_s5
+                            .join(allControlSig.domain(allControl_p5))
+                            .plus(ac_s5.join(allControlSig.domain(allControl_p6))))
+                    .forAll(ac_decl5))
+            .and(
+                bijectionFilteredFunction
+                    .call(
+                        happensBefore.call(),
+                        ac_s6
+                            .join(allControlSig.domain(allControl_p5))
+                            .plus(ac_s6.join(allControlSig.domain(allControl_p6))),
+                        ac_s6.join(allControlSig.domain(allControl_p7)))
+                    .forAll(ac_decl6))
+            .and(
+                ac_s7
+                    .join(allControlSig.domain(allControl_p1))
+                    .cardinality()
+                    .equal(ExprConstant.makeNUMBER(1))
+                    .forAll(ac_decl7))
+            .and(
+                ac_s8
+                    .join(allControlSig.domain(allControl_p1))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p2)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p3)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p4)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p5)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p6)))
                     .plus(ac_s8.join(allControlSig.domain(allControl_p7)))
-                    .in(ac_s8.join(stepsFunction.call())).forAll(ac_decl8))
-                .and(ac_s9.join(stepsFunction.call())
-                    .in(ac_s9.join(allControlSig.domain(allControl_p1))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p2)))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p3)))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p4)))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p5)))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p6)))
-                        .plus(ac_s9.join(allControlSig.domain(allControl_p7))))
+                    .in(ac_s8.join(stepsFunction.call()))
+                    .forAll(ac_decl8))
+            .and(
+                ac_s9
+                    .join(stepsFunction.call())
+                    .in(
+                        ac_s9
+                            .join(allControlSig.domain(allControl_p1))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p2)))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p3)))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p4)))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p5)))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p6)))
+                            .plus(ac_s9.join(allControlSig.domain(allControl_p7))))
                     .forAll(ac_decl9)));
 
     // ========== Define functions and predicates ==========
@@ -522,9 +638,9 @@ class ControlNodesTest {
     // allControlExpr.and(alloy.getOverAllFact()), null);
 
     Command[] commands = {
-        /*
-         * simpleSequenceCmd, forkCmd, joinCmd, decisionCmd, mergeCmd, allControlCmd
-         */
+      /*
+       * simpleSequenceCmd, forkCmd, joinCmd, decisionCmd, mergeCmd, allControlCmd
+       */
     };
 
     // ========== Write file ==========
@@ -538,7 +654,6 @@ class ControlNodesTest {
     translator.generateAlsFileContents(alloyModule, outFileName);
 
     // ========== Import real AST from file ==========
-
 
     CompModule importedModule = AlloyUtils.importAlloyModule(manualfilename);
 

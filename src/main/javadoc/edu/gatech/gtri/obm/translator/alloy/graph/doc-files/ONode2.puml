@@ -1,0 +1,6 @@
+@startuml
+start
+:Set Class Attribute //n// to //_n//;
+:Increment Class Attribute //numOneOf//;
+stop
+@enduml
