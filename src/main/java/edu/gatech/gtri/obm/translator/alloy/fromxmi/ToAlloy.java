@@ -272,13 +272,13 @@ public class ToAlloy {
   public void createNoInputsField(String sigName, String fieldName) {
     PrimSig sig = sigByName.get(sigName);
     Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig);
-    alloy.createNoInputsField(sig, field);
+    alloy.createNoInputsOrOutputsField(sig, field, Alloy.oinputs);
   }
 
   public void createNoOutputsField(String sigName, String fieldName) {
     PrimSig sig = sigByName.get(sigName);
     Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig);
-    alloy.createNoOutputsField(sig, field);
+    alloy.createNoInputsOrOutputsField(sig, field, Alloy.ooutputs);
   }
 
   public void addInputsAndNoInputsX(Sig.PrimSig sig, Set<Field> fields, boolean addNoInputsX,
@@ -296,7 +296,7 @@ public class ToAlloy {
     if (addEqual)
       alloy.addEqual2(sig, sortedFields, Alloy.oinputs);
     if (addNoInputsX)
-      alloy.noInputsX(sig);
+      alloy.noInputsOrOutputsX(sig, Alloy.oinputs);
 
   }
 
@@ -318,7 +318,7 @@ public class ToAlloy {
       alloy.addEqual2(sig, sortedFields, Alloy.ooutputs);
 
     if (addNoOutputsX)
-      alloy.noOutputsX(sig);
+      alloy.noInputsOrOutputsX(sig, Alloy.ooutputs);
   }
 
 
@@ -445,11 +445,11 @@ public class ToAlloy {
         addInputsAndNoInputsX(sig, inputsFields, addNoInputsX, addEqual);
       } else {
         if (inputFlowFieldTypes.contains(sigName))// Integer is flowing
-          alloy.noXInputs(sig);// fact {all x: Integer | no (x.inputs)}
+          alloy.noXInputsOrOutputs(sig, Alloy.oinputs);// fact {all x: Integer | no (x.inputs)}
         else {
           // if removed "no x.inputs" from child remove also from container that should not happens
           // or from AutomicBehavior or SimpleSequence....
-          alloy.noInputsXAndXInputs(sig);
+          alloy.noInputsXAndXInputsOrOutputsXAndXOutputs(sig, Alloy.oinputs);
         }
       }
       // outputs
@@ -466,9 +466,11 @@ public class ToAlloy {
         addOutputsAndNoOutputsX(sig, outputsFields, addNoOutputsX, addEqual);
       } else {
         if (outputFlowFieldTypes.contains(sigName)) // Integer = type of what is flowing
-          alloy.noXOutputs(sig);// fact {all x: Integer | no (x.outputs)}
+          alloy.noXInputsOrOutputs(sig, Alloy.ooutputs);// fact {all x: Integer | no (x.outputs)}
         else {
-          alloy.noOutputsXAndXOutputs(sig); // both "no outputs.x" & "no x.outputs"
+          alloy.noInputsXAndXInputsOrOutputsXAndXOutputs(sig, Alloy.ooutputs); // both "no
+                                                                               // outputs.x" & "no
+                                                                               // x.outputs"
         }
       }
     }
