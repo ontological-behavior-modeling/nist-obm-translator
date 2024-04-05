@@ -1,0 +1,10 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return Empty String;
+stop
+endif
+:Set //isRootSig// to false;
+:Return ExprConstant toString;
+stop
+@enduml

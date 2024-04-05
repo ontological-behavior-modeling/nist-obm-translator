@@ -1,0 +1,5 @@
+@startuml
+start
+:Change Attribute //updated// to be flag;
+stop
+@enduml

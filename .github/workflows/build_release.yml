@@ -1,0 +1,47 @@
+#
+name: GitHub Actions Build Release
+
+# Triggers the workflow on a push or pull request on the main branch.
+on:
+  push:
+    branches: [ main ]
+    
+jobs:
+  build:
+    # The workflow runs on the latest Ubuntu.
+    runs-on: ubuntu-latest
+    
+    steps:
+    
+      - name: Checkout main branch from GitHub
+        uses: actions/checkout@v2
+      
+      - name: Step 2. Setup Java 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+        
+      - name: Increment version
+        id: increment-version
+        uses: RichardInnocent/semantic-versioning-maven@v0.0.36
+        with:
+          access-token: ${{ secrets.PAT_TOKEN }}
+          
+      - name: Get version
+        run: echo "RELEASE_VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
+      
+      - name: Print version
+        run: echo ${{ env.RELEASE_VERSION }}
+        
+      - name: Package Maven project
+        run: mvn -B package --file pom.xml
+        
+      - name: Create release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.PAT_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "v${{ env.RELEASE_VERSION }}"
+          files: |
+            target/*.jar

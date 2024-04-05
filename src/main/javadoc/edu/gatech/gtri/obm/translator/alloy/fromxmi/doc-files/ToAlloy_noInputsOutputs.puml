@@ -1,0 +1,6 @@
+@startuml
+start
+:Add Fact for No Inputs;
+:Add Fact for No Outputs;
+stop
+@enduml

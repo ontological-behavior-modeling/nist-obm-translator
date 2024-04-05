@@ -1,0 +1,17 @@
+@startuml
+start
+->_mainSig.join(_p1)
+_mainSig.join(_p2);
+:Create Function Filtered with Joined Expr;
+->_mainSig.join(_p1).plus(_mainSig.join(_p2))
+_mainSig.join(_p2);
+:Create Inverse Function Filtered;
+->_mainSig.join(_p2)
+_mainSig.join(_p2).plus(_mainSig.join(_p3));
+:Create Function Filtered;
+->_mainSig.join(_p2)
+_mainSig.join(_p3));
+:Create Inverse Function Filtered;
+:Add Expr together;
+stop
+@enduml

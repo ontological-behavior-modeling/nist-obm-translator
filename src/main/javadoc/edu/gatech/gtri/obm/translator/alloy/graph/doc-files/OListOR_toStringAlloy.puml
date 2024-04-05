@@ -1,0 +1,14 @@
+@startuml
+start
+:Create New ArrayList //ls//;
+:Create Empty String //s//;
+while(For Each IObject in //list//)
+:Add Current IObject to //s//;
+endwhile
+if(//s// Starts with +) then (yes)
+:Trim String //s//;
+endif
+:Add //s// to //ls//;
+:Return //ls//;
+stop
+@enduml

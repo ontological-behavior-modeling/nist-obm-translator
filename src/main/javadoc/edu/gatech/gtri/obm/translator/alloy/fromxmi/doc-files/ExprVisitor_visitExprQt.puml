@@ -1,0 +1,27 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return Empty String;
+stop
+endif
+:Set //isRootSig// to false;
+:Create String //op// of ExprQt
+Operation;
+:Set //names// String to "";
+:Set //sigType// String to "";
+:Create String //sub// of ExprQt Body;
+while(For Each Declaration in ExprQt)
+:Set //names// to Declaration Names;
+:Create String of Declaration Expression;
+if(Declaration Expression Contains a Space) then (yes)
+:Set //sigType// Decl Expr with 
+Space Removed;
+else (no)
+:Set //sigType// to Decl Expr;
+endif
+endwhile
+:Create StringBuilder;
+:Return StringBuilder appended with 
+//op, names, sigType, sub//;
+stop
+@enduml

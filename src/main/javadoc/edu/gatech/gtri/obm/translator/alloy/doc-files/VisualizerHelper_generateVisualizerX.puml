@@ -1,0 +1,23 @@
+@startuml
+start
+:Construct A4Options;
+:Set A4Options Parameters;
+:Execute Command from A4Solutions;
+:Create counter;
+:Instantiate FileWriter;
+:Create New LinkedHashSet;
+while(A4Solutions Answer is Satisfiable)
+:Get Uniqueness of A4Solution Answer;
+:Print Answer Uniqueness;
+:Replace all BinaryLinkSig, TransferSig,
+and TransferBeforeSig in A4Solution String;
+:Go to next A4Solution Answer;
+endwhile
+if(counter == 0) then (yes)
+:Print No Solution Found;
+endif
+:Print # of Solutions;
+:Print # of Unique Solutions;
+:Print # of Unique Modified Solutions;
+stop
+@enduml

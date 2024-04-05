@@ -1,0 +1,17 @@
+@startuml
+start
+:Print decision Title;
+:Create Node, //p0Node//;
+:Get //p0Node// ID;
+:Create Node, //p1Node//;
+:Get //p1Node// ID;
+:Create Node, //p2Node//;
+:Get //p2Node// ID;
+:Add Edge to //graph// between
+p0 and p1 Nodes;
+:Add Edge to //graph// between
+p0 and p2 Nodes;
+:Set Edge Attributes oneof to true;
+:Return p0Node;
+stop
+@enduml

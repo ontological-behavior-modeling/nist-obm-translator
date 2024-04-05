@@ -28,6 +28,7 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Type;
 
+
 public class ExpressionComparator {
 
   private final Set<List<Expr>> visitedExpressions;
@@ -46,7 +47,6 @@ public class ExpressionComparator {
     visitedExpressions.clear();
     List<List<Expr>> ee1 = sortExprList((ExprList) e1);
     List<List<Expr>> ee2 = sortExprList((ExprList) e2);
-    // boolean same = compareExpr(ee1, ee2, true);
 
     if (!compareTwoList(ee1, ee2)) {
       List<Object> flat1 = ee1.stream().flatMap(List::stream).collect(Collectors.toList());
@@ -371,6 +371,7 @@ public class ExpressionComparator {
       System.err.println("CompareExpr Expr.class not implemented");
     } else if (expr1.getClass().equals(ExprBinary.class)) {
       if (!compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)) {
+
         System.err
             .println("compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2) ("
                 + expr1 + " vs. " + expr2 + ")");
@@ -399,13 +400,6 @@ public class ExpressionComparator {
     } else if (expr1.getClass().equals(ExprLet.class)) {
       System.err.println("ExprLet: not implemented");
     } else if (expr1.getClass().equals(ExprList.class)) {
-      // if (start)
-      // if (!compareExprListStart((ExprList) expr1, (ExprList) expr2)) {
-      // System.err
-      // .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2) ("
-      // + expr1 + " vs. " + expr2 + ")");;
-      // return false;
-      // } else {
       if (!compareExprList((ExprList) expr1, (ExprList) expr2)) {
         System.err
             .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2) ("
@@ -661,9 +655,6 @@ public class ExpressionComparator {
     }
     // for each expr1.arg
     for (int i = 0; i < expr1.args.size(); i++) {
-      System.out.println("===========Looking for =============================");
-      System.out.println(expr1.args.get(i)); // (all x | no x . o/steps)
-      System.out.println("====================================================");
       boolean found = false;
       for (int j = 0; j < expr2.args.size(); j++) {
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
@@ -716,12 +707,8 @@ public class ExpressionComparator {
     }
     // for each expr1.arg
     for (int i = 0; i < expr1.args.size(); i++) {
-      System.out.println("===========Looking for [" + i + "]============================= ");
-      System.out.println(expr1.args.get(i)); // (all x | no x . o/steps)
-      System.out.println("====================================================");
       boolean found = false;
       for (int j = 0; j < expr2.args.size(); j++) {
-        System.out.println("j = " + j);
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
         // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
         // visitedExpressions.clear();
@@ -1096,24 +1083,6 @@ public class ExpressionComparator {
 
     // check all sig1.facts are in sig2.facts - not necessary check separately
     boolean found;
-    // for (Expr next1 : sig1.getFacts()) {
-    // found = false;
-    // for (Expr next2 : sig2.getFacts()) {
-    // visitedExpressions.clear();
-    // if (compareAsString(next1, next2))
-    // if (compareExpr(next1, next2)) {
-    // found = true;
-    // break;
-    // }
-    // }
-    // if (!found) {
-    // System.err.println(
-    // "compareSig: !comparing Facts failed. " + next1 + " not found in " + sig2.getFacts());
-    // return false;
-    // }
-    // }
-
-
     if (sig1.getFieldDecls().size() != sig2.getFieldDecls().size()) {
       System.err.println("compareSig: sig1.getFieldDecls().size() != sig2.getFieldDecls().size() ("
           + sig1.getFieldDecls().size() + " vs. " + sig2.getFieldDecls().size() + ")");

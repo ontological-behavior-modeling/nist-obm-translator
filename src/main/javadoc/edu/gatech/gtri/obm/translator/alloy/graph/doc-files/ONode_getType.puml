@@ -1,0 +1,6 @@
+@startuml
+start
+:Get //n// Attribute Type;
+:Return Attribute Type;
+stop
+@enduml

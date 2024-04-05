@@ -51,14 +51,32 @@ public class AlloyUtils {
     return false;
   }
 
+  /**
+   * Import alloy module.
+   *
+   * @param f the f
+   * @return the comp module
+   */
   public static CompModule importAlloyModule(File f) {
     return AlloyUtils.importAlloyModule(f.getAbsolutePath());
   }
 
+  /**
+   * Import alloy module.
+   *
+   * @param absoluteFileName the absolute file name
+   * @return the comp module
+   */
   public static CompModule importAlloyModule(String absoluteFileName) {
     return CompUtil.parseEverything_fromFile(new A4Reporter(), null, absoluteFileName);
   }
 
+  /**
+   * Removes the slash.
+   *
+   * @param sig the sig
+   * @return the string
+   */
   public static String removeSlash(String sig) {
     if (sig.contains("/")) {
       int index = sig.lastIndexOf('/');
@@ -68,6 +86,12 @@ public class AlloyUtils {
     return sig;
   }
 
+  /**
+   * Valid parent.
+   *
+   * @param parentName the parent name
+   * @return true, if successful
+   */
   public static boolean validParent(String parentName) {
     // System.out.println(parentName);
     if (parentName == null || invalidParentNames.contains(parentName))

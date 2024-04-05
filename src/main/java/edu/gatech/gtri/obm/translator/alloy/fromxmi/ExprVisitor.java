@@ -282,6 +282,7 @@ public class ExprVisitor extends VisitQuery<String> {
         List<String> sortedType = new ArrayList<>(fieldByType.keySet());
         Collections.sort(sortedType);
 
+
         for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
           if (fs.size() == 1) {

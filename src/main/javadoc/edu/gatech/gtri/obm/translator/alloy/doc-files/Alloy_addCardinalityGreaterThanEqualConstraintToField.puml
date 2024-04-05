@@ -1,0 +1,8 @@
+@startuml
+start
+:Make ExprVar from Sig;
+:Create ArrayList;
+:Create new Declaration;
+:Add Cardinality to Overall Fact;
+stop
+@enduml

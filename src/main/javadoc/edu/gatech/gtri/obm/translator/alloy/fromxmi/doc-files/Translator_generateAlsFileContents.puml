@@ -1,0 +1,14 @@
+@startuml
+title generateAlsFileContents
+start
+ :Create StringBuilder;
+ :Append Common Title;
+ :Append Signatures;
+ :Append Facts;
+ :Append Predicates;
+ :Create PrintWriter with 
+ Output File;
+ :Print StringBuilder to 
+ Output File;
+stop
+@enduml

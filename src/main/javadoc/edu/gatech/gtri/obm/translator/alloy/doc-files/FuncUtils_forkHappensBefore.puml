@@ -1,0 +1,12 @@
+@startuml
+start
+->_mainSig.join(_p1)
+_mainSig.join(_p2));
+:Create Bijection Filtered;
+->_mainSig.join(_p1)
+_mainSig.join(_p3));
+:Create Bijection Filtered;
+:Add Exprs Together;
+:Return Added Expr;
+stop
+@enduml

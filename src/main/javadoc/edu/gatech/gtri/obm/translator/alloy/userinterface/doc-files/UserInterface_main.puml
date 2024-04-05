@@ -1,0 +1,7 @@
+@startuml
+start
+:Set Look and Feel;
+:Construct New User Interface;
+:Set Visibility to True;
+stop
+@enduml

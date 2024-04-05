@@ -1,0 +1,7 @@
+@startuml
+start
+:Create oneOf sigType;
+:Add Field to Sig
+(API to AlloyAnalyzer);
+stop
+@enduml

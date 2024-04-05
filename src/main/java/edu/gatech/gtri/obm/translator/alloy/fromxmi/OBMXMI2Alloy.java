@@ -81,7 +81,7 @@ public class OBMXMI2Alloy {
 
   /**
    * 
-   * @param working_dir where required alloy library (Transfer) is locating
+   * @param working_dir where required alloy library (Transfer.als/ utilities package) is locating
    */
   public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy(working_dir);
@@ -92,14 +92,24 @@ public class OBMXMI2Alloy {
     sigToFactsMap = new HashMap<>();
   }
 
-  public boolean createAlloyFile(File xmiFile, String className, File outputFile)
+  /**
+   * 
+   * @param xmiFile
+   * @param qualifiedName of a UML:Class for translation (ie.,
+   *        Model::FoodService::OFSingleFoodService)
+   * @param outputFile
+   * @return
+   * @throws FileNotFoundException
+   * @throws UMLModelErrorException
+   */
+  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile)
       throws FileNotFoundException, UMLModelErrorException {
 
     if (!xmiFile.exists() || !xmiFile.canRead()) {
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
       return false;
     }
-    if (loadOBMAndCreateAlloy(xmiFile, className)) {
+    if (loadOBMAndCreateAlloy(xmiFile, qualifiedName)) {
       String outputFileName = toAlloy.createAlloyFile(outputFile, this.parameterFields);
       System.out.println(outputFileName + " is created");
       return true;
@@ -379,8 +389,6 @@ public class OBMXMI2Alloy {
 
     PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
 
-    System.out.println("=================" + ne.getName());
-
     Set<Property> redefinedProperties = new HashSet<>();
     if (propertiesByType != null) {
       for (org.eclipse.uml2.uml.Type propertyType : propertiesByType.keySet()) {
@@ -428,7 +436,7 @@ public class OBMXMI2Alloy {
               }
             }
           }
-        } else { // ?????? cardinality only when no redefined properties only?
+        } else { // cardinality only when no redefined properties
           for (Property p : propertiesSortedByType) {
             addCardinality(p, sigOfNamedElement, p.getName());
           }
@@ -468,8 +476,7 @@ public class OBMXMI2Alloy {
    * @return Set<String> signame whose (BehaviorWithParameter) connectorend's belong to have the
    *         same type (ie., p1, p2: BehaviorWithParameter)
    */
-  private Set<String> processConnector(Class ne,
-      /* PrimSig sigOfNamedElement, */ HashMap<String, Set<String>> inputs,
+  private Set<String> processConnector(Class ne, HashMap<String, Set<String>> inputs,
       HashMap<String, Set<String>> outputs, Set<Sig> sigWithTransferFields,
       Set<String> fieldsWithInputs, Set<String> fieldsWithOutputs) {
 
@@ -489,11 +496,6 @@ public class OBMXMI2Alloy {
       handleOneOfConnectors(sigOfNamedElement, connectors, oneOfSet, processedConnectors);
     }
 
-    // connector between p1 and p2 having the same BehaviorWithParameter, then this is set as true
-    // boolean oneofConnectorsOwnerFieldTypeAreThesame = false; // default
-
-    // boolean isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = false;
-    System.out.println("!!!!!!!!!!!!!!!!!!!!!============ " + ne.getName());
     // process remaining of connectors
     for (org.eclipse.uml2.uml.Connector cn : connectors) {
       if (processedConnectors.contains(cn))
@@ -537,7 +539,7 @@ public class OBMXMI2Alloy {
               }
             }
           } else {
-            // System.out.println(ce.getDefiningEnd().getName());// transferSource
+
             String definingEndName = ce.getDefiningEnd().getName();
             edu.umd.omgutil.uml.ConnectorEnd end =
                 (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
@@ -561,16 +563,13 @@ public class OBMXMI2Alloy {
             } else if (definingEndName.equals("transferSource")) {
               connector_type = CONNECTOR_TYPE.TRANSFER;
               source = endsFeatureNames.get(0);
-              // System.out.println("s: " + source + ce.getRole().getType().getName());
               sourceTypeName = ce.getRole().getType().getName();
 
               List<Property> ps = sysMLUtil.getPropertyPath(ce);
-              // System.out.println(ps);
 
             } else if (definingEndName.equals("transferTarget")) {
               connector_type = CONNECTOR_TYPE.TRANSFER;
               target = endsFeatureNames.get(0);
-              // System.out.println("t: " + target + " " + ce.getRole().getType().getName());
               targetTypeName = ce.getRole().getType().getName();
             }
 
@@ -581,12 +580,6 @@ public class OBMXMI2Alloy {
             } else if (connector_type == CONNECTOR_TYPE.HAPPENS_DURING)
               handleHappensDuring(sigOfNamedElement, source, target);
 
-            // using graph to find out what is one of
-            // if (sourceCN != null && targetCN != null) {
-            // Edge edge = ge.addEdge(source + target, source, target);
-            // if (isOneof(constraints, sourceCN, targetCN)) {
-            // edge.setAttribute("oneof", true);
-            // }
             else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
 
               System.out.println(
@@ -620,7 +613,6 @@ public class OBMXMI2Alloy {
               addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties.get(1)); // "targetInputProperty"
               addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties.get(0));// "sourceOutputProperty",
 
-              System.out.println(targetTypeName + " ?= " + sourceTypeName);
               boolean addEquals = false;
               if (targetTypeName.equals(sourceTypeName)) { // ie., targetTypeName = sourceTypeName
                                                            // is "BehaviorWithParemeter" for 4.1.5
@@ -635,28 +627,16 @@ public class OBMXMI2Alloy {
                 processConnectorInputsOutputs(sigOfNamedElement, source, target, sourceTypeName,
                     targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
                     fieldsWithOutputs, addEquals);
-              // isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame = true;
-
-
               if (type.getName().equals("Transfer")) {
                 handleTransferFieldAndFn(sigOfNamedElement, source, target);
               } else if (type.getName().equals("TransferBefore")) {
-                // String[] sourceOutputAndTargetInputProperties =
-                // handleTransferAndTransferBeforeInputsAndOutputs(cn);
                 handleTransferBeforeFieldAndFn(sigOfNamedElement, source, target);
-                // sigWithTransferFields.add(sigOfNamedElement);
-                // addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties[1]);
-                // addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties[0]);
               }
             }
           }
         } // end of connectorEnd
       } // end of Connector
     } // org.eclipse.uml2.uml.Connector
-    // handleHappensBefore(ge, thisSig); //getting happens before using graph
-    // return isOneofConnectorSourceAndTargetPropertyOwnerFieldTypeAreTheSame == true
-    // ? sigOfNamedElement
-    // : null;
     return sigNameOfSharedFieldType;
   }
 
@@ -1308,96 +1288,7 @@ public class OBMXMI2Alloy {
 
   }
 
-  /**
-   * 
-   * @param element (ie., Connector)
-   * @param streotypeName (ie,. Model::OBM::ItemFlow)
-   * @param propertyName (ie., sourceOutputProperty)
-   * @return null if no Stereotype is applied to element or List<Property>
-   */
-  // private List<Property> getStreotypePropertyValues(Element element, String streotypeName,
-  // String propertyName) {
-  // List<Property> results = new ArrayList<>();
-  // Stereotype st = null;
-  // if ((st = element.getAppliedStereotype(streotypeName)) != null) {
-  // List<Object> properties = (List<Object>) (element.getValue(st, propertyName));
-  // for (Object property : properties)
-  // results.add((Property) property);
-  // return results;
-  // }
-  // return null;
-  // }
 
-  // commented out getting happens before using graph
-
-  // private boolean isOneOf(Constraint c) {
-  // ValueSpecification vs = c.getSpecification();
-  // if (vs instanceof OpaqueExpressionImpl) {
-  // edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
-  // if (omgE.getBodies().contains("OneOf"))
-  // return true;
-  // }
-  // return false;
-  // }
-
-  // if any of connector end is startCN or endCN then specify connector is one of
-  // private boolean isOneof(Set<Constraint> constraints, ConnectorEnd startCN, ConnectorEnd endCN)
-  // {
-  // for (Constraint ct : constraints) {
-  // if (isOneOf(ct)) {
-  // EList<Element> constraintedElements = ct.getConstrainedElements();
-  // if (constraintedElements.size() == 2) {
-  // if (constraintedElements.get(0) == startCN || constraintedElements.get(0) == endCN
-  // || constraintedElements.get(1) == startCN || constraintedElements.get(1) == endCN)
-  // return true;
-  // }
-  // }
-  // }
-  // return false;
-  // }
-
-  /*
-   * private void handleHappensBefore(Graph2AlloyExpr ge, Sig thisSig) {
-   * System.out.println("HB Function: "); Map<IObject, IObject> happensBeforeFnInfo =
-   * ge.getHappensBeforeFunction(); // before, after // Graph2AlloyExpr.print(happensBeforeFnInfo);
-   * for (IObject before : happensBeforeFnInfo.keySet()) { before.sort(); List<Expr> lbefore =
-   * toExprs(before, thisSig); IObject after = happensBeforeFnInfo.get(before); after.sort();
-   * List<Expr> lafter = toExprs(after, thisSig);
-   * 
-   * for (int i = 0; i < lbefore.size(); i++) { Expr beforeExpr = lbefore.get(i); for (int j = 0; j
-   * < lafter.size(); j++) { Expr afterExpr = lafter.get(j);
-   * toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig, beforeExpr, afterExpr);
-   * } } } // end iterator
-   * 
-   * System.out.println("HB Inverse Function: "); Map<IObject, IObject> happensBeforeInvFnInfo =
-   * ge.getHappensBeforeInvFunction(); // before, Graph2AlloyExpr.print(happensBeforeInvFnInfo); //
-   * after
-   * 
-   * for (IObject before : happensBeforeInvFnInfo.keySet()) { before.sort(); List<Expr> lbefore =
-   * toExprs(before, thisSig); IObject after = happensBeforeInvFnInfo.get(before); after.sort();
-   * List<Expr> lafter = toExprs(after, thisSig);
-   * 
-   * for (int i = 0; i < lbefore.size(); i++) { Expr beforeExpr = lbefore.get(i); for (int j = 0; j
-   * < lafter.size(); j++) { Expr afterExpr = lafter.get(j);
-   * 
-   * // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(mainSig, // beforeExpr, //
-   * afterExpr); toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(thisSig,
-   * beforeExpr, afterExpr); } } } // end iterator }
-   * 
-   * // assume if 1st list field in _aSig, all fields are also in _aSig public List<Expr>
-   * toExprs(IObject _o, Sig _aSig) { List<Expr> exprs = new ArrayList<>(); if (_o instanceof
-   * OListOR) { ONode onode = (ONode) ((OListOR) _o).get(0); Sig.Field f =
-   * toAlloy.getField(onode.getName()); if (f.sig == _aSig) { Expr expr = _aSig.domain(f); for (int
-   * i = 1; i < ((OListOR) _o).size(); i++) { onode = (ONode) ((OListOR) _o).get(i); expr =
-   * expr.plus(_aSig.domain(toAlloy.getField(onode.getName()))); } exprs.add(expr); }
-   * 
-   * } else if (_o instanceof OListAND) { ONode onode = (ONode) ((OListAND) _o).get(0); Sig.Field f
-   * = toAlloy.getField(onode.getName()); if (f.sig == _aSig) { exprs.add(_aSig.domain(f)); for (int
-   * i = 1; i < ((OListAND) _o).size(); i++) { onode = (ONode) ((OListAND) _o).get(i); f =
-   * toAlloy.getField(onode.getName()); exprs.add(_aSig.domain(f)); } } } else { ONode onode =
-   * (ONode) _o; Sig.Field f = toAlloy.getField(onode.getName()); if (f.sig == _aSig)
-   * exprs.add(_aSig.domain(f)); } return exprs; }
-   */
 
 }
 

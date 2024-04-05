@@ -20,6 +20,20 @@ import edu.umd.omgutil.UMLModelErrorException;
 
 /*
  * Testing set up
+ *
+ * als files
+ *
+ * from:Box\NIST OBM Translator\Alloy Models\obm-alloy-code_2023-09-25. zip\obm\*
+ *
+ * to:obm-alloy-code_2023-09-25\obm
+ *
+ * xmi files
+ *
+ * from:Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25.
+ * zip\obmsmttrans\samples\OBMModel.xmi Box\NIST OBM Translator\NIST UML-SysML OBM
+ * Models\obmsmttrans_2023-09-25. zip\obmsmttrans\samples\OBM.xmi
+ *
+ * to:obm-alloy-code_2023-09-25\obm
  */
 class OBMXMI2AlloyTest {
 
@@ -86,7 +100,6 @@ class OBMXMI2AlloyTest {
       "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService, true",})
 
 
-
   /**
    * create an alloy file from a class named sysMLClassQualifiedName from Obm xmi file using Alloy
    * API. The created alloy file is imported using Alloy API again to find AllReachableFacts and
@@ -130,7 +143,6 @@ class OBMXMI2AlloyTest {
     // creating comparator
     ExpressionComparator ec = new ExpressionComparator();
 
-
     ////////////////////// Set up (Importing Modules) /////////////////////////////////////////
     // API
     System.out.println("==== Loading api generated file...");
@@ -140,7 +152,6 @@ class OBMXMI2AlloyTest {
     File testFile = new File(output_and_testfiles_dir, manualFileName);
     System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
     CompModule testModule = AlloyUtils.importAlloyModule(testFile);
-
 
     //////////////////////// Comparing Reachable Facts ////////////////////////////////
     // API
@@ -161,7 +172,7 @@ class OBMXMI2AlloyTest {
     ///////////////////////// Comparing Sigs ////////////////////
     // API
     List<Sig> api_reachableDefinedSigs = apiModule.getAllReachableUserDefinedSigs();
-    Map<String, Sig> api_SigByName = new HashMap<>();// test.getAllReachableUserDefinedSigs();
+    Map<String, Sig> api_SigByName = new HashMap<>(); // test.getAllReachableUserDefinedSigs();
     for (Sig sig : api_reachableDefinedSigs) {
       api_SigByName.put(sig.label, sig);
     }

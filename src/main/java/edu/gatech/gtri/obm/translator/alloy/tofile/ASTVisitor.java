@@ -1,5 +1,6 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,15 +22,26 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
 
+// TODO: Auto-generated Javadoc
+/** The Class ASTVisitor. */
 public class ASTVisitor extends VisitQuery<Expr> {
 
+  /** The map. */
   private final Map<Expr, List<Expr>> map;
 
+  /** The number of duplicate visits. */
   private int numberOfDuplicateVisits;
+
+  /** The number of unique visits. */
   private int numberOfUniqueVisits;
+
+  /** The number of visits. */
   private int numberOfVisits;
+
+  /** The indent. */
   private int indent = 0;
 
+  /** Instantiates a new AST visitor. */
   public ASTVisitor() {
     map = new HashMap<>();
     numberOfDuplicateVisits = 0;
@@ -37,10 +49,16 @@ public class ASTVisitor extends VisitQuery<Expr> {
     numberOfVisits = 0;
   }
 
+  /**
+   * Gets the map.
+   *
+   * @return the map
+   */
   public Map<Expr, List<Expr>> getMap() {
     return map;
   }
 
+  /** Prints the visit info. */
   public void printVisitInfo() {
     System.out.println("Number of nodes visited:\t\t\t" + numberOfVisits);
     System.out.println("Number of unique nodes visited:\t\t" + numberOfUniqueVisits);
@@ -48,20 +66,18 @@ public class ASTVisitor extends VisitQuery<Expr> {
     System.out.println("Number of nodes mapped:\t\t\t\t" + map.keySet().size());
   }
 
-  // public void printMap() {
-  // for (Expr expr : map.keySet()) {
-  // System.out.println(expr);
-  // }
-  // }
-
-
+  /**
+   * Visit.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
+   */
   @Override
   public Expr visit(ExprBinary x) throws Err {
     for (int i = 0; i < indent; i++) {
       System.out.print("\t");
     }
-    System.out.println("ExprBinary: " + x);
-
     if (!map.containsKey(x)) {
       map.put(x, new ArrayList<>());
     }
@@ -76,6 +92,13 @@ public class ASTVisitor extends VisitQuery<Expr> {
     return x;
   }
 
+  /**
+   * Visit.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
+   */
   @Override
   public Expr visit(ExprList x) throws Err {
 
@@ -94,12 +117,20 @@ public class ASTVisitor extends VisitQuery<Expr> {
     for (Expr y : x.args) {
       map.get(x).add(y.accept(this));
     }
+    System.out.println("ExprConstant: " + x);
 
     indent--;
 
     return x;
   }
 
+  /**
+   * Visit.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
+   */
   @Override
   public Expr visit(ExprCall x) throws Err {
     for (int i = 0; i < indent; i++) {
@@ -110,6 +141,7 @@ public class ASTVisitor extends VisitQuery<Expr> {
     if (!map.containsKey(x)) {
       map.put(x, new ArrayList<>());
     }
+    System.out.println("ExprITE: " + x);
 
     indent++;
 
@@ -123,7 +155,11 @@ public class ASTVisitor extends VisitQuery<Expr> {
   }
 
   /**
-   * Visits an ExprConstant node (this default implementation simply returns null)
+   * Visits an ExprConstant node (this default implementation simply returns null).
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(ExprConstant x) throws Err {
@@ -140,8 +176,15 @@ public class ASTVisitor extends VisitQuery<Expr> {
   }
 
   /**
-   * Visits an ExprITE node (C => X else Y) by calling accept() on C, X, then Y.
+   * Visits an
+   * 
+   * ExprITE node (C - X else Y) by calling accept() on C, X, then Y.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
+
   @Override
   public Expr visit(ExprITE x) throws Err {
     for (int i = 0; i < indent; i++) {
@@ -166,6 +209,10 @@ public class ASTVisitor extends VisitQuery<Expr> {
 
   /**
    * Visits an ExprLet node (let a=x | y) by calling accept() on "a", "x", then "y".
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(ExprLet x) throws Err {
@@ -180,6 +227,7 @@ public class ASTVisitor extends VisitQuery<Expr> {
 
     indent++;
 
+
     map.get(x).add(x.var.accept(this));
     map.get(x).add(x.expr.accept(this));
     map.get(x).add(x.sub.accept(this));
@@ -192,6 +240,10 @@ public class ASTVisitor extends VisitQuery<Expr> {
   /**
    * Visits an ExprQt node (all a,b,c:X1, d,e,f:X2... | F) by calling accept() on
    * a,b,c,X1,d,e,f,X2... then on F.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(ExprQt x) throws Err {
@@ -222,10 +274,13 @@ public class ASTVisitor extends VisitQuery<Expr> {
 
   /**
    * Visits an ExprUnary node (OP X) by calling accept() on X.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(ExprUnary x) throws Err {
-
 
     if (x.op == ExprUnary.Op.NOOP) {
       return visitThis(x.deNOP());
@@ -250,7 +305,11 @@ public class ASTVisitor extends VisitQuery<Expr> {
   }
 
   /**
-   * Visits a ExprVar node (this default implementation simply returns null)
+   * Visits a ExprVar node (this default implementation simply returns null).
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(ExprVar x) throws Err {
@@ -267,7 +326,11 @@ public class ASTVisitor extends VisitQuery<Expr> {
   }
 
   /**
-   * Visits a Sig node (this default implementation simply returns null)
+   * Visits a Sig node (this default implementation simply returns null).
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
    */
   @Override
   public Expr visit(Sig x) throws Err {
@@ -291,6 +354,13 @@ public class ASTVisitor extends VisitQuery<Expr> {
     return x;
   }
 
+  /**
+   * Visit.
+   *
+   * @param x the x
+   * @return the expr
+   * @throws Err the err
+   */
   @Override
   public Expr visit(Field x) throws Err {
     for (int i = 0; i < indent; i++) {

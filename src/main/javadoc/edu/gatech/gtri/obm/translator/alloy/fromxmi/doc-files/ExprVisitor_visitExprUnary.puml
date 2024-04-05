@@ -1,0 +1,35 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return Empty String;
+stop
+endif
+:Set //isRootSig// to false;
+if(ExprUnary Operator is NOOP) then (yes)
+:visitThis ExprUnary
+(API to AlloyAnalyzer);
+endif
+:Create StringBuilder;
+:Create String //out// from the
+ExprUnary Subexpression;
+if(Subexpression is an Instance of ExprBinary)
+:Set //out// to be Surrounded by Parenthesis;
+endif
+if(ExprUnary Operation is Cardinality) then (yes)
+:Add # to //out//;
+elseif(ExprUnary Operation is Setof) then (yes)
+:Add set to //out//;
+elseif(ExprUnary Operation is Not) then (yes)
+:Add not to //out//;
+elseif(ExprUnary Operation is No) then (yes)
+:Add no to //out//;
+elseif(ExprUnary Operation is Closure) then (yes)
+:Add ^ to //out//;
+elseif(ExprUnary Operation is One or Oneof) then (yes)
+:Add one to //out//;
+elseif(ExprUnary Operation is Transpose) then (yes)
+:Add ~ to //out//;
+endif
+:Return //out//;
+stop
+@enduml

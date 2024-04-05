@@ -2,13 +2,7 @@ package manualtest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.junit.jupiter.api.Test;
+
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.FuncUtils;
@@ -24,7 +18,14 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.parser.CompModule;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import obmtest.ExpressionComparator;
+import org.junit.jupiter.api.Test;
 
 class FoodServiceControlFlowExplicitFactTest {
 
@@ -34,7 +35,6 @@ class FoodServiceControlFlowExplicitFactTest {
     String outFileName = "src/test/resources/generated-" + moduleName + ".als";
     String filename = "src/test/resources/4.2.1_FoodServiceControlFlow_ExplicitFacts.als";
     Alloy alloy = new Alloy("src/test/resources");
-
 
     // ========== Define list of signatures unique to the file ==========
 
@@ -54,8 +54,9 @@ class FoodServiceControlFlowExplicitFactTest {
         alloy.createSigAndAddToAllSigs("FastFoodService", (Sig.PrimSig) singleFoodServiceSig);
     Sig restaurantServiceSig =
         alloy.createSigAndAddToAllSigs("RestaurantService", (Sig.PrimSig) singleFoodServiceSig);
-    Sig unsatisfiableFoodServiceSig = alloy.createSigAndAddToAllSigs("UnsatisfiableFoodService",
-        (Sig.PrimSig) singleFoodServiceSig);
+    Sig unsatisfiableFoodServiceSig =
+        alloy.createSigAndAddToAllSigs(
+            "UnsatisfiableFoodService", (Sig.PrimSig) singleFoodServiceSig);
 
     // ========== Define list of relations unique to the file ==========
 
@@ -65,7 +66,6 @@ class FoodServiceControlFlowExplicitFactTest {
     Sig.Field foodService_payField = FuncUtils.addField("pay", foodServiceSig, paySig);
     Sig.Field foodService_eatField = FuncUtils.addField("eat", foodServiceSig, eatSig);
     Sig.Field foodService_serveField = FuncUtils.addField("serve", foodServiceSig, serveSig);
-
 
     LinkedHashMap<Field, Sig> fieldTypeByField = new LinkedHashMap<>();
     fieldTypeByField.put(foodService_orderField, orderSig);
@@ -87,14 +87,14 @@ class FoodServiceControlFlowExplicitFactTest {
 
     ExprVar fs = ExprVar.make(null, "fs", foodServiceSig.type());
 
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig,
-        foodService_orderField, foodService_serveField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        fs, foodServiceSig, foodService_orderField, foodService_serveField);
 
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig,
-        foodService_prepareField, foodService_serveField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        fs, foodServiceSig, foodService_prepareField, foodService_serveField);
 
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(fs, foodServiceSig,
-        foodService_serveField, foodService_eatField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        fs, foodServiceSig, foodService_serveField, foodService_eatField);
 
     // Map<String, Sig.Field> fieldByName = new LinkedHashMap<>();
     // fieldByName.put(foodService_orderField.label, foodService_orderField);
@@ -102,7 +102,6 @@ class FoodServiceControlFlowExplicitFactTest {
     // fieldByName.put(foodService_payField.label, foodService_payField);
     // fieldByName.put(foodService_eatField.label, foodService_eatField);
     // fieldByName.put(foodService_serveField.label, foodService_serveField);
-
 
     Set<String> foodServiceSteps = new HashSet<String>();
     foodServiceSteps.add("order");
@@ -124,39 +123,44 @@ class FoodServiceControlFlowExplicitFactTest {
 
     // BuffetService:
     ExprVar bs = ExprVar.make(null, "bs", buffetServiceSig.type());
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(bs, buffetServiceSig,
-        foodService_prepareField, foodService_orderField);
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(bs, buffetServiceSig,
-        foodService_eatField, foodService_payField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        bs, buffetServiceSig, foodService_prepareField, foodService_orderField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        bs, buffetServiceSig, foodService_eatField, foodService_payField);
 
     // ChurchSupperService:
     Func bijectionFiltered = AlloyUtils.getFunction(Alloy.transferModule, "o/bijectionFiltered");
     Func happensBefore = AlloyUtils.getFunction(Alloy.transferModule, "o/happensBefore");
     ExprVar css = ExprVar.make(null, "css", churchSupperServiceSig.type());
     Decl cssDecl = new Decl(null, null, null, List.of(css), churchSupperServiceSig.oneOf());
-    alloy.addToOverallFact(bijectionFiltered.call(happensBefore.call(),
-        css.join(foodService_payField), css.join(foodService_prepareField)).forAll(cssDecl));
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(css, churchSupperServiceSig,
-        foodService_payField, foodService_orderField);
+    alloy.addToOverallFact(
+        bijectionFiltered
+            .call(
+                happensBefore.call(),
+                css.join(foodService_payField),
+                css.join(foodService_prepareField))
+            .forAll(cssDecl));
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        css, churchSupperServiceSig, foodService_payField, foodService_orderField);
 
     // FastFoodService:
     ExprVar ffs = ExprVar.make(null, "ffs", fastFoodServiceSig.type());
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ffs, fastFoodServiceSig,
-        foodService_orderField, foodService_payField);
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ffs, fastFoodServiceSig,
-        foodService_payField, foodService_eatField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        ffs, fastFoodServiceSig, foodService_orderField, foodService_payField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        ffs, fastFoodServiceSig, foodService_payField, foodService_eatField);
 
     // RestaurantService:
     ExprVar rs = ExprVar.make(null, "rs", restaurantServiceSig.type());
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(rs, restaurantServiceSig,
-        foodService_eatField, foodService_payField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        rs, restaurantServiceSig, foodService_eatField, foodService_payField);
 
     // UnsatisfiableFoodService
     ExprVar ufs = ExprVar.make(null, "ufs", unsatisfiableFoodServiceSig.type());
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ufs, unsatisfiableFoodServiceSig,
-        foodService_eatField, foodService_payField);
-    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ufs, unsatisfiableFoodServiceSig,
-        foodService_payField, foodService_prepareField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        ufs, unsatisfiableFoodServiceSig, foodService_eatField, foodService_payField);
+    alloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(
+        ufs, unsatisfiableFoodServiceSig, foodService_payField, foodService_prepareField);
 
     // Functions and Predicates ==========
 
@@ -167,25 +171,34 @@ class FoodServiceControlFlowExplicitFactTest {
 
     // noChildFoodService
     Expr noChildFoodServiceExpr =
-        buffetServiceSig.no().and(churchSupperServiceSig.no()).and(fastFoodServiceSig.no())
-            .and(restaurantServiceSig.no()).and(unsatisfiableFoodServiceSig.no());
+        buffetServiceSig
+            .no()
+            .and(churchSupperServiceSig.no())
+            .and(fastFoodServiceSig.no())
+            .and(restaurantServiceSig.no())
+            .and(unsatisfiableFoodServiceSig.no());
 
     Func noChildFoodServiceFunc =
         new Func(null, "noChildFoodService", null, null, noChildFoodServiceExpr);
 
     // instancesDuringExample
-    Expr instancesDuringExampleExpr = orderSig.in(foodServiceSig.join(foodService_orderField))
-        .and(prepareSig.in(foodServiceSig.join(foodService_prepareField)))
-        .and(serveSig.in(foodServiceSig.join(foodService_serveField)))
-        .and(eatSig.in(foodServiceSig.join(foodService_eatField)))
-        .and(paySig.in(foodServiceSig.join(foodService_payField)));
+    Expr instancesDuringExampleExpr =
+        orderSig
+            .in(foodServiceSig.join(foodService_orderField))
+            .and(prepareSig.in(foodServiceSig.join(foodService_prepareField)))
+            .and(serveSig.in(foodServiceSig.join(foodService_serveField)))
+            .and(eatSig.in(foodServiceSig.join(foodService_eatField)))
+            .and(paySig.in(foodServiceSig.join(foodService_payField)));
     Func instancesDuringExampleFunc =
         new Func(null, "instancesDuringExample", null, null, instancesDuringExampleExpr);
 
-
     // onlyFoodService
-    Expr onlyFoodServiceExpr = foodServiceSig.cardinality().equal(ExprConstant.makeNUMBER(1))
-        .and(singleFoodServiceSig.no()).and(noChildFoodServiceFunc.call());
+    Expr onlyFoodServiceExpr =
+        foodServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .and(singleFoodServiceSig.no())
+            .and(noChildFoodServiceFunc.call());
     Func onlyFoodServiceFunc = new Func(null, "onlyFoodService", null, null, onlyFoodServiceExpr);
 
     // onlySingleFoodService
@@ -197,8 +210,11 @@ class FoodServiceControlFlowExplicitFactTest {
     // onlyBuffetService
     Decl decl_obs = new Decl(null, null, null, List.of(g), foodServiceSig.oneOf());
 
-    Expr onlyBuffetServiceExpr = buffetServiceSig.cardinality().equal(ExprConstant.makeNUMBER(1))
-        .and(g.in(buffetServiceSig).forAll(decl_obs));
+    Expr onlyBuffetServiceExpr =
+        buffetServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .and(g.in(buffetServiceSig).forAll(decl_obs));
 
     Func onlyBuffetServiceFunc =
         new Func(null, "onlyBuffetService", null, null, onlyBuffetServiceExpr);
@@ -207,8 +223,11 @@ class FoodServiceControlFlowExplicitFactTest {
 
     Decl decl_css = new Decl(null, null, null, List.of(g), churchSupperServiceSig.oneOf());
 
-    Expr onlyChurchSupperServiceExpr = churchSupperServiceSig.cardinality()
-        .equal(ExprConstant.makeNUMBER(1)).and(g.in(churchSupperServiceSig).forAll(decl_css));
+    Expr onlyChurchSupperServiceExpr =
+        churchSupperServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .and(g.in(churchSupperServiceSig).forAll(decl_css));
 
     Func onlyChurchSupperServiceFunc =
         new Func(null, "onlyChurchSupperService", null, null, onlyChurchSupperServiceExpr);
@@ -217,8 +236,11 @@ class FoodServiceControlFlowExplicitFactTest {
 
     Decl decl_offs = new Decl(null, null, null, List.of(g), fastFoodServiceSig.oneOf());
 
-    Expr onlyFastFoodServiceExpr = foodServiceSig.cardinality().equal(ExprConstant.makeNUMBER(1))
-        .and(g.in(fastFoodServiceSig).forAll(decl_offs));
+    Expr onlyFastFoodServiceExpr =
+        foodServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .and(g.in(fastFoodServiceSig).forAll(decl_offs));
 
     Func onlyFastFoodServiceFunc =
         new Func(null, "onlyFastFoodService", null, null, onlyFastFoodServiceExpr);
@@ -227,8 +249,11 @@ class FoodServiceControlFlowExplicitFactTest {
 
     Decl decl = new Decl(null, null, null, List.of(g), restaurantServiceSig.oneOf());
 
-    Expr onlyRestaurantServiceExpr = restaurantServiceSig.cardinality()
-        .equal(ExprConstant.makeNUMBER(1)).and(g.in(restaurantServiceSig).forAll(decl));
+    Expr onlyRestaurantServiceExpr =
+        restaurantServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
+            .and(g.in(restaurantServiceSig).forAll(decl));
     Func onlyRestaurantServiceFunc =
         new Func(null, "onlyRestaurantService", null, null, onlyRestaurantServiceExpr);
 
@@ -237,11 +262,14 @@ class FoodServiceControlFlowExplicitFactTest {
         new Decl(null, null, null, List.of(g), unsatisfiableFoodServiceSig.oneOf());
 
     Expr onlyUnsatisfiableFoodServiceExpr =
-        unsatisfiableFoodServiceSig.cardinality().equal(ExprConstant.makeNUMBER(1))
+        unsatisfiableFoodServiceSig
+            .cardinality()
+            .equal(ExprConstant.makeNUMBER(1))
             .and(g.in(unsatisfiableFoodServiceSig).forAll(unsatisfiableFoodServiceDecl));
 
-    Func onlyUnsatisfiableFoodServiceFunc = new Func(null, "onlyUnsatisfiableFoodService", null,
-        null, onlyUnsatisfiableFoodServiceExpr);
+    Func onlyUnsatisfiableFoodServiceFunc =
+        new Func(
+            null, "onlyUnsatisfiableFoodService", null, null, onlyUnsatisfiableFoodServiceExpr);
 
     // ========== Commands ==========
 
@@ -262,74 +290,183 @@ class FoodServiceControlFlowExplicitFactTest {
     Func suppressIOFunc = new Func(null, "suppressIO", null, null, suppressIOExpressionBody);
 
     // showFoodService
-    Expr showFoodServiceCmdExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlyFoodServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showFoodServiceCmdExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlyFoodServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
     Command showFoodServiceCmd =
-        new Command(null, showFoodServiceCmdExpr, "showFoodService", false, 10, -1, -1, -1,
-            List.of(), List.of(), alloy.getOverAllFact().and(showFoodServiceCmdExpr), null);
-
+        new Command(
+            null,
+            showFoodServiceCmdExpr,
+            "showFoodService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showFoodServiceCmdExpr),
+            null);
 
     // showSingleFoodService
-    Expr showSingleFoodServiceExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlySingleFoodServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showSingleFoodServiceExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlySingleFoodServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
     CommandScope ssf_cs = new CommandScope(singleFoodServiceSig, true, 1);
 
-    Command showSingleFoodServiceCmd = new Command(null, showSingleFoodServiceExpr,
-        "showSingleFoodService", false, 10, -1, -1, -1, List.of(ssf_cs), List.of(),
-        alloy.getOverAllFact().and(showSingleFoodServiceExpr), null);
+    Command showSingleFoodServiceCmd =
+        new Command(
+            null,
+            showSingleFoodServiceExpr,
+            "showSingleFoodService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(ssf_cs),
+            List.of(),
+            alloy.getOverAllFact().and(showSingleFoodServiceExpr),
+            null);
 
     // showBuffetService
-    Expr showBuffetServiceExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlyBuffetServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showBuffetServiceExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlyBuffetServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
     Command showBuffetServiceCmd =
-        new Command(null, showBuffetServiceExpr, "showBuffetService", false, 10, -1, -1, -1,
-            List.of(), List.of(), alloy.getOverAllFact().and(showBuffetServiceExpr), null);
+        new Command(
+            null,
+            showBuffetServiceExpr,
+            "showBuffetService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showBuffetServiceExpr),
+            null);
 
     // showChurchSupperService
-    Expr showChurchSupperServiceExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlyChurchSupperServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showChurchSupperServiceExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlyChurchSupperServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
-    Command showChurchSupperServiceCmd = new Command(null, showChurchSupperServiceExpr,
-        "showChurchSupperService", false, 10, -1, -1, -1, List.of(), List.of(),
-        alloy.getOverAllFact().and(showChurchSupperServiceExpr), null);
+    Command showChurchSupperServiceCmd =
+        new Command(
+            null,
+            showChurchSupperServiceExpr,
+            "showChurchSupperService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showChurchSupperServiceExpr),
+            null);
 
     // showFastFoodService
-    Expr showFastFoodServiceExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlyFastFoodServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showFastFoodServiceExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlyFastFoodServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
     Command showFastFoodServiceCmd =
-        new Command(null, showFastFoodServiceExpr, "showFastFoodService", false, 10, -1, -1, -1,
-            List.of(), List.of(), alloy.getOverAllFact().and(showFastFoodServiceExpr), null);
+        new Command(
+            null,
+            showFastFoodServiceExpr,
+            "showFastFoodService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showFastFoodServiceExpr),
+            null);
 
     // showRestaurantService
-    Expr showRestaurantServiceExpr = nonZeroDurationOnlyFunc.call()
-        .and(instancesDuringExampleFunc.call()).and(onlyRestaurantServiceFunc.call())
-        .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+    Expr showRestaurantServiceExpr =
+        nonZeroDurationOnlyFunc
+            .call()
+            .and(instancesDuringExampleFunc.call())
+            .and(onlyRestaurantServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
     Command showRestaurantServiceCmd =
-        new Command(null, showRestaurantServiceExpr, "showRestaurantService", false, 10, -1, -1, -1,
-            List.of(), List.of(), alloy.getOverAllFact().and(showRestaurantServiceExpr), null);
+        new Command(
+            null,
+            showRestaurantServiceExpr,
+            "showRestaurantService",
+            false,
+            10,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showRestaurantServiceExpr),
+            null);
 
     // showUnsatisfiableFoodService
     Expr showUnsatisfiableFoodServiceExpr =
-        instancesDuringExampleFunc.call().and(onlyUnsatisfiableFoodServiceFunc.call())
-            .and(suppressTransfersFunc.call()).and(suppressIOFunc.call());
+        instancesDuringExampleFunc
+            .call()
+            .and(onlyUnsatisfiableFoodServiceFunc.call())
+            .and(suppressTransfersFunc.call())
+            .and(suppressIOFunc.call());
 
-    Command showUnsatisfiableFoodServiceCmd = new Command(null, showUnsatisfiableFoodServiceExpr,
-        "showUnsatisfiableFoodService", false, 15, -1, -1, -1, List.of(), List.of(),
-        alloy.getOverAllFact().and(showUnsatisfiableFoodServiceExpr), null);
+    Command showUnsatisfiableFoodServiceCmd =
+        new Command(
+            null,
+            showUnsatisfiableFoodServiceExpr,
+            "showUnsatisfiableFoodService",
+            false,
+            15,
+            -1,
+            -1,
+            -1,
+            List.of(),
+            List.of(),
+            alloy.getOverAllFact().and(showUnsatisfiableFoodServiceExpr),
+            null);
 
-    Command[] commands = {showFoodServiceCmd, showSingleFoodServiceCmd, showBuffetServiceCmd,
-        showChurchSupperServiceCmd, showFastFoodServiceCmd, showRestaurantServiceCmd,
-        showUnsatisfiableFoodServiceCmd};
+    Command[] commands = {
+      showFoodServiceCmd,
+      showSingleFoodServiceCmd,
+      showBuffetServiceCmd,
+      showChurchSupperServiceCmd,
+      showFastFoodServiceCmd,
+      showRestaurantServiceCmd,
+      showUnsatisfiableFoodServiceCmd
+    };
 
     // ========== Create Alloy file version ==========
 
