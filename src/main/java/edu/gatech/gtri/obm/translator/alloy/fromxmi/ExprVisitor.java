@@ -269,7 +269,7 @@ public class ExprVisitor extends VisitQuery<String> {
       int numberOfFields = x.getFields().size();
 
       if (numberOfFields > 0) {
-        sb.append("\n");
+        // sb.append("\n");
         fieldAfterSig = true;
 
         Map<String, List<Sig.Field>> fieldByType = new HashMap<>(); // x.decl().expr.accept(this)
@@ -282,10 +282,12 @@ public class ExprVisitor extends VisitQuery<String> {
         List<String> sortedType = new ArrayList<>(fieldByType.keySet());
         Collections.sort(sortedType);
 
+
         for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
           if (fs.size() == 1) {
-            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n "))
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))// sbb.append(",\n
+                                                                                // "))
                 .append(AlloyUtils.removeSlash(fs.get(0).label)).append(": ").append(type)
                 .toString();
           } else { // have to be > 1
@@ -299,10 +301,15 @@ public class ExprVisitor extends VisitQuery<String> {
               labels[i] = AlloyUtils.removeSlash(fs.get(i).label);
             }
             if (isdisj)
-              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n ")).append("disj ")
-                  .append(String.join(", ", labels)).append(": ").append(type).toString();
+              fields = (fields.length() == 0 ? sbb.append(' ')
+                  : /* sbb.append(",\n ")) */sbb.append(", ")).append("disj ")
+                      .append(String.join(", ", labels)).append(": ").append(type).toString();
             else
-              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(",\n "))
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")) /*
+                                                                                    * sbb.
+                                                                                    * append(",\n "
+                                                                                    * ))
+                                                                                    */
                   .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
@@ -315,7 +322,7 @@ public class ExprVisitor extends VisitQuery<String> {
         //
         // }
         // sb.append(String.join(",", fields)).append(' ');
-        sb.append(fields).append('\n');
+        sb.append(fields);/* .append('\n'); */
         sb.append("}\n");
       } else
         sb.append("}\n");
