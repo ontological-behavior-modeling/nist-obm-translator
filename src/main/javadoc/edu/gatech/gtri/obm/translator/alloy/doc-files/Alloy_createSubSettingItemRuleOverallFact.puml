@@ -1,0 +1,10 @@
+@startuml
+start
+:Make ExprVar;
+:Create new Declaration;
+:Call subsettingItemRuleForSources;
+:Add subsettingItemRuleForSource to Overall Fact;
+:Call subsettingItemRuleForTargets;
+:Add isBeforeTarget to Overall Fact;
+stop
+@enduml

@@ -1,5 +1,6 @@
 package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ public class Translator {
   private final ExprVisitor exprVisitor;
   /** The ignored sigs. */
   private final Set<Sig> ignoredSigs;
-
 
   /**
    * Instantiates a new translator.

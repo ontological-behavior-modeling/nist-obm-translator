@@ -1,0 +1,49 @@
+@startuml
+start
+:Create IObject HashMap //hb//;
+if(//leavingEdgeOneOf//) then (yes)
+:Create OListOR //or//;
+while(For Each Leaving Edge in //source//)
+:Get Edge's Target Node;
+:Add Target Node to //or//;
+endwhile
+if(Size of //or// is Greater than 0) then (yes)
+:Print Source Name and //or//;
+:Put //source// and //or// in
+IObject Map //hb//;
+while(For the Size of //or//)
+:Get Current IObject //o// in //or//;
+if(//o// is an Instance of ONode) then (yes)
+:Create IObject Map //newMap//;
+:Cast //o// to ONode;
+:Create IObject //v//;
+:Get //v// from //newMap//;
+:Put //or// and //v// in
+map //hb//;
+break
+endif
+endwhile
+endif
+elseif(Source Has Greater Than 0 Leaving Edges)
+:Create OListAND //and//;
+while(For Each Leaving Edge in Source)
+:Get Edge's Target Node;
+:Add Target Node to //and//;
+endwhile
+if(Size of //and// is Greater Than 0) then (yes)
+:Print Source Name and //and//;
+:Put //source// and //and// in
+map //hb//;
+while(For Size of //and//)
+:Get IObject, //o//, at Current Index of //and//;
+if(//o// is an Instance of ONode)
+:Cast //o// to ONode;
+:Create IObject Map //newMap//;
+:Put //newMap// in map //hb//;
+endif
+endwhile
+endif
+endif
+:Return //hb//;
+stop
+@enduml

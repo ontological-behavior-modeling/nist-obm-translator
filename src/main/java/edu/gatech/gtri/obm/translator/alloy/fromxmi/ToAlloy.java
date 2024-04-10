@@ -339,16 +339,10 @@ public class ToAlloy {
   }
 
   public void createNoInputsField(String sigName, String fieldName) {
-    // PrimSig sig = sigByName.get(sigName);
-    // Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig);
-    // alloy.createNoInputsOrOutputsField(sig, field, Alloy.oinputs);
     createNoInputsOrOutputsField(sigName, fieldName, Alloy.oinputs);
   }
 
   public void createNoOutputsField(String sigName, String fieldName) {
-    // PrimSig sig = sigByName.get(sigName);
-    // Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig);
-    // alloy.createNoInputsOrOutputsField(sig, field, Alloy.ooutputs);
     createNoInputsOrOutputsField(sigName, fieldName, Alloy.ooutputs);
   }
 

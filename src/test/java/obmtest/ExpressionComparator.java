@@ -47,7 +47,6 @@ public class ExpressionComparator {
     visitedExpressions.clear();
     List<List<Expr>> ee1 = sortExprList((ExprList) e1);
     List<List<Expr>> ee2 = sortExprList((ExprList) e2);
-    // boolean same = compareExpr(ee1, ee2, true);
 
     if (!compareTwoList(ee1, ee2)) {
       List<Object> flat1 = ee1.stream().flatMap(List::stream).collect(Collectors.toList());
@@ -372,6 +371,7 @@ public class ExpressionComparator {
       System.err.println("CompareExpr Expr.class not implemented");
     } else if (expr1.getClass().equals(ExprBinary.class)) {
       if (!compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2)) {
+
         System.err
             .println("compareExpr: !compareExprBinary((ExprBinary) expr1, (ExprBinary) expr2) ("
                 + expr1 + " vs. " + expr2 + ")");
@@ -1081,7 +1081,6 @@ public class ExpressionComparator {
 
     // check all sig1.facts are in sig2.facts - not necessary check separately
     boolean found;
-
     if (sig1.getFieldDecls().size() != sig2.getFieldDecls().size()) {
       System.err.println("compareSig: sig1.getFieldDecls().size() != sig2.getFieldDecls().size() ("
           + sig1.getFieldDecls().size() + " vs. " + sig2.getFieldDecls().size() + ")");

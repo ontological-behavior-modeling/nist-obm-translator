@@ -1,0 +1,5 @@
+@startuml
+start
+:Return list IObject at Index //_index//;
+stop
+@enduml

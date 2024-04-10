@@ -1,0 +1,9 @@
+@startuml
+start
+:Make ExprVar;
+:Call BijectionFiltered;
+:Create new ArrayList;
+:Create new Declaration;
+:Add BijectionFiltered to Overall Fact;
+stop
+@enduml

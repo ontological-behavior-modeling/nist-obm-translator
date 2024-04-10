@@ -1,0 +1,14 @@
+@startuml
+start
+ -> File Path: String;
+ :Set Directory to File Path;
+ :Parse Occurrence Alloy
+ Module from File Path;
+ :Create Signature Array;
+ :Add Occurrence Signatures to Array;
+ :Add Occurrence Facts to Array;
+ :Abstract;
+ :Set All Parameters from
+ Occurrence Module;
+stop
+@enduml

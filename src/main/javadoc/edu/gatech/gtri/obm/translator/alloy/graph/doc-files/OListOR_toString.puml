@@ -1,0 +1,9 @@
+@startuml
+start
+:Create String //s// "(";
+while(For Each IObject in //list//)
+:Add Current IObject to //s//;
+endwhile
+:Return String //s//;
+stop
+@enduml

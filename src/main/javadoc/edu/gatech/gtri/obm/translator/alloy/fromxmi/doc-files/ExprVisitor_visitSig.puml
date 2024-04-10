@@ -1,0 +1,98 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return Empty String;
+stop
+endif
+if(//isRootSig//) then (yes)
+:Create StringBuilder;
+:Set //isRootSig// to false;
+if(Sig multiplicity is One) then(yes)
+:Append one to StringBuilder;
+elseif(Sig Multiplicity is Lone)
+:Append lone to StringBuilder;
+elseif(Sig Multiplicity is Some)
+:Append some to StringBuilder;
+endif
+if (Sig is Abstract)
+:Append abstract to StringBuilder;
+endif
+:Append sig and Sig label to StringBuilder;
+if(Sig is an Instance of Sig.PrimSig)
+:Cast Sig to Sig.PrimSig;
+if(PrimSig Does Not have a Parent) then (yes)
+:Append extends to StringBuilder;
+:Append Parent Label to StringBuilder;
+endif
+endif
+if(Number of Fields in Sig is > 0) then (yes)
+:Set //fieldAfterSig// to true;
+:Create HashMap //fieldsByType//;
+while(For Each Field in Sig)
+:sortFields;
+endwhile
+:Create Empty String //fields//;
+:Create StringBuilder;
+:Create String List //sortedType//;
+:Sort //sortedType//;
+while(For Each String in //sortedType//)
+:Get Current field Type from //fields//;
+if(Current Field Size is 1) then (yes)
+if(//fields// Length is Zero) then (yes)
+:Append a Space to StringBuilder;
+else(no)
+:Append ", " to StringBuilder;
+endif
+:Append Field Label and Type to StringBuilder;
+else(no)
+:Create boolean //isdisj// to true;
+:Create String Array //labels// from Size of Type List;
+while(For Each Sig.Field in List)
+if(//parameterFields// Contains Current String) then (yes)
+:Set //isdisj// to false;
+endif
+:Set //label// at Current Index to 
+Field Label with Slash Removed;
+if(//isdisj//) then (yes)
+if(//fields// Length is Zero) then (yes)
+:Append a Space to StringBuilder;
+else(no)
+:Append ", " to StringBuilder;
+endif
+:Append "disj" //labels// and //type//
+to StringBuilder;
+else (no)
+if(//fields// Length is Zero) then (yes)
+:Append a Space to StringBuilder;
+else(no)
+:Append ", " to StringBuilder;
+endif
+:Append //labels// and //type//
+to StringBuilder;
+endif
+endwhile
+:Append //fields// and a Space
+to StringBuilder;
+endif
+endwhile
+:Append "}\n" to StringBuilder;
+endif
+:Set //fieldAfterSig// to false;
+if(Number of Sig Implicit Facts is > 0) then (yes)
+:Create String Array //facts//;
+:Set //isImplicitFact// to true;
+:Set //isSigFact// to true;
+while(For Each Implicit Fact)
+:Get Current Fact from Sig;
+:Add Fact to //facts//;
+endwhile
+:Set //isImplicitFact// to false;
+:Set //isSigFact// to false;
+:Append //facts// to StringBuilder;
+endif
+:Return StringBuilder toString;
+endif
+:Return Sig Label with Slash Removed;
+stop
+
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+start
+:Create New ArrayList, //list//;
+stop
+@enduml

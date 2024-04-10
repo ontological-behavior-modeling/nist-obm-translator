@@ -1,0 +1,18 @@
+@startuml
+start
+if(//ignoredExpr// contains ExprCall) then (yes)
+:Return Empty String;
+stop
+endif
+:Set //isRootSig// to false;
+if(//fieldAfterSig//)
+:Create StringBuilder;
+:Append Field Label With Slash Removed
+and Field Declaration Expression
+to StringBuilder;
+:Return StringBuilder toString;
+stop
+endif
+:Return Field Label;
+stop
+@enduml
