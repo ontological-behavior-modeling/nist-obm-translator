@@ -151,7 +151,6 @@ public class Alloy {
   }
 
   public PrimSig createSigAndAddToAllSigs(String label, PrimSig parent) {
-    // Sig s = new PrimSig("this/" + label, parent);
     PrimSig s = new PrimSig(label, parent);
     allSigs.add(s);
     return s;
@@ -303,7 +302,12 @@ public class Alloy {
     addToOverallFact(funcFilteredExpr.forAll(decl));
   }
 
-  // transfer = x.tarnsferSupplierCustomer
+  /**
+   * Creates the sub setting item rule overall fact.
+   *
+   * @param ownerSig the owner sig
+   * @param transfer the transfer
+   */
   public Set<Expr> createSubSettingItemRuleOverallFact(Sig ownerSig, Expr transfer) {
     Set<Expr> factsAdded = new HashSet<>();
     ExprVar varX = makeVarX(ownerSig);
@@ -316,6 +320,12 @@ public class Alloy {
     return factsAdded;
   }
 
+  /**
+   * Creates the is after source is before target overall fact.
+   *
+   * @param ownerSig the owner sig
+   * @param transfer the transfer
+   */
   public Set<Expr> createIsAfterSourceIsBeforeTargetOverallFact(Sig ownerSig, Expr transfer) {
 
     Set<Expr> factsAdded = new HashSet<>();
@@ -336,7 +346,15 @@ public class Alloy {
       this.addToOverallFact(fact.forAll(decl));
   }
 
-  /* if from or to is null, use ExprVar x */
+
+  /**
+   * Creates the function filtered and add to overall fact.
+   *
+   * @param ownerSig the owner sig
+   * @param from the from
+   * @param to the to
+   * @param func the func
+   */
   public Set<Expr> createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to,
       Func func) {
 
@@ -390,13 +408,11 @@ public class Alloy {
 
 
   /**
-   * used by manual test Example: all s: FoodService | bijectionFiltered[happensBefore, s.order,
-   * s.serve]
-   * 
-   * @param ownerSig = FoodService
-   * @param var = s
-   * @param from = order
-   * @param to = serve
+   * Creates the bijection filtered happens before and add to overall fact.
+   *
+   * @param ownerSig the owner sig
+   * @param from the from
+   * @param to the to
    */
   public void createBijectionFilteredHappensBeforeAndAddToOverallFact(ExprVar varX, Sig ownerSig,
       Expr from, Expr to) {
@@ -436,6 +452,13 @@ public class Alloy {
         .and(suppressIOExpression);
   }
 
+  /**
+   * Adds the cardinality equal constraint to field.
+   *
+   * @param ownerSig the owner sig
+   * @param field the field
+   * @param num the num
+   */
   public void addCardinalityEqualConstraintToField(Sig ownerSig, Sig.Field field, int num) {
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
@@ -443,6 +466,13 @@ public class Alloy {
         varX.join(field).cardinality().equal(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
+  /**
+   * Adds the cardinality greater than equal constraint to field.
+   *
+   * @param ownerSig the owner sig
+   * @param field the field
+   * @param num the num
+   */
   public void addCardinalityGreaterThanEqualConstraintToField(Sig ownerSig, Sig.Field field,
       int num) {
     ExprVar varX = makeVarX(ownerSig);
@@ -451,7 +481,14 @@ public class Alloy {
         varX.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
   }
 
-  // fact {all x: B1 | x.vin=x.vout}
+  /**
+   * Adds the equal.
+   *
+   * @param ownerSig the owner sig
+   * @param field1 the field 1
+   * @param field2 the field 2
+   */
+  // fact {all x: B1 | x.vin = x.vout}
   public void addEqual(Sig ownerSig, Sig.Field field1, Sig.Field field2) {
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
@@ -482,7 +519,13 @@ public class Alloy {
   }
 
 
-
+  /**
+   * Adds the one constraint to field.
+   *
+   * @param var the var
+   * @param ownerSig the owner sig
+   * @param field the field
+   */
   public void addOneConstraintToField(ExprVar var, Sig ownerSig, Sig.Field field) {
     Decl decl = makeDecl(var, ownerSig);
     this.addToOverallFact(
@@ -503,44 +546,34 @@ public class Alloy {
     addToOverallFact((var.join(osteps.call()).no()).forAll(decl));
   }
 
-  // (all x | no x.inputs)
-  public void noXInputs(Sig sig) {
+
+
+  // all x | no inputs.x or // {all x| no outputs.x}
+  public void noInputsOrOutputsX(Sig sig, Func inputsOrOutpus) {
     ExprVar var = makeVarX(sig);
     Decl decl = makeDecl(var, sig);
-    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
+    addToOverallFact((inputsOrOutpus.call().join(var).no()).forAll(decl));
   }
 
-  // all x | no inputs.x
-  public void noInputsX(Sig sig) {
+
+  // (all x | no x.inputs) // (all x | no x.outputs)
+  public void noXInputsOrOutputs(Sig sig, Func inputsOrOutputs) {
     ExprVar var = makeVarX(sig);
     Decl decl = makeDecl(var, sig);
-    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
+    addToOverallFact((var.join(inputsOrOutputs.call()).no()).forAll(decl));
   }
 
   // no inputs.x
   // no x.inputs
-  public void noInputsXAndXInputs(Sig sig) {
+  // no x.outputs
+  // no outputs.x
+  public void noInputsXAndXInputsOrOutputsXAndXOutputs(Sig sig, Func inputsOrOutputs) {
     ExprVar var = makeVarX(sig);
     Decl decl = makeDecl(var, sig);
-    addToOverallFact((oinputs.call().join(var).no()).forAll(decl));
-    addToOverallFact((var.join(oinputs.call()).no()).forAll(decl));
+    addToOverallFact((inputsOrOutputs.call().join(var).no()).forAll(decl));
+    addToOverallFact((var.join(inputsOrOutputs.call()).no()).forAll(decl));
   }
 
-
-
-  // (all x | no x.outputs)
-  public void noXOutputs(Sig sig) {
-    ExprVar var = makeVarX(sig);
-    Decl decl = makeDecl(var, sig);
-    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
-  }
-
-  // {all x| no outputs.x}
-  public void noOutputsX(Sig sig) {
-    ExprVar var = makeVarX(sig);
-    Decl decl = makeDecl(var, sig);
-    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
-  }
 
 
   public void noItemsX(Sig sig) {
@@ -549,67 +582,15 @@ public class Alloy {
     addToOverallFact((oitems.call().join(var).no()).forAll(decl)); // no item.x
   }
 
-  // no x.outputs
-  // no outputs.x
-  public void noOutputsXAndXOutputs(Sig sig) {
-    ExprVar var = makeVarX(sig);
-    Decl decl = makeDecl(var, sig);
-    addToOverallFact((var.join(ooutputs.call()).no()).forAll(decl));
-    addToOverallFact((ooutputs.call().join(var).no()).forAll(decl));
-  }
-
-  public boolean addInputsAndNoInputsX(PrimSig ownerSig, List<Field> fields, boolean addNoInputsX,
-      boolean addEqual) {
-    if (addEqual) {
-      addEqual2(ownerSig, fields, oinputs);
-      return true;
-    }
-    if (addNoInputsX)
-      noInputsX(ownerSig);
-    return false;
-  }
 
 
-  public boolean addOutputsAndNoOutputsX(PrimSig ownerSig, List<Field> fields,
-      boolean addNoOutputsX, boolean addEqual) {
-    // createBijectionFilteredAddToOverallFact2(ownerSig, field, Alloy.ooutputs);
-    if (addEqual) {
-      addEqual2(ownerSig, fields, ooutputs);
-      return true;
-    }
-    if (addNoOutputsX)
-      noOutputsX(ownerSig);
-    return false;
-  }
-
-
-  // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
-  // public void createEqualFieldInputsToOverallFact(Sig sig, Sig.Field fromField, Expr to,
-  // Sig.Field toField) {
-  // createEqualFieldToOverallFact(sig, fromField, fromField, to, toField, oinputs);
-  // }
-  //
-  // // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-  // public void createEqualFieldOutputsToOverallFact(Sig sig, Sig.Field fromField, Expr to,
-  // Sig.Field toField) {
-  // createEqualFieldToOverallFact(sig, fromField, fromField, to, toField, ooutputs);
-  // }
-
-  // fact {all x: MultipleObjectFlow | no x.p1.inputs}
-  public void createNoInputsField(Sig sig, Field field) {
-    ExprVar varX = makeVarX(sig);
-    Decl declX = makeDecl(varX, sig);// x: MultipleObjectFlow
-    Expr exprField = varX.join(sig.domain(field)); // x.p1
-    addToOverallFact((exprField.join(oinputs.call())/* x.p1.inputs */.no()).forAll(declX));
-  }
-
-  // fact {all x: MultipleObjectFlow | no x.p4.outputs}
-  public void createNoOutputsField(Sig sig, Field field) {
+  public void createNoInputsOrOutputsField(Sig sig, Field field, Func inputsOrOutputs) {
     ExprVar varX = makeVarX(sig);
     Decl declX = makeDecl(varX, sig);// x: MultipleObjectFlow
     Expr exprField = varX.join(sig.domain(field)); // x.p4
-    addToOverallFact((exprField.join(ooutputs.call())/* x.p4.outputs */.no()).forAll(declX));
+    addToOverallFact((exprField.join(inputsOrOutputs.call())/* x.p4.outputs */.no()).forAll(declX));
   }
+
 
   // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
   // or
@@ -652,6 +633,12 @@ public class Alloy {
 
   }
 
+  /**
+   * Adds the steps.
+   *
+   * @param sig the sig
+   * @param stepFields the step fields
+   */
   public void addSteps(PrimSig sig, Set<String> stepFields, boolean addInXSteps,
       boolean addXStepsIn) {
     ExprVar varX = makeVarX(sig);

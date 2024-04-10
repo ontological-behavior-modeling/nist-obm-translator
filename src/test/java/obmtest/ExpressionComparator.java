@@ -28,6 +28,7 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Type;
 
+
 public class ExpressionComparator {
 
   private final Set<List<Expr>> visitedExpressions;
@@ -399,22 +400,12 @@ public class ExpressionComparator {
     } else if (expr1.getClass().equals(ExprLet.class)) {
       System.err.println("ExprLet: not implemented");
     } else if (expr1.getClass().equals(ExprList.class)) {
-      // if (start)
-      // if (!compareExprListStart((ExprList) expr1, (ExprList) expr2)) {
-      // System.err
-      // .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2) ("
-      // + expr1 + " vs. " + expr2 + ")");;
-      // return false;
-      // } else {
       if (!compareExprList((ExprList) expr1, (ExprList) expr2)) {
         System.err
             .println("compareExpr: " + "!compareExprList((ExprList) expr1, (ExprList) expr2) ("
                 + expr1 + " vs. " + expr2 + ")");
         return false;
       }
-      // }
-      // else
-      // System.out.println("not start");
     } else if (expr1.getClass().equals(ExprQt.class)) {
       if (!compareExprQt((ExprQt) expr1, (ExprQt) expr2)) {
         System.err.println("compareExpr: " + "!compareExprQt((ExprQt) expr1, (ExprQt) expr2) ("
@@ -661,9 +652,6 @@ public class ExpressionComparator {
     }
     // for each expr1.arg
     for (int i = 0; i < expr1.args.size(); i++) {
-      System.out.println("===========Looking for =============================");
-      System.out.println(expr1.args.get(i)); // (all x | no x . o/steps)
-      System.out.println("====================================================");
       boolean found = false;
       for (int j = 0; j < expr2.args.size(); j++) {
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
@@ -716,12 +704,8 @@ public class ExpressionComparator {
     }
     // for each expr1.arg
     for (int i = 0; i < expr1.args.size(); i++) {
-      System.out.println("===========Looking for [" + i + "]============================= ");
-      System.out.println(expr1.args.get(i)); // (all x | no x . o/steps)
-      System.out.println("====================================================");
       boolean found = false;
       for (int j = 0; j < expr2.args.size(); j++) {
-        System.out.println("j = " + j);
         // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
         // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
         // visitedExpressions.clear();
@@ -912,6 +896,7 @@ public class ExpressionComparator {
       return false;
     }
     if (func1.isPrivate == null && func2.isPrivate != null) {
+
       System.err
           .println("compareFunctions: " + "func1.isPrivate == null && func2.isPrivate != null");
       return false;
@@ -1096,23 +1081,6 @@ public class ExpressionComparator {
 
     // check all sig1.facts are in sig2.facts - not necessary check separately
     boolean found;
-    // for (Expr next1 : sig1.getFacts()) {
-    // found = false;
-    // for (Expr next2 : sig2.getFacts()) {
-    // visitedExpressions.clear();
-    // if (compareAsString(next1, next2))
-    // if (compareExpr(next1, next2)) {
-    // found = true;
-    // break;
-    // }
-    // }
-    // if (!found) {
-    // System.err.println(
-    // "compareSig: !comparing Facts failed. " + next1 + " not found in " + sig2.getFacts());
-    // return false;
-    // }
-    // }
-
 
     if (sig1.getFieldDecls().size() != sig2.getFieldDecls().size()) {
       System.err.println("compareSig: sig1.getFieldDecls().size() != sig2.getFieldDecls().size() ("
@@ -1226,18 +1194,9 @@ public class ExpressionComparator {
     if (t1 == null && t2 == null) {
       return true;
     }
-
     if (t1 == null || t2 == null) {
       return false;
     }
-
-    // if(!t1.toString().equals(t2.toString())) {
-    // System.err.println("compareType: t1.toString() != t2.toString()");
-    // System.err.println("t1.toString(): " + t1.toString());
-    // System.err.println("t2.toString(): " + t2.toString());
-    // return false;
-    // }
-
     if (t1.is_bool != t2.is_bool) {
       System.err.println("compareType: t1.is_bool != t2.is_bool");
       return false;

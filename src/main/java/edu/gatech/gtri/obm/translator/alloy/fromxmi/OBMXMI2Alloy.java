@@ -81,7 +81,7 @@ public class OBMXMI2Alloy {
 
   /**
    * 
-   * @param working_dir where required alloy library (Transfer) is locating
+   * @param working_dir where required alloy library (Transfer.als/ utilities package) is locating
    */
   public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy(working_dir);
@@ -92,14 +92,24 @@ public class OBMXMI2Alloy {
     sigToFactsMap = new HashMap<>();
   }
 
-  public boolean createAlloyFile(File xmiFile, String className, File outputFile)
+  /**
+   * 
+   * @param xmiFile
+   * @param qualifiedName of a UML:Class for translation (ie.,
+   *        Model::FoodService::OFSingleFoodService)
+   * @param outputFile
+   * @return
+   * @throws FileNotFoundException
+   * @throws UMLModelErrorException
+   */
+  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile)
       throws FileNotFoundException, UMLModelErrorException {
 
     if (!xmiFile.exists() || !xmiFile.canRead()) {
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
       return false;
     }
-    if (loadOBMAndCreateAlloy(xmiFile, className)) {
+    if (loadOBMAndCreateAlloy(xmiFile, qualifiedName)) {
       String outputFileName = toAlloy.createAlloyFile(outputFile, this.parameterFields);
       System.out.println(outputFileName + " is created");
       return true;
