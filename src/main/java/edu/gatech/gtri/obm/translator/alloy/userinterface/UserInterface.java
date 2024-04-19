@@ -130,39 +130,37 @@ public class UserInterface {
   private boolean refresh = true;
 
   /** The executor to run the translator functions in the background. */
-  private ExecutorService executor = Executors.newFixedThreadPool(10);
+  private ExecutorService executor = Executors.newFixedThreadPool(1);
 
-  /**
-   * A callable method to conglomerate all the class elements within the xmi file.
-   *
-   * @return classNames A string array of the xmi file class elements
-   */
+  /** A callable method to conglomerate all the class elements within the xmi file. */
   private Callable<String[]> findXmiClasses =
       () -> {
-        ResourceSet rs = null;
+        String[] classNames = null;
         try {
-          rs = EMFUtil.createResourceSet();
-        } catch (FileNotFoundException e) {
+          ResourceSet rs = EMFUtil.createResourceSet();
+
+          Resource r =
+              EMFUtil.loadResourceWithDependencies(
+                  rs, URI.createFileURI(xmiFile.getAbsolutePath()), null);
+
+          List<String> resourceNames = new ArrayList<String>();
+          TreeIterator<EObject> xmiContent = r.getAllContents();
+          while (xmiContent.hasNext()) {
+            EObject current = xmiContent.next();
+            if (current.getClass().equals(ClassImpl.class)) {
+              String qn = ((ClassImpl) current).getQualifiedName();
+              if (qn != null) resourceNames.add(qn);
+            }
+          }
+          int size = resourceNames.size();
+          classNames = new String[size];
+          for (int i = 0; i < size; i++) {
+            classNames[i] = resourceNames.get(i);
+          }
+          Arrays.sort(classNames);
+        } catch (Exception e) {
           e.printStackTrace();
         }
-        Resource r =
-            EMFUtil.loadResourceWithDependencies(
-                rs, URI.createFileURI(xmiFile.getAbsolutePath()), null);
-
-        resourceNames = new ArrayList<NamedElement>();
-        TreeIterator<EObject> xmiContent = r.getAllContents();
-        while (xmiContent.hasNext()) {
-          EObject current = xmiContent.next();
-          if (current.getClass().equals(ClassImpl.class)) {
-            resourceNames.add((ClassImpl) current);
-          }
-        }
-        int size = resourceNames.size();
-        String[] classNames = new String[size];
-        for (int i = 0; i < size; i++) {
-          classNames[i] = resourceNames.get(i).getQualifiedName();
-        }
-        Arrays.sort(classNames);
         return classNames;
       };
 
@@ -282,6 +280,7 @@ public class UserInterface {
               scrollPane.setVisible(true);
               frmObmAlloyTranslator.setMinimumSize(new Dimension(530, 450));
               frmObmAlloyTranslator.pack();
+              p.getT().cancel();
               p.getDialog().dispose();
             }
           }
@@ -308,6 +307,7 @@ public class UserInterface {
               e1.printStackTrace();
             }
             list.setListData(allClassNames);
+            p.getT().cancel();
             p.getDialog().dispose();
           }
         });
