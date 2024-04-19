@@ -110,8 +110,11 @@ public class OBMXMI2Alloy {
    *        Model::FoodService::OFSingleFoodService)
    * @param outputFile - the output alloy file
    * @return true if the given outputFile is created from the given xmlFile and the qualifiedName
+   * @throws UMLModelErrorException
+   * @throws FileNotFoundException
    */
-  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile) {
+  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile)
+      throws FileNotFoundException, UMLModelErrorException {
     if (!xmiFile.exists() || !xmiFile.canRead()) {
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
       return false;
@@ -144,7 +147,8 @@ public class OBMXMI2Alloy {
    * @param - the qualifiedName of a class contained in the xml file
    * @return boolean true if successfully created as alloy objects otherwise false
    */
-  private boolean loadOBMAndCreateAlloy(File xmiFile, String className) {
+  private boolean loadOBMAndCreateAlloy(File xmiFile, String className)
+      throws FileNotFoundException, UMLModelErrorException {
 
     parameterFields = new HashSet<>();
     valueTypeFields = new HashSet<>();
@@ -172,10 +176,10 @@ public class OBMXMI2Alloy {
       sysmladapter = new SysMLAdapter(xmiFile, null);
     } catch (UMLModelErrorException e1) {
       this.errorMessage = "Failed to load SysML in EMFUtil.";
-      return false;
+      throw e1;
     } catch (FileNotFoundException e) {
       this.errorMessage = xmiFile.getAbsolutePath() + " does not exist.";
-      return false;
+      throw e;
     }
 
     org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, className);
