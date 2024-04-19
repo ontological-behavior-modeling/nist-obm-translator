@@ -346,6 +346,43 @@ public class Alloy {
       this.addToOverallFact(fact.forAll(decl));
   }
 
+  // fact {all x: OFSingleFoodService | x.transferOrderPay.sources.orderedFoodItem +
+  // x.transferOrderPay.sources.orderAmount in x.transferOrderPay.items}
+  // fact {all x: OFSingleFoodService | x.transferOrderPay.items in
+  // x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount}
+  public Set<Expr> createTransferInItems(Sig ownerSig, Expr transfer, Expr toField, Func func,
+      Set<Field> targetInputsSourceOutputsFields, boolean toBeInherited) {
+    ExprVar varX = makeVarX(ownerSig);
+    Decl decl = makeDecl(varX, ownerSig);
+    Expr funcCall = func.call();
+
+    List<Field> sortedTargetInputsSourceOutputsFields =
+        AlloyUtils.sortFields(targetInputsSourceOutputsFields);
+    Expr all = null, all_r = null;
+    for (Field field : sortedTargetInputsSourceOutputsFields) {
+      all = all == null ? varX.join(transfer).join(funcCall).join(field)
+          : all.plus(varX.join(transfer).join(funcCall).join(field));
+    }
+    // all = x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount
+
+    // x.transferOrderPay.items in
+    // x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount
+    all_r = varX.join(transfer).join(Alloy.oitems.call()).in(all);
+
+    // x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount in
+    // x.transferOrderPay.items
+    all = all.in(varX.join(transfer).join(Alloy.oitems.call()));
+
+    if (!toBeInherited) {
+      this.addToOverallFact(all.forAll(decl));
+      this.addToOverallFact(all_r.forAll(decl));
+    }
+
+    Set<Expr> factsAdded = new HashSet<>();
+    factsAdded.add(all);
+    factsAdded.add(all_r);
+    return factsAdded;
+  }
 
   /**
    * Creates the function filtered and add to overall fact.
@@ -355,6 +392,7 @@ public class Alloy {
    * @param to the to
    * @param func the func
    */
+  // fact {all x: OFSingleFoodService | bijectionFiltered[sources, x.transferOrderPay, x.order]}
   public Set<Expr> createBijectionFilteredToOverallFact(Sig ownerSig, Expr from, Expr to,
       Func func) {
 
@@ -367,27 +405,22 @@ public class Alloy {
     Expr toExpr = null;
 
     boolean justFunction = false;
-    boolean justInverseFunction = false;
     if (to == null) {// just x - means no field but to itself
                      // i.e., fact {all x: B | bijectionFiltered[sources, x.transferB1B2, x.b1]} in
                      // 4.1.4 Transfer Parameter2 -Parameter Behavior.als
       justFunction = true;
       toExpr = varX;
-    } else
+    } else {
+      // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
       toExpr = addExprVarToExpr(varX, to);
+    }
     if (from == null) {// just x - means no field but to itself
-      justInverseFunction = true;
       fromExpr = varX;
     } else
       fromExpr = addExprVarToExpr(varX, from);
 
-    Expr funcCall = func.call();
-    Expr fnc_inversefnc_or_bijection = null;
-    if (!justFunction && !justInverseFunction) {
-      fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
-    } else if (justFunction) {
-      // fnc_inversefnc_or_bijection = functionFiltered.call(funcCall, fromExpr, toExpr);
-      fnc_inversefnc_or_bijection = bijectionFiltered.call(funcCall, fromExpr, toExpr);
+    Expr fnc_inversefnc_or_bijection = bijectionFiltered.call(func.call(), fromExpr, toExpr);
+    if (justFunction) { // to == null so toExpr = varX
       if (func == Alloy.sources) { // {fact {all x: B | isBeforeTarget[x.transferBB1]}
         this.addToOverallFact(isBeforeTarget.call(fromExpr).forAll(decl));
         factsAdded.add(isBeforeTarget.call(fromExpr));
@@ -396,9 +429,6 @@ public class Alloy {
         factsAdded.add(isAfterSource.call(fromExpr));
       }
     }
-    // else if (justInverseFunction) {
-    // fnc_inversefnc_or_bijection = inverseFunctionFiltered.call(funcCall, fromExpr, toExpr);
-    // }
     this.addToOverallFact(fnc_inversefnc_or_bijection.forAll(decl));
     factsAdded.add(fnc_inversefnc_or_bijection);
 
@@ -461,9 +491,8 @@ public class Alloy {
    */
   public void addCardinalityEqualConstraintToField(Sig ownerSig, Sig.Field field, int num) {
     ExprVar varX = makeVarX(ownerSig);
-    Decl decl = makeDecl(varX, ownerSig);
-    this.addToOverallFact(
-        varX.join(field).cardinality().equal(ExprConstant.makeNUMBER(num)).forAll(decl));
+    this.addToOverallFact(varX.join(field).cardinality().equal(ExprConstant.makeNUMBER(num))
+        .forAll(makeDecl(varX, ownerSig)));
   }
 
   /**
@@ -476,9 +505,8 @@ public class Alloy {
   public void addCardinalityGreaterThanEqualConstraintToField(Sig ownerSig, Sig.Field field,
       int num) {
     ExprVar varX = makeVarX(ownerSig);
-    Decl decl = makeDecl(varX, ownerSig);
-    this.addToOverallFact(
-        varX.join(field).cardinality().gte(ExprConstant.makeNUMBER(num)).forAll(decl));
+    this.addToOverallFact(varX.join(field).cardinality().gte(ExprConstant.makeNUMBER(num))
+        .forAll(makeDecl(varX, ownerSig)));
   }
 
   /**
@@ -491,8 +519,8 @@ public class Alloy {
   // fact {all x: B1 | x.vin = x.vout}
   public void addEqual(Sig ownerSig, Sig.Field field1, Sig.Field field2) {
     ExprVar varX = makeVarX(ownerSig);
-    Decl decl = makeDecl(varX, ownerSig);
-    this.addToOverallFact(varX.join(field1).equal(varX.join(field2)).forAll(decl));
+    this.addToOverallFact(
+        varX.join(field1).equal(varX.join(field2)).forAll(makeDecl(varX, ownerSig)));
   }
 
   // fact {all x: B1 | x.vin = x.inputs}
@@ -518,6 +546,25 @@ public class Alloy {
     addToOverallFact(equalExprclosure.forAll(decl));
   }
 
+  // fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem +
+  // x.prepare.prepareDestination}
+  public void createInOutClosure(PrimSig ownerSig, Field fieldOwner, List<Sig.Field> fieldOfFields,
+      Func inOrOut) {
+    ExprVar varX = makeVarX(ownerSig);
+    Decl decl = makeDecl(varX, ownerSig);
+    Expr fieldsExpr = null;
+    for (Field field : fieldOfFields) {
+      // sig.domain(field) or sig.parent.domain(sig.parent.field)
+      // Expr sigDomainField = AlloyUtils.getSigDomainFileld(field.label, ownerSig);
+      // if (sigDomainField != null)
+      fieldsExpr = fieldsExpr == null ? varX.join(fieldOwner).join(field)
+          : fieldsExpr.plus(varX.join(fieldOwner).join(field));
+    }
+    // x.inputs in ....
+    Expr equalExprclosure = (varX.join(fieldOwner).join(inOrOut.call())).in(fieldsExpr);
+    addToOverallFact(equalExprclosure.forAll(decl));
+
+  }
 
   /**
    * Adds the one constraint to field.
@@ -607,10 +654,17 @@ public class Alloy {
     Expr exprField = varX.join(sig.domain(fromField)); // x.p1
     Decl declY = new Decl(null, null, null, List.of(varP), exprField);
 
-    // p.i = p.outputs (func = outputs)
-    Expr equalExpr = varP.join(toField).equal(varP.join(func.call()));
+    // p.i = p.outputs (func = outputs) to p.i in p.outputs
+    Expr equalExpr = varP.join(toField).in(varP.join(func.call()));
+    // and p.outputs in p.i
+    Expr equqlExpr2 = varP.join(func.call()).in(varP.join(toField));
 
+    // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
+    // to
+    // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i in p.outputs}
+    // fact {all x: MultipleObjectFlow | all p: x.p1 | p.outpus in p.i}
     addToOverallFact(equalExpr.forAll(declY).forAll(declX));
+    addToOverallFact(equqlExpr2.forAll(declY).forAll(declX));
   }
 
 
@@ -650,18 +704,30 @@ public class Alloy {
       sortedFieldLabel.add(stepField);
     Collections.sort(sortedFieldLabel);
 
-    Expr expr = null;
-    for (String fieldName : sortedFieldLabel) {
-      // sig.domain(field) or sig.parent.domain(sig.parent.field)
-      Expr sigDomainField = AlloyUtils.getSigDomainFileld(fieldName, sig);
-      if (sigDomainField != null)
-        expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
-    }
-    if (expr != null) {
-      if (addInXSteps) // all of them
-        addToOverallFact((expr).in(varX.join(ostepsExpr1)).forAll(decl)); // .... in x.steps
-      if (addXStepsIn) // to only leaf
+
+    if (addXStepsIn) {// to only leaf sig - all fields including inherited/redefined
+      Expr expr = null;
+      for (String fieldName : sortedFieldLabel) {
+        // sig.domain(field) or sig.parent.domain(sig.parent.field)
+        Expr sigDomainField = AlloyUtils.getSigDomainFileld(fieldName, sig); // including inherited
+                                                                             // fields
+        if (sigDomainField != null)
+          expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
+      }
+      if (expr != null)
         addToOverallFact(varX.join(ostepsExpr1).in(expr).forAll(decl)); // x.steps in .....
+    }
+
+    if (addInXSteps) {// for all sigs - own fields - not include redefined
+      Expr expr = null;
+      for (String fieldName : sortedFieldLabel) {
+        Expr sigDomainField = AlloyUtils.getSigOwnField(fieldName, sig);
+        if (sigDomainField != null) {
+          expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
+        }
+      }
+      if (expr != null)
+        addToOverallFact((expr).in(varX.join(ostepsExpr1)).forAll(decl)); // .... in x.steps
     }
   }
 
