@@ -47,9 +47,9 @@ class OBMXMI2AlloyTest {
   @CsvSource({
 
       // order in fields and step matters
-      // mw
+
       "4.2.2 FoodService Object Flow - OFFoodService_mw.als,Model::FoodService::OFFoodService, true",
-      "4.2.2 FoodService Object Flow - OFSingleFoodService_mw.als,Model::FoodService::OFSingleFoodService,true",
+      "4.2.2 FoodService Object Flow - OFSingleFoodService.als,Model::FoodService::OFSingleFoodService,true",
       "4.2.2 FoodService Object Flow - OFParallelFoodService_mw.als,Model::FoodService::OFParallelFoodService,true",
       "4.2.2 FoodService Object Flow - OFLoopFoodService_mw.als,Model::FoodService::OFLoopFoodService,true",
 
@@ -61,12 +61,13 @@ class OBMXMI2AlloyTest {
 
       // mw
       "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt,true",
-      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow.als, Model::Basic::MultipleObjectFlow,true",
+      // mw
+      "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als, Model::Basic::MultipleObjectFlow,true",
 
-      // mw ????????????????
-      "4.1.4 Transfers and Parameters2 - ParameterBehavior_mw.als,Model::Basic::ParameterBehavior,true",
-      // mw change = x.inputs to in x.inputs
-      "4.1.4 Transfers and Parameters1 - TransferProduct_mw.als, Model::Basic::TransferProduct,true",
+      // mw ok email from Jeremy 4/15/24
+      "4.1.4 Transfers and Parameters2 - ParameterBehavior.als,Model::Basic::ParameterBehavior,true",
+      // mw change = x.inputs to in x.inputs okd email from Jeremy 4/15/24
+      "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct,true",
       // mw
       "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl,true",
 
@@ -93,13 +94,13 @@ class OBMXMI2AlloyTest {
       "4.1.6 UnsatisfiableComposition1_mw.als, Model::Basic::UnsatisfiableComposition1, true",
       "4.1.6 UnsatisfiableComposition2_mw.als, Model::Basic::UnsatisfiableComposition2, true",
 
-      "4.2.1 FoodService Control Flow - FoodService_mw.als, Model::Realistic::FoodService, true",
-      "4.2.1 FoodService Control Flow - SingleFoodService_mw.als,Model::Realistic::SingleFoodService, true",
-      "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::Realistic::BuffetService, true",
-      "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::Realistic::ChurchSupper, true",
-      "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::Realistic::FastFoodService, true",
-      "4.2.1 FoodService Control Flow - RestaurantService_mw.als,Model::Realistic::RestaurantService, true",
-      "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::Realistic::UnsatisfiableService, true",})
+      "4.2.1 FoodService Control Flow - FoodService_mw.als, Model::FoodService::FoodService, true",
+      "4.2.1 FoodService Control Flow - SingleFoodService_mw.als,Model::FoodService::SingleFoodService, true",
+      "4.2.1 FoodService Control Flow - BuffetService_mw.als, Model::FoodService::BuffetService, true",
+      "4.2.1 FoodService Control Flow - ChurchSupperService_mw.als, Model::FoodService::ChurchSupper, true",
+      "4.2.1 FoodService Control Flow - FastFoodService_mw.als, Model::FoodService::FastFoodService, true",
+      "4.2.1 FoodService Control Flow - RestaurantService_mw.als,Model::FoodService::RestaurantService, true",
+      "4.2.1 FoodService Control Flow - UsatisfiableFoodService_mw.als,Model::FoodService::UnsatisfiableService, true",})
 
 
   /**
