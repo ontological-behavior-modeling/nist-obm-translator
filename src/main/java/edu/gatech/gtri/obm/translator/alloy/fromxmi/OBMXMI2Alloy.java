@@ -26,12 +26,11 @@ import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
 import org.eclipse.uml2.uml.Stereotype;
-import org.eclipse.uml2.uml.Type;
 import org.eclipse.uml2.uml.ValueSpecification;
 import org.eclipse.uml2.uml.internal.impl.OpaqueExpressionImpl;
+import edu.gatech.gtri.obm.translator.alloy.Alloy;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.gatech.gtri.obm.translator.alloy.MDUtils;
-import edu.mit.csail.sdg.alloy4.SafeList;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
@@ -52,23 +51,29 @@ public class OBMXMI2Alloy {
   Set<Field> parameterFields; // A set of Field mapped from a Property with <<Parameter>> stereotype
   // Each connector with <<ObjectFlow>>, get sourceOutputProperty and targetInputProperty,
   // find the property type name and put in this Set
+  Set<Field> valueTypeFields;
   Set<String> transferingTypeSig; // ie., [Integer] for Model::Basic::MultipleObjectFlowAlt
   String message = "";
 
   // key = sigName, value = field names
-  Map<String, Set<String>> stepPropertiesBySig;
+  Map<String, Set<String>> stepPropertiesBySig_all; // including inherited one - used in closure
+  // (x.steps in ....)
+  Map<String, Set<String>> stepPropertiesBySig; // not include inherited one - used in all (.....
+                                                // in
+  // x.steps)
   Set<Connector> redefinedConnectors; // Set of Connector used in processConnector method so
                                       // connector not to be processed by parents
   Map<String, Set<String>> sigToTransferFieldMap; // key = signame of parent having transfer fields,
                                                   // value = Set<String> transferfields names
   Map<String, Set<Expr>> sigToFactsMap;
-  Map<PrimSig, Set<Property>> redefinedPropertiesPerSig;
+  Map<PrimSig, Set<Property>> redefinedPropertiesBySig;
   Set<PrimSig> leafSigs;
 
 
   private static String STEREOTYPE_STEP = "Model::OBM::Step";
   private static String STEREOTYPE_PATICIPANT = "SysML::ParticipantProperty";
   public static String STEREOTYPE_PAREMETER = "Model::OBM::Parameter";// property
+  public static String STEREOTYPE_VALUETYPE = "SysML::Blocks::ValueType";
   private static String STEREOTYPE_ITEMFLOW = "Model::OBM::ItemFlow";
   private static String STEREOTYPE_OBJECTFLOW = "Model::OBM::ObjectFlow";
   private static String STEREOTYPE_BINDDINGCONNECTOR = "SysML::BindingConnector";
@@ -87,6 +92,7 @@ public class OBMXMI2Alloy {
     toAlloy = new ToAlloy(working_dir);
     redefinedConnectors = new HashSet<Connector>();
     // key = sigName, value = field names
+    stepPropertiesBySig_all = new HashMap<>();
     stepPropertiesBySig = new HashMap<>();
     sigToTransferFieldMap = new HashMap<>();
     sigToFactsMap = new HashMap<>();
@@ -129,6 +135,7 @@ public class OBMXMI2Alloy {
   private boolean loadOBMAndCreateAlloy(File xmiFile, String _className) {
 
     parameterFields = new HashSet<>();
+    valueTypeFields = new HashSet<>();
     transferingTypeSig = new HashSet<>();
     ResourceSet rs;
     try {
@@ -184,13 +191,14 @@ public class OBMXMI2Alloy {
     }
 
     Set<NamedElement> allClassesConnectedToMainSigByFields = propertiesByClass.keySet(); // SimpleSequence,
+    // [0]=grand parent [1]=parent [2]=child
     List<Class> classInHierarchy = MDUtils.createListIncludeSelfAndParents((Class) mainClass); // SimpleSequence
 
-    /* Map<PrimSig, Set<Property>> */ redefinedPropertiesPerSig = new HashMap<>();
+    /* Map<PrimSig, Set<Property>> */ redefinedPropertiesBySig = new HashMap<>();
     // go throw each sigs in classInHierarchy and allClassesConnectedToMainSigByFields
     for (Class ne : classInHierarchy) {
       Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
-      addFieldsToSig(ne, propertiesByType, redefinedPropertiesPerSig);
+      addFieldsToSig(ne, propertiesByType, redefinedPropertiesBySig);
       addToStepPropertiesBySig(ne);
 
       // allClasses MAY contain a class in hierarchy so remove it
@@ -199,14 +207,14 @@ public class OBMXMI2Alloy {
 
     for (NamedElement ne : allClassesConnectedToMainSigByFields) {
       Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByType = propertiesByClass.get(ne);
-      addFieldsToSig(ne, propertiesByType, redefinedPropertiesPerSig);
+      addFieldsToSig(ne, propertiesByType, redefinedPropertiesBySig);
       addToStepPropertiesBySig(ne);
     }
 
-    for (PrimSig sig : redefinedPropertiesPerSig.keySet()) {
+    for (PrimSig sig : redefinedPropertiesBySig.keySet()) {
       // fact {all x: OFFoodService | x.eat in OFEat }
       // fact {all x: IFSingleFoodService | x.order in IFCustomerOrder}
-      toAlloy.addRedefinedSubsettingAsFacts(sig, redefinedPropertiesPerSig.get(sig));
+      toAlloy.addRedefinedSubsettingAsFacts(sig, redefinedPropertiesBySig.get(sig));
 
     }
 
@@ -253,7 +261,7 @@ public class OBMXMI2Alloy {
     // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
     // Note: Only supporting transferFields inherited to mainSig.
     // If maingSig has a parent who inherited tranferFields, currently the translator is not
-    // supported to handle the inherited transfer fields.
+    // supported to handle the inherited transfer fields for non mainSig.
     Set<String> mainSigInheritingTransferFields = new HashSet<>();
     // i.e.,
     // o/isBeforeTarget[x . (IFFoodService <: transferOrderServe)]
@@ -273,12 +281,12 @@ public class OBMXMI2Alloy {
         mainSigInheritingTransferRelatedFacts.addAll(possibleMainSigInheritingTransferRelatedFacts);
     }
     // add mainSig's inherited transfer fields to step Properties for the mainSig
-    stepPropertiesBySig.get(mainClass.getName()).addAll(mainSigInheritingTransferFields);
+    stepPropertiesBySig_all.get(mainClass.getName()).addAll(mainSigInheritingTransferFields);
 
     toAlloy.addFacts(mainClass.getName(), mainSigInheritingTransferRelatedFacts);
 
 
-    Set<Sig> noStepsSigs = toAlloy.addSteps(stepPropertiesBySig, parameterFields, leafSigs);
+    Set<Sig> noStepsSigs = toAlloy.addSteps(stepPropertiesBySig_all, parameterFields, leafSigs);
     // if "no x.steps" and sig with fields with type Transfer should not have below:
     // fact {all x: BehaviorWithParameterOut | no y: Transfer | y in x.steps}
     sigWithTransferFields.addAll(noStepsSigs);
@@ -316,10 +324,26 @@ public class OBMXMI2Alloy {
    */
   private void addToStepPropertiesBySig(NamedElement ne) {
 
-    Set<String> stepProperties = new HashSet<>();
+    Set<String> stepProperties_all = new HashSet<>();
     if (ne instanceof org.eclipse.uml2.uml.Class) { // ne can be PrimitiveType
       Set<org.eclipse.uml2.uml.Property> atts =
           sysMLUtil.getAllAttributes((org.eclipse.uml2.uml.Class) ne);
+      for (Property p : atts) {
+        if (p.getAppliedStereotype(STEREOTYPE_STEP) != null
+            || p.getAppliedStereotype(STEREOTYPE_PATICIPANT) != null) {
+          stepProperties_all.add(p.getName());
+        }
+      }
+    }
+    // for PrimitiveType (ie., Real, Integer), empty Set is added
+    System.out.println("====" + ne.getName());
+    System.out.println(stepProperties_all);
+    stepPropertiesBySig_all.put(ne.getName(), stepProperties_all);
+
+    Set<String> stepProperties = new HashSet<>();
+    if (ne instanceof org.eclipse.uml2.uml.Class) { // ne can be PrimitiveType
+      Set<org.eclipse.uml2.uml.Property> atts =
+          sysMLUtil.getOwnedAttributes((org.eclipse.uml2.uml.Class) ne);
       for (Property p : atts) {
         if (p.getAppliedStereotype(STEREOTYPE_STEP) != null
             || p.getAppliedStereotype(STEREOTYPE_PATICIPANT) != null) {
@@ -327,14 +351,16 @@ public class OBMXMI2Alloy {
         }
       }
     }
-    // for PrimitiveType (ie., Real, Integer), empty Set is added
+    System.out.println("====own" + ne.getName());
+    System.out.println(stepProperties);
     stepPropertiesBySig.put(ne.getName(), stepProperties);
+
   }
 
   /**
    * 
    * @param ne
-   * @param stepPropertiesBySig
+   * @param stepPropertiesBySig_all
    * @param inputs
    * @param outputs
    * @param sigWithTransferFields
@@ -344,34 +370,59 @@ public class OBMXMI2Alloy {
       HashMap<String, Set<String>> inputs, HashMap<String, Set<String>> outputs,
       Set<Sig> sigWithTransferFields) {
 
-    Set<String> fieldNamesWithInputs = new HashSet<>();
-    Set<String> fieldNamesWithOutputs = new HashSet<>();
+    PrimSig ownerSig = toAlloy.getSig(ne.getName());
+
+    Map<Field, Set<Field>> fieldWithInputs = new HashMap<>(); // key = prepare, value=
+                                                              // [preparedFoodItem,prepareDestination]
+    Map<Field, Set<Field>> fieldWithOutputs = new HashMap<>(); // key = order,
+                                                               // value=[orderAmount,
+                                                               // orderDestination,
+                                                               // orderedFoodItem]
 
     // transfer fields created is adding to stepPropertiesBySig passing in processConnector
     // ie., BehaviorWithParameter
     Set<String> sigNameOfSharedFieldType = processConnector((Class) ne, inputs, outputs,
-        sigWithTransferFields, fieldNamesWithInputs, fieldNamesWithOutputs);
+        sigWithTransferFields, fieldWithInputs, fieldWithOutputs);
+
 
     // any of connectorends owned field types are the same (p1, p2:
     // BehaviorWithParameter)
     // 4.1.5 Multiple Execution Step2 = MultiplObjectFlow=[BehaviorWithParameter]
     if (sigNameOfSharedFieldType.size() > 0) {
-      Set<String> nonTransferFieldNames = stepPropertiesBySig.get(ne.getName()).stream()
+      Set<String> nonTransferFieldNames = stepPropertiesBySig_all.get(ne.getName()).stream()
           .filter(f -> !f.startsWith("transfer")).collect(Collectors.toSet());
-
       // no inputs
       for (String fieldName : nonTransferFieldNames) {
-        if (!fieldNamesWithInputs.contains(fieldName)) {
+        if (!AlloyUtils.fieldsLabels(fieldWithInputs.keySet()).contains(fieldName)) {
           // fact {all x: MultipleObjectFlow |no x.p1.inputs}
-          toAlloy.createNoInputsField(ne.getName(), fieldName);
+          toAlloy.createNoInputsOrOutputsField(ownerSig, fieldName, Alloy.oinputs);
         }
-        if (!fieldNamesWithOutputs.contains(fieldName)) {
-          toAlloy.createNoOutputsField(ne.getName(), fieldName);
+        if (!AlloyUtils.fieldsLabels(fieldWithOutputs.keySet()).contains(fieldName)) {
+          toAlloy.createNoInputsOrOutputsField(ownerSig, fieldName, Alloy.ooutputs);
         }
       }
 
     }
+    // 4/10
+    // fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem +
+    // x.prepare.prepareDestination}
+    for (Field field : fieldWithInputs.keySet()) {
+      Set<Field> fields = removeParameterFields(fieldWithInputs.get(field));
+      if (fields.size() > 0)
+        toAlloy.createInOutClosure(ownerSig, field, fields, Alloy.oinputs);
+    }
+    for (Field field : fieldWithOutputs.keySet()) {
+      Set<Field> fields = removeParameterFields(fieldWithOutputs.get(field));
+      if (fields.size() > 0)
+        toAlloy.createInOutClosure(ownerSig, field, fields, Alloy.ooutputs);
+    }
+
     return sigNameOfSharedFieldType;
+
+  }
+
+  private Set<Field> removeParameterFields(Set<Field> original) {
+    return original.stream().filter(f -> !parameterFields.contains(f)).collect(Collectors.toSet());
   }
 
   /**
@@ -398,7 +449,8 @@ public class OBMXMI2Alloy {
         // sort property in alphabetical order, also remove redefined properties from the sorted
         // list.
         List<String> nonRedefinedPropertyInAlphabeticalOrderPerType = new ArrayList<>();
-        Set<String> parameterProperty = new HashSet<>();
+        Set<String> parameterProperties = new HashSet<>();
+        Set<String> valueTypeProperties = new HashSet<>();
         for (Property p : propertiesSortedByType) {
           if (p.getName() != null) { // Since MD allow having no name.
             if (p.getRedefinedProperties().size() == 0) {
@@ -409,7 +461,9 @@ public class OBMXMI2Alloy {
               // toAlloy.addRedefinedSubsettingAsFacts(sigOfNamedElement, field, )
             }
             if (p.getAppliedStereotype(STEREOTYPE_PAREMETER) != null) {
-              parameterProperty.add(p.getName());
+              parameterProperties.add(p.getName());
+            } else if (p.getApplicableStereotype(STEREOTYPE_VALUETYPE) != null) {
+              valueTypeProperties.add(p.getName());
             }
 
           } else {
@@ -430,9 +484,11 @@ public class OBMXMI2Alloy {
           // server, Serve, SinglFooeService
           if (fields != null) { // this should not happens
             for (int j = 0; j < propertiesSortedByType.size(); j++) {
-              addCardinality(propertiesSortedByType.get(j), sigOfNamedElement, fields[j].label);
-              if (parameterProperty.contains(fields[j].label)) {
+              addCardinality(propertiesSortedByType.get(j), sigOfNamedElement, fields[j]);
+              if (parameterProperties.contains(fields[j].label)) {
                 this.parameterFields.add(fields[j]);
+              } else if (valueTypeProperties.contains(fields[j].label)) {
+                this.valueTypeFields.add(fields[j]);
               }
             }
           }
@@ -444,6 +500,15 @@ public class OBMXMI2Alloy {
       }
     } // end processing property
 
+  }
+
+  private void addCardinality(Property p, PrimSig sigOfNamedElement, Field field) {
+    if (p.getLower() == p.getUpper())
+      toAlloy.addCardinalityEqualConstraintToField(field, sigOfNamedElement, p.getLower());
+    else if (p.getUpper() == -1 && p.getLower() >= 1) {
+      toAlloy.addCardinalityGreaterThanEqualConstraintToField(field, sigOfNamedElement,
+          p.getLower());
+    }
   }
 
   private void addCardinality(Property p, PrimSig sigOfNamedElement, String fieldName) {
@@ -478,10 +543,9 @@ public class OBMXMI2Alloy {
    */
   private Set<String> processConnector(Class ne, HashMap<String, Set<String>> inputs,
       HashMap<String, Set<String>> outputs, Set<Sig> sigWithTransferFields,
-      Set<String> fieldsWithInputs, Set<String> fieldsWithOutputs) {
+      Map<Field, Set<Field>> fieldsWithInputs, Map<Field, Set<Field>> fieldsWithOutputs) {
 
     Set<String> sigNameOfSharedFieldType = new HashSet<>();
-
     PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
 
     Set<Constraint> constraints = sysMLUtil.getAllRules(ne);
@@ -582,19 +646,19 @@ public class OBMXMI2Alloy {
 
             else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
 
-              System.out.println(
-                  "=========== redefined connectors:" + cn.getRedefinedConnectors().size());
+              // System.out.println(
+              // "=========== redefined connectors:" + cn.getRedefinedConnectors().size());
               for (Connector redefinedConnector : cn.getRedefinedConnectors()) {
-                System.out.println("QName: " + redefinedConnector.getQualifiedName());
+                // System.out.println("QName: " + redefinedConnector.getQualifiedName());
                 for (ConnectorEnd cce : ((Connector) redefinedConnector).getEnds()) {
-                  System.out.println(cce.getDefiningEnd().getName());
-                  if (cce.getDefiningEnd().getName().equals("transferSource")) {
-                    String xxsourceTypeName = cce.getRole().getType().getName();
-                    System.out.println(xxsourceTypeName);
-                  } else if (cce.getDefiningEnd().getName().equals("transferTarget")) {
-                    String xxtargetTypeName = cce.getRole().getType().getName();
-                    System.out.println(xxtargetTypeName);
-                  }
+                  // System.out.println(cce.getDefiningEnd().getName());
+                  // if (cce.getDefiningEnd().getName().equals("transferSource")) {
+                  // String xxsourceTypeName = cce.getRole().getType().getName();
+                  // System.out.println(xxsourceTypeName);
+                  // } else if (cce.getDefiningEnd().getName().equals("transferTarget")) {
+                  // String xxtargetTypeName = cce.getRole().getType().getName();
+                  // System.out.println(xxtargetTypeName);
+                  // }
                   if (cce.getDefiningEnd().getName().equals("transferSource")
                       || cce.getDefiningEnd().getName().equals("transferTarget")) {
                     // while processing child sig connectors, find parent connector that child is
@@ -613,6 +677,8 @@ public class OBMXMI2Alloy {
               addToHashMap(inputs, targetTypeName, sourceOutputAndTargetInputProperties.get(1)); // "targetInputProperty"
               addToHashMap(outputs, sourceTypeName, sourceOutputAndTargetInputProperties.get(0));// "sourceOutputProperty",
 
+
+
               boolean addEquals = false;
               if (targetTypeName.equals(sourceTypeName)) { // ie., targetTypeName = sourceTypeName
                                                            // is "BehaviorWithParemeter" for 4.1.5
@@ -622,15 +688,26 @@ public class OBMXMI2Alloy {
                 addEquals = true;
               }
 
+              boolean toBeInherited = false;
               // only leafSig
-              if (leafSigs.contains(sigOfNamedElement))
-                processConnectorInputsOutputs(sigOfNamedElement, source, target, sourceTypeName,
-                    targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
-                    fieldsWithOutputs, addEquals);
+              List<Set<Field>> targetInputsSourceOutputsFields = null;
+              if (leafSigs.contains(sigOfNamedElement)) {
+                targetInputsSourceOutputsFields =
+                    processConnectorInputsOutputs(sigOfNamedElement, source, target, sourceTypeName,
+                        targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
+                        fieldsWithOutputs, addEquals);
+
+              } else { // non leaf
+                targetInputsSourceOutputsFields = xx(sigOfNamedElement, source, target,
+                    sourceTypeName, targetTypeName, sourceOutputAndTargetInputProperties);
+                toBeInherited = true;
+              }
               if (type.getName().equals("Transfer")) {
-                handleTransferFieldAndFn(sigOfNamedElement, source, target);
+                handleTransferFieldAndFn(sigOfNamedElement, source, target,
+                    targetInputsSourceOutputsFields, toBeInherited);
               } else if (type.getName().equals("TransferBefore")) {
-                handleTransferBeforeFieldAndFn(sigOfNamedElement, source, target);
+                handleTransferBeforeFieldAndFn(sigOfNamedElement, source, target,
+                    targetInputsSourceOutputsFields, toBeInherited);
               }
             }
           }
@@ -639,6 +716,47 @@ public class OBMXMI2Alloy {
     } // org.eclipse.uml2.uml.Connector
     return sigNameOfSharedFieldType;
   }
+
+  private List<Set<Field>> xx(PrimSig sigOfNamedElement, String source, String target,
+      String sourceTypeName, String targetTypeName,
+      List<Set<String>> sourceOutputAndTargetInputProperties) {
+
+    Field outputFrom = AlloyUtils.getFieldFromSigOrItsParents(source, sigOfNamedElement);
+    Set<Field> addOutputToFields = new HashSet<>();
+    Set<Field> addInputToFields = new HashSet<>();
+    if (outputFrom != null) {
+      PrimSig typeSig = toAlloy.getSig(sourceTypeName);// sourceTypeName =IFCustomerOrder
+      for (String sourceOutput : sourceOutputAndTargetInputProperties.get(0)) {
+        // orderedFoodItem
+        Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(sourceOutput, typeSig);// i
+        // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
+        if (!parameterFields.contains(outputTo))
+          addOutputToFields.add(outputTo);
+        // System.out.println(sigOfNamedElement.label); // IFSingleFoodService
+        // System.out.println(outputFrom.label); // order
+        // System.out.println(outputTo.label); // orderedFoodItem
+      }
+    }
+
+    // target => inputs
+    // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
+    // System.out.println(
+    // target + ": " + targetTypeName + " with " + sourceOutputAndTargetInputProperties[1]);
+
+    Field inputFrom = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfNamedElement);// p2
+    if (inputFrom != null) {
+      PrimSig typeSig = toAlloy.getSig(targetTypeName);// IFCustomPrepare
+      for (String targetInputProperties : sourceOutputAndTargetInputProperties.get(1)) {
+        Field inputTo = AlloyUtils.getFieldFromSigOrItsParents(targetInputProperties, // i
+            typeSig);
+        if (!parameterFields.contains(inputTo))
+          addInputToFields.add(inputTo);
+      }
+
+    }
+    return List.of(addOutputToFields, addInputToFields);
+  }
+
 
   /**
    * adding facts inputs and outputs for bijection like below
@@ -657,10 +775,11 @@ public class OBMXMI2Alloy {
    * @param fieldsWithInputs
    * @param fieldsWithOutputs
    */
-  private void processConnectorInputsOutputs(PrimSig sigOfNamedElement, String source,
+  private List<Set<Field>> processConnectorInputsOutputs(PrimSig sigOfNamedElement, String source,
       String target, String sourceTypeName, String targetTypeName,
-      List<Set<String>> sourceOutputAndTargetInputProperties, Set<String> fieldsWithInputs,
-      Set<String> fieldsWithOutputs, boolean addEquals) {
+      List<Set<String>> sourceOutputAndTargetInputProperties,
+      Map<Field, Set<Field>> fieldsWithInputs, Map<Field, Set<Field>> fieldsWithOutputs,
+      boolean addEquals) {
 
     // if addEquals are true add the fact like below:
     // targetTypeName = sourceTypeName (ie., BehaviorWithParameter)
@@ -673,58 +792,69 @@ public class OBMXMI2Alloy {
                                                                                           // (sigOfNamedElement
                                                                                           // =
                                                                                           // IFSIngleFoodService)
+
+    Set<Field> addOutputToFields = new HashSet<>();
+    Set<Field> addInputToFields = new HashSet<>();
     if (outputFrom != null) {
-      if (!fieldsWithOutputs.contains(outputFrom.label)) {// handle duplicate p1 having two outputs
-        fieldsWithOutputs.add(outputFrom.label);
-        PrimSig typeSig = toAlloy.getSig(sourceTypeName);// sourceTypeName =IFCustomerOrder
+      // if (!fieldsWithOutputs.contains(outputFrom.label)) {// handle duplicate p1 having two
+      // outputs
 
-        Set<Field> addedField = new HashSet<>();
-        for (String sourceOutput : sourceOutputAndTargetInputProperties.get(0)) {
-          // orderedFoodItem
-          Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(
-              // [orderFoodItem, prepareFoodItem],
-              sourceOutput, typeSig);// i
-          // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
+      // fieldsWithOutputs.add(outputFrom.label);
 
-          System.out.println(sigOfNamedElement.label); // IFSingleFoodService
-          System.out.println(outputFrom.label); // order
-          System.out.println(outputTo.label); // orderedFoodItem
+      PrimSig typeSig = toAlloy.getSig(sourceTypeName);// sourceTypeName =IFCustomerOrder
 
+
+      for (String sourceOutput : sourceOutputAndTargetInputProperties.get(0)) {
+        // orderedFoodItem
+        Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(
+            // [orderFoodItem, prepareFoodItem],
+            sourceOutput, typeSig);// i
+        // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
+        if (!parameterFields.contains(outputTo))
+          addOutputToFields.add(outputTo);
+        // System.out.println(sigOfNamedElement.label); // IFSingleFoodService
+        // System.out.println(outputFrom.label); // order
+        // System.out.println(outputTo.label); // orderedFoodItem
+
+        if (!contains(fieldsWithOutputs, outputFrom, outputTo)) {
+          addToHashMap(fieldsWithOutputs, outputFrom, outputTo);
           // fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order,
           // x.order.orderedFoodItem]}
 
           // not need to add in this.sigToFactMap because its special field type (ie., order:
           // IFCustomOrder) are handled below using redefined Property
           /* addToSigToFactsMap(sigOfNamedElement.label, */
-          toAlloy.createBijectionFilteredOutputsAndAddToOverallFact(sigOfNamedElement, outputFrom,
-              outputFrom.join(outputTo), outputTo, addEquals);// );
-          addedField.add(outputTo);
+          toAlloy.createBijectionFilteredInputsOrOutputs(sigOfNamedElement, outputFrom,
+              outputFrom.join(outputTo), outputTo, addEquals, Alloy.ooutputs);// );
+
         }
 
         // if redefined and not in addField, create fact bijection outputs
-        Optional<Property> op_redefinedProperty = redefinedPropertiesPerSig.get(sigOfNamedElement)
-            .stream().filter(p -> p.getName().equals(outputFrom.label)).findFirst();
-        if (op_redefinedProperty.isPresent()) {
-          Property redefinedProperty = op_redefinedProperty.get();
-          Type type = redefinedProperty.getType();
-
-          if (type.getName().equals(sourceTypeName)) { // IFCustomerOrder
-            SafeList<Field> typeSigFields = typeSig.getFields();
-            for (Field typeSigField : typeSigFields) { // orderDestination, orderAmount
-              // (IFCustomerOrder's fields)
-              if (!addedField.contains(typeSigField)) {
-                // fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order,
-                // x.order.orderDestination]}
-                // fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order,
-                // x.order.orderAmount]}
-                /* addToSigToFactsMap(sigOfNamedElement.label, */
-                toAlloy.createBijectionFilteredOutputsAndAddToOverallFact(sigOfNamedElement,
-                    outputFrom, outputFrom.join(typeSigField), typeSigField, false);// );
-                System.out.println(typeSigField.label);
-              }
-            }
-          }
-        }
+        // Optional<Property> op_redefinedProperty =
+        // redefinedPropertiesPerSig.get(sigOfNamedElement)
+        // .stream().filter(p -> p.getName().equals(outputFrom.label)).findFirst();
+        // if (op_redefinedProperty.isPresent()) {
+        // Property redefinedProperty = op_redefinedProperty.get();
+        // Type type = redefinedProperty.getType();
+        //
+        // if (type.getName().equals(sourceTypeName)) { // IFCustomerOrder
+        // SafeList<Field> typeSigFields = typeSig.getFields();
+        // for (Field typeSigField : typeSigFields) { // orderDestination, orderAmount
+        // // (IFCustomerOrder's fields)
+        // if (!addedField.contains(typeSigField)) {
+        // // fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order,
+        // // x.order.orderDestination]}
+        // // fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order,
+        // // x.order.orderAmount]}
+        // /* addToSigToFactsMap(sigOfNamedElement.label, */
+        // System.out.println(typeSigField.label);
+        // toAlloy.createBijectionFilteredOutputsAndAddToOverallFact(sigOfNamedElement,
+        // outputFrom, outputFrom.join(typeSigField), typeSigField, false);// );
+        //
+        // }
+        // }
+        // }
+        // }
 
       }
     }
@@ -736,50 +866,57 @@ public class OBMXMI2Alloy {
 
     Field inputFrom = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfNamedElement);// p2
     if (inputFrom != null) {
-      if (!fieldsWithInputs.contains(inputFrom.label)) { // handle duplicate p4 is having two inputs
-        fieldsWithInputs.add(inputFrom.label);
-        PrimSig typeSig = toAlloy.getSig(targetTypeName);// IFCustomPrepare
-        Set<Field> addedField = new HashSet<>();
-        for (String targetInputProperties : sourceOutputAndTargetInputProperties.get(1)) {
-          Field inputTo = AlloyUtils.getFieldFromSigOrItsParents(targetInputProperties, // i
-              typeSig);
-          // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
-          // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
-          // x.prepare.preparedFoodItem]}
-          /* addToSigToFactsMap(sigOfNamedElement.label, */
+      // if (!fieldsWithInputs.contains(inputFrom.label)) { // handle duplicate p4 is having two
+      // inputs
+      // fieldsWithInputs.add(inputFrom.label);
+      PrimSig typeSig = toAlloy.getSig(targetTypeName);// IFCustomPrepare
+      for (String targetInputProperties : sourceOutputAndTargetInputProperties.get(1)) {
+        Field inputTo = AlloyUtils.getFieldFromSigOrItsParents(targetInputProperties, // i
+            typeSig);
+        if (!parameterFields.contains(inputTo))
+          addInputToFields.add(inputTo);
+        // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
+        // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
+        // x.prepare.preparedFoodItem]}
+        /* addToSigToFactsMap(sigOfNamedElement.label, */
+        if (!contains(fieldsWithInputs, inputFrom, inputTo)) {
+          addToHashMap(fieldsWithInputs, inputFrom, inputTo);
+          toAlloy.createBijectionFilteredInputsOrOutputs(sigOfNamedElement, inputFrom,
+              inputFrom.join(inputTo), inputTo, addEquals, Alloy.oinputs);// );
 
-          toAlloy.createBijectionFilteredInputsAndAddToOverallFact(sigOfNamedElement, inputFrom,
-              inputFrom.join(inputTo), inputTo, addEquals);// );
-          addedField.add(inputTo);
-        }
-        Optional<Property> op_redefinedProperty = redefinedPropertiesPerSig.get(sigOfNamedElement)
-            .stream().filter(p -> p.getName().equals(inputFrom.label)).findFirst();
-        if (op_redefinedProperty.isPresent()) {
-          Property redefinedProperty = op_redefinedProperty.get();
-          Type type = redefinedProperty.getType();
-          if (type.getName().equals(targetTypeName)) {// IFCustomPrepare
-            SafeList<Field> typeSigFields = typeSig.getFields();
-            for (Field typeSigField : typeSigFields) {// [prepareDestination]
-              if (!addedField.contains(typeSigField)) {
-                // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
-                // x.prepare.prepareDestination]}
-                /* addToSigToFactsMap(sigOfNamedElement.label, */
-                toAlloy.createBijectionFilteredInputsAndAddToOverallFact(sigOfNamedElement,
-                    inputFrom, inputFrom.join(typeSigField), typeSigField, false);// );
-              }
-            }
-          }
         }
 
       }
+      // Optional<Property> op_redefinedProperty =
+      // redefinedPropertiesPerSig.get(sigOfNamedElement)
+      // .stream().filter(p -> p.getName().equals(inputFrom.label)).findFirst();
+      // if (op_redefinedProperty.isPresent()) {
+      // Property redefinedProperty = op_redefinedProperty.get();
+      // Type type = redefinedProperty.getType();
+      // if (type.getName().equals(targetTypeName)) {// IFCustomPrepare
+      // SafeList<Field> typeSigFields = typeSig.getFields();
+      // for (Field typeSigField : typeSigFields) {// [prepareDestination]
+      // if (!addedField.contains(typeSigField)) {
+      // // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
+      // // x.prepare.prepareDestination]}
+      // /* addToSigToFactsMap(sigOfNamedElement.label, */
+      // toAlloy.createBijectionFilteredInputsAndAddToOverallFact(sigOfNamedElement,
+      // inputFrom, inputFrom.join(typeSigField), typeSigField, false);// );
+      // }
+      // }
+      // }
+      // }
+
+      // }
     }
+    return List.of(addOutputToFields, addInputToFields);
 
   }
 
   private Sig.Field handTransferFieldAndFnPrep(PrimSig sig, String source, String target) {
     String fieldName = "transfer" + firstCharUpper(source) + firstCharUpper(target);
     // adding transferFields in stepProperties
-    stepPropertiesBySig.get(sig.label).add(fieldName);
+    stepPropertiesBySig_all.get(sig.label).add(fieldName);
     addSigToTransferFieldsMap(sig, fieldName);
     Sig.Field transferField = ToAlloy.addAlloyTransferField(fieldName, sig);
     return transferField;
@@ -794,10 +931,11 @@ public class OBMXMI2Alloy {
    * @param target
    * @param stepFieldNames
    */
-  private void handleTransferFieldAndFn(PrimSig sig, String source, String target) {
+  private void handleTransferFieldAndFn(PrimSig sig, String source, String target,
+      List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
     Sig.Field transferField = handTransferFieldAndFnPrep(sig, source, target);
-    addToSigToFactsMap(sig.label,
-        toAlloy.createFnForTransferAndAddToOverallFact(sig, transferField, source, target));
+    addToSigToFactsMap(sig.label, toAlloy.createFnForTransfer(sig, transferField, source, target,
+        targetInputsSourceOutputsFields, toBeInherited));
   }
 
   /**
@@ -807,10 +945,11 @@ public class OBMXMI2Alloy {
    * @param target
    * @param stepFieldNames is passed here to add transfer fields created while processing connector.
    */
-  private void handleTransferBeforeFieldAndFn(PrimSig sig, String source, String target) {
+  private void handleTransferBeforeFieldAndFn(PrimSig sig, String source, String target,
+      List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
     Sig.Field transferField = handTransferFieldAndFnPrep(sig, source, target);
-    addToSigToFactsMap(sig.label,
-        toAlloy.createFnForTransferBeforeAndAddToOverallFact(sig, transferField, source, target));
+    addToSigToFactsMap(sig.label, toAlloy.createFnForTransferBefore(sig, transferField, source,
+        target, targetInputsSourceOutputsFields, toBeInherited));
   }
 
   /**
@@ -1058,8 +1197,7 @@ public class OBMXMI2Alloy {
             .getFieldFromSigOrItsParents(sourceNames.get(0), ownerSig)/* ) */;
       }
 
-      toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-          afterExpr);
+      toAlloy.createBijectionFiltered(ownerSig, beforeExpr, afterExpr, Alloy.happensBefore);
     }
   }
 
@@ -1095,8 +1233,7 @@ public class OBMXMI2Alloy {
       // Expr texpr = sig.domain(targetField);
       // toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sexpr, texpr);
 
-      toAlloy.createBijectionFilteredHappensBeforeAndAddToOverallFact(sig, sourceField,
-          targetField);
+      toAlloy.createBijectionFiltered(sig, sourceField, targetField, Alloy.happensBefore);
     } else
       System.err.println("source or target for HappensBefore not in " + sig.label);
   }
@@ -1107,8 +1244,7 @@ public class OBMXMI2Alloy {
     Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sig);
 
     if (sourceField != null && targetField != null) {
-      toAlloy.createBijectionFilteredHappensDuringAndAddToOverallFact(sig, sourceField,
-          targetField);
+      toAlloy.createBijectionFiltered(sig, sourceField, targetField, Alloy.happensDuring);
     } else
       System.err.println("source or target for handleHappensDuring not in " + sig.label);
 
@@ -1262,8 +1398,7 @@ public class OBMXMI2Alloy {
     return o.substring(0, 1).toUpperCase() + o.substring(1).toLowerCase();
   }
 
-  public static void addToHashMap(HashMap<String, Set<String>> map, String key,
-      Set<String> values) {
+  public static void addToHashMap(Map<String, Set<String>> map, String key, Set<String> values) {
     if (values == null || values.size() == 0)
       return;
     Set<String> vs;
@@ -1274,7 +1409,27 @@ public class OBMXMI2Alloy {
       map.put(key, vs);
     }
     vs.addAll(values);
+  }
 
+  public static void addToHashMap(Map<Field, Set<Field>> map, Field key, Field value) {
+    Set<Field> vs;
+    if (map.containsKey(key))
+      vs = map.get(key);
+    else {
+      vs = new HashSet<Field>();
+      map.put(key, vs);
+    }
+    vs.add(value);
+  }
+
+  public static boolean contains(Map<Field, Set<Field>> map, Field key, Field value) {
+    if (!map.containsKey(key))
+      return false;
+    else {
+      if (!map.get(key).contains(value))
+        return false;
+    }
+    return true;
   }
 
   public void addToSigToFactsMap(String sigName, Set<Expr> facts) {
@@ -1285,11 +1440,7 @@ public class OBMXMI2Alloy {
       sigToFactsMap.put(sigName, facts);
     else
       allFacts.addAll(facts);
-
   }
-
-
-
 }
 
 

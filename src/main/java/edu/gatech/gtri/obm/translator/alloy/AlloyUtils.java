@@ -2,12 +2,15 @@ package edu.gatech.gtri.obm.translator.alloy;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.NamedElement;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
@@ -195,7 +198,7 @@ public class AlloyUtils {
 
   // sig.domain(sigField) or parentSig.domain(parentSigField)
   public static Expr getSigDomainFileld(String fieldNameLookingFor, PrimSig sig) {
-    for (Sig.Field field : sig.getFields()) {
+    for (Sig.Field field : sig.getFields()) { // getFields does not include redefined fields
       if (field.label.equals(fieldNameLookingFor))
         return sig.domain(field);
     }
@@ -209,6 +212,14 @@ public class AlloyUtils {
       else {
         sig = sig.parent; // reset
       }
+    }
+    return null;
+  }
+
+  public static Expr getSigOwnField(String fieldNameLookingFor, PrimSig sig) {
+    for (Sig.Field field : sig.getFields()) { // getFields does not include redefined fields
+      if (field.label.equals(fieldNameLookingFor))
+        return sig.domain(field);
     }
     return null;
   }
@@ -535,6 +546,33 @@ public class AlloyUtils {
     }
 
     return inputsOrOutputsFields;
+  }
+
+  // public static List<Field> sortFields(Set<Field> fields) {
+  // List<String> sortedFieldLabel = new ArrayList<>();
+  // for (Field field : fields)
+  // sortedFieldLabel.add(field.label);
+  // Collections.sort(sortedFieldLabel);
+  //
+  // Map<String, Field> fieldByName =
+  // fields.stream().collect(Collectors.toMap(e -> e.label, e -> e));
+  // List<Field> sortedFields =
+  // sortedFieldLabel.stream().map(e -> fieldByName.get(e)).collect(Collectors.toList());
+  // return sortedFields;
+  // }
+
+  public static List<Field> sortFields(Set<Field> fields) {
+    List<Field> sortedFields = new ArrayList<>(fields);
+    Collections.sort(sortedFields, new Comparator<Field>() {
+      public int compare(Field o1, Field o2) {
+        return (o1.label).compareTo(o2.label);
+      }
+    });
+    return sortedFields;
+  }
+
+  public static Set<String> fieldsLabels(Set<Field> fields) {
+    return fields.stream().map(e -> e.label).collect(Collectors.toSet());
   }
 
 
