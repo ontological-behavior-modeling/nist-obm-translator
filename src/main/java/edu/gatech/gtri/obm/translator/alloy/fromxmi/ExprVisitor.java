@@ -37,9 +37,9 @@ public class ExprVisitor extends VisitQuery<String> {
   private final Set<Sig.Field> parameterFields;
 
 
-  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> pf) {
+  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> parameterFields) {
     this.ignoredExprs = ignoredExprs;
-    this.parameterFields = pf;
+    this.parameterFields = parameterFields;
   }
 
   @Override
