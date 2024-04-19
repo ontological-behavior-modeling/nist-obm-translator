@@ -440,8 +440,7 @@ public class ToAlloy {
    * @param hasParameterFileld boolean if fields with ParameterField exists or not
    * @param leafSig
    */
-  public Set<Sig> addSteps(Map<String, Set<String>> stepPropertiesBySig, Set<Field> parameterFields,
-      Set<PrimSig> leafSigs) {
+  public Set<Sig> addSteps(Map<String, Set<String>> stepPropertiesBySig, Set<PrimSig> leafSigs) {
 
     Set<Sig> noStepsSigs = new HashSet<>();
     for (String sigName : stepPropertiesBySig.keySet()) {

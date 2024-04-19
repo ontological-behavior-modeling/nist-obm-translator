@@ -132,7 +132,7 @@ public class OBMXMI2Alloy {
   }
 
   /**
-   * Get errorMessage collected while translating.
+   * Get a errorMessage collected while translating.
    * 
    * @return errorMessage
    */
@@ -302,7 +302,7 @@ public class OBMXMI2Alloy {
     toAlloy.addFacts(mainClass.getName(), mainSigInheritingTransferRelatedFacts);
 
 
-    Set<Sig> noStepsSigs = toAlloy.addSteps(stepPropertiesBySig_all, parameterFields, leafSigs);
+    Set<Sig> noStepsSigs = toAlloy.addSteps(stepPropertiesBySig_all, leafSigs);
     // if "no x.steps" and sig with fields with type Transfer should not have below:
     // fact {all x: BehaviorWithParameterOut | no y: Transfer | y in x.steps}
     sigWithTransferFields.addAll(noStepsSigs);
@@ -423,6 +423,8 @@ public class OBMXMI2Alloy {
     // fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem +
     // x.prepare.prepareDestination}
     for (Field field : fieldWithInputs.keySet()) {
+      // The following fact is NOT included because x.p1.vout is <<Parmeter>> field
+      // fact {all x: MultipleObjectFlowAlt | x.p1.outputs in x.p1.vout}
       Set<Field> fields = removeParameterFields(fieldWithInputs.get(field));
       if (fields.size() > 0)
         toAlloy.createInOutClosure(ownerSig, field, fields, Alloy.oinputs);
@@ -437,6 +439,12 @@ public class OBMXMI2Alloy {
 
   }
 
+  /**
+   * Remove fields with Parameter stereotype from the given fields.
+   * 
+   * @param original - the set of fields before removing Parameter stereotype removed.
+   * @return set of fields after removing Parameter streotype fields
+   */
   private Set<Field> removeParameterFields(Set<Field> original) {
     return original.stream().filter(f -> !parameterFields.contains(f)).collect(Collectors.toSet());
   }
@@ -445,6 +453,7 @@ public class OBMXMI2Alloy {
    * Add fields in Sig (non redefined attributes only), Add cardinality facts (ie., abc = 1) and
    * return set of strings to be used later.
    * 
+   * this.parameterFields and this.valueTypeFields are updated.
    * 
    * @param NamedElement ne that map to a Sig
    * @param propertiesByType - Map<Type, List<Property>> map of properties by type
@@ -714,8 +723,9 @@ public class OBMXMI2Alloy {
                         fieldsWithOutputs, addEquals);
 
               } else { // non leaf
-                targetInputsSourceOutputsFields = xx(sigOfNamedElement, source, target,
-                    sourceTypeName, targetTypeName, sourceOutputAndTargetInputProperties);
+                targetInputsSourceOutputsFields =
+                    findInputAndOutputsFields(sigOfNamedElement, source, target, sourceTypeName,
+                        targetTypeName, sourceOutputAndTargetInputProperties);
                 toBeInherited = true;
               }
               if (type.getName().equals("Transfer")) {
@@ -733,8 +743,23 @@ public class OBMXMI2Alloy {
     return sigNameOfSharedFieldType;
   }
 
-  private List<Set<Field>> xx(PrimSig sigOfNamedElement, String source, String target,
-      String sourceTypeName, String targetTypeName,
+  /**
+   * Find sourceOutputProperty field and targetInputProperty field with the given connector
+   * information. Return List of fields [0] = sourceOutputProperty field, [1]= targetInputProperty
+   * field
+   * 
+   * @param sigOfNamedElement - PrimSig (ie., OFFoodService)
+   * @param source - Source property name (i.e. order)
+   * @param target - Target property name (ie., serve)
+   * @param sourceTypeName - Source property type (ie., OFOrder)
+   * @param targetTypeName - Target property type (ie., OFServe)
+   * @param sourceOutputAndTargetInputProperties - List of String [0] = sourceOutputProperty [1] =
+   *        tragetInputProperty (i.e., [orderedFoodIterm, servedFoodItem])
+   * @return List of fields (i.e., [field (OFOrder <: orderedFoodItem),[field (OFServe <:
+   *         servedFoodItem)]])
+   */
+  private List<Set<Field>> findInputAndOutputsFields(PrimSig sigOfNamedElement, String source,
+      String target, String sourceTypeName, String targetTypeName,
       List<Set<String>> sourceOutputAndTargetInputProperties) {
 
     Field outputFrom = AlloyUtils.getFieldFromSigOrItsParents(source, sigOfNamedElement);
