@@ -1,15 +1,11 @@
 package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
 import edu.gatech.gtri.obm.translator.alloy.Alloy;
@@ -148,18 +144,18 @@ public class ToAlloy {
    * @param addEqual true if field shared the same type (BehaviorParameter)
    */
 
-  public Set<Expr> createBijectionFilteredInputsAndAddToOverallFact(Sig ownerSig,
-      Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
-    return createBijectionFilteredInputsOrOutputsAndAddToOverallFact(ownerSig, fromField, to,
-        toField, addEqual, Alloy.oinputs);
-  }
-
-
-  public Set<Expr> createBijectionFilteredOutputsAndAddToOverallFact(Sig ownerSig,
-      Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
-    return createBijectionFilteredInputsOrOutputsAndAddToOverallFact(ownerSig, fromField, to,
-        toField, addEqual, Alloy.ooutputs);
-  }
+  // public Set<Expr> createBijectionFilteredInputsAndAddToOverallFact(Sig ownerSig,
+  // Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
+  // return createBijectionFilteredInputsOrOutputsAndAddToOverallFact(ownerSig, fromField, to,
+  // toField, addEqual, Alloy.oinputs);
+  // }
+  //
+  //
+  // public Set<Expr> createBijectionFilteredOutputsAndAddToOverallFact(Sig ownerSig,
+  // Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual) {
+  // return createBijectionFilteredInputsOrOutputsAndAddToOverallFact(ownerSig, fromField, to,
+  // toField, addEqual, Alloy.ooutputs);
+  // }
 
   /**
    * 
@@ -171,8 +167,8 @@ public class ToAlloy {
    * @param addEqual true if field shared the same type (BehaviorParameter)
    * @param inputsOrOutputs Func Alloy.oinputs or Alloy.ooutputs
    */
-  private Set<Expr> createBijectionFilteredInputsOrOutputsAndAddToOverallFact(Sig ownerSig,
-      Sig.Field fromField, Expr to, Sig.Field toField, boolean addEqual, Func inputsOrOutputs) {
+  public Set<Expr> createBijectionFilteredInputsOrOutputs(Sig ownerSig, Sig.Field fromField,
+      Expr to, Sig.Field toField, boolean addEqual, Func inputsOrOutputs) {
 
     Set<Expr> facts = new HashSet<>();
     facts.addAll(
@@ -190,10 +186,15 @@ public class ToAlloy {
    * @param from the from
    * @param to the to
    */
-  public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
-    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.happensBefore);
+  // public void createBijectionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
+  // Expr to) {
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.happensBefore);
+  // }
+
+  public void createBijectionFiltered(Sig ownerSig, Expr from, Expr to, Func func) {
+    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, func);
   }
+
 
   /**
    * Creates the bijection filtered happens during and add to overall fact.
@@ -202,10 +203,10 @@ public class ToAlloy {
    * @param from the from
    * @param to the to
    */
-  public void createBijectionFilteredHappensDuringAndAddToOverallFact(Sig ownerSig, Expr from,
-      Expr to) {
-    alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.happensDuring);
-  }
+  // public void createBijectionFilteredHappensDuringAndAddToOverallFact(Sig ownerSig, Expr from,
+  // Expr to) {
+  // alloy.createBijectionFilteredToOverallFact(ownerSig, from, to, Alloy.happensDuring);
+  // }
 
   /**
    * Creates the function filtered happens before and add to overall fact.
@@ -288,14 +289,13 @@ public class ToAlloy {
           .println("A field \"" + fieldName + "\" not found in Sig \"" + ownerSig.label + "\".");
   }
 
-  public Set<Expr> createFnForTransferAndAddToOverallFact(PrimSig ownerSig, Expr transfer,
-      String source, String target) {
+  public Set<Expr> createFnForTransfer(PrimSig ownerSig, Expr transfer, String source,
+      String target, List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
 
     // for 4.1.4 Transfers and Parameters1 - TransferProduct_modified
     // sig ParticipantTransfer
     // sourceTypeName Supplier -> Field supplier
     // targetTypeName Customer -> Field customer
-
 
     Field sourceTypeField = AlloyUtils.getFieldFromSigOrItsParents(source, ownerSig);
     Field targetTypeField = AlloyUtils.getFieldFromSigOrItsParents(target, ownerSig);
@@ -307,12 +307,30 @@ public class ToAlloy {
     // fact {all x: ParticipantTransfer | subsettingItemRuleForSources[x.transferSupplierCustomer]}
     // fact {all x: ParticipantTransfer | subsettingItemRuleForTargets[x.transferSupplierCustomer]}
 
+
+    // fact {all x: OFSingleFoodService | bijectionFiltered[sources, x.transferOrderPay, x.order]}
     Set<Expr> facts = new HashSet<>();
-    facts.addAll(alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceTypeField,
-        Alloy.sources));
-    facts.addAll(alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetTypeField,
-        Alloy.targets));
-    facts.addAll(alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer));
+
+    // only for leaf node
+    // fact {all x: OFSingleFoodService | x.transferOrderPay.sources.orderedFoodItem +
+    // x.transferOrderPay.sources.orderAmount in x.transferOrderPay.items}
+    if (targetInputsSourceOutputsFields != null) {
+      if (targetInputsSourceOutputsFields.get(0).size() > 0)
+        facts.addAll(alloy.createTransferInItems(ownerSig, transfer, sourceTypeField, Alloy.sources,
+            targetInputsSourceOutputsFields.get(0), toBeInherited));
+      if (targetInputsSourceOutputsFields.get(1).size() > 0)
+        facts.addAll(alloy.createTransferInItems(ownerSig, transfer, targetTypeField, Alloy.targets,
+            targetInputsSourceOutputsFields.get(1), toBeInherited));
+    }
+    // facts.addAll(alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceTypeField,
+    // Alloy.sources));
+    // facts.addAll(alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetTypeField,
+    // Alloy.targets));
+    // facts.addAll(alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer));
+
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, sourceTypeField, Alloy.sources);
+    alloy.createBijectionFilteredToOverallFact(ownerSig, transfer, targetTypeField, Alloy.targets);
+    alloy.createSubSettingItemRuleOverallFact(ownerSig, transfer);
 
     return facts;
   }
@@ -326,70 +344,68 @@ public class ToAlloy {
    */
 
 
-  public Set<Expr> createFnForTransferBeforeAndAddToOverallFact(PrimSig ownerSig, Expr transfer,
-      String sourceName, String targetName) {
+  public Set<Expr> createFnForTransferBefore(PrimSig ownerSig, Expr transfer, String sourceName,
+      String targetName, List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
 
     Set<Expr> facts = new HashSet<>();
-    facts
-        .addAll(createFnForTransferAndAddToOverallFact(ownerSig, transfer, sourceName, targetName));
+    facts.addAll(createFnForTransfer(ownerSig, transfer, sourceName, targetName,
+        targetInputsSourceOutputsFields, toBeInherited));
     facts.addAll(alloy.createIsAfterSourceIsBeforeTargetOverallFact(ownerSig, transfer));
     // fact {all x: ParameterBehavior | isAfterSource[x.transferbeforeAB]}//missing
     // fact {all x: ParameterBehavior | isBeforeTarget[x.transferbeforeAB]}//missing
     return facts;
   }
 
-  public void createNoInputsField(String sigName, String fieldName) {
-    createNoInputsOrOutputsField(sigName, fieldName, Alloy.oinputs);
-  }
+  // public void createNoInputsOrOutputField(String sigName, String fieldName, Func inputsOrOutputs)
+  // {
+  // createNoInputsOrOutputsField(sigName, fieldName, inputsOrOutputs);
+  // }
 
-  public void createNoOutputsField(String sigName, String fieldName) {
-    createNoInputsOrOutputsField(sigName, fieldName, Alloy.ooutputs);
-  }
 
-  private void createNoInputsOrOutputsField(String sigName, String fieldName,
+  public void createNoInputsOrOutputsField(PrimSig ownerSig, String fieldName,
       Func inputsOrOutputs) {
-    PrimSig sig = sigByName.get(sigName);
-    Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig);
-    alloy.createNoInputsOrOutputsField(sig, field, inputsOrOutputs);
+    Sig.Field field = AlloyUtils.getFieldFromSigOrItsParents(fieldName, ownerSig);
+    alloy.createNoInputsOrOutputsField(ownerSig, field, inputsOrOutputs);
   }
 
-  public void addInputsAndNoInputsX(Sig.PrimSig sig, Set<Field> fields, boolean addNoInputsX,
-      boolean addEqual) {
+  // public void addInputsAndNoInputsX(Sig.PrimSig sig, Set<Field> fields, boolean addNoInputsX,
+  // boolean addEqual) {
+  // List<Field> sortedFields = AlloyUtils.sortFields(fields);
+  //
+  // if (addEqual)
+  // alloy.addEqual2(sig, sortedFields, Alloy.oinputs);
+  // if (addNoInputsX)
+  // alloy.noInputsOrOutputsX(sig, Alloy.oinputs);
+  //
+  // }
 
-    List<String> sortedFieldLabel = new ArrayList<>();
-    Map<String, Field> fieldByName =
-        fields.stream().collect(Collectors.toMap(e -> e.label, e -> e));
-    for (String fieldName : fieldByName.keySet())
-      sortedFieldLabel.add(fieldName);
-    Collections.sort(sortedFieldLabel);
-    List<Field> sortedFields =
-        sortedFieldLabel.stream().map(e -> fieldByName.get(e)).collect(Collectors.toList());
 
+  // public void addOutputsAndNoOutputsX(PrimSig sig, Set<Field> fields, boolean addNoOutputsX,
+  // boolean addEqual) {
+  //
+  // List<Field> sortedFields = AlloyUtils.sortFields(fields);
+  // if (addEqual)
+  // alloy.addEqual2(sig, sortedFields, Alloy.ooutputs);
+  // if (addNoOutputsX)
+  // alloy.noInputsOrOutputsX(sig, Alloy.ooutputs);
+  // }
+
+  public void addInOrOutputsAndNoInOrOutputsX(PrimSig sig, Set<Field> fields, boolean addNoOutputsX,
+      boolean addEqual, Func func) {
+
+    List<Field> sortedFields = AlloyUtils.sortFields(fields);
     if (addEqual)
-      alloy.addEqual2(sig, sortedFields, Alloy.oinputs);
-    if (addNoInputsX)
-      alloy.noInputsOrOutputsX(sig, Alloy.oinputs);
-
-  }
-
-
-
-  public void addOutputsAndNoOutputsX(PrimSig sig, Set<Field> fields, boolean addNoOutputsX,
-      boolean addEqual) {
-
-    List<Field> sortedFields = new ArrayList<>(fields);
-    Collections.sort(sortedFields, new Comparator<Field>() {
-      public int compare(Field o1, Field o2) {
-        return (o1.label).compareTo(o2.label);
-      }
-    });
-
-    if (addEqual)
-      alloy.addEqual2(sig, sortedFields, Alloy.ooutputs);
+      alloy.addEqual2(sig, sortedFields, func);
     if (addNoOutputsX)
-      alloy.noInputsOrOutputsX(sig, Alloy.ooutputs);
+      alloy.noInputsOrOutputsX(sig, func);
   }
 
+
+  public void createInOutClosure(PrimSig ownerSig, Field field, Set<Field> fieldOfFields,
+      Func inputsOrOutputs) {
+    List<Field> sortedfieldOfFields = AlloyUtils.sortFields(fieldOfFields);
+    alloy.createInOutClosure(ownerSig, field, sortedfieldOfFields, inputsOrOutputs);
+  }
 
   public void handleNoTransfer(Set<Sig> sigWithTransferFields, Set<PrimSig> leafSigs) {
     Object[] sigs =
@@ -433,7 +449,7 @@ public class ToAlloy {
       PrimSig sig = sigByName.get(sigName);
       // if leaf Sig do
       if (leafSigs.contains(sig)) {
-        if (stepPropertiesBySig.get(sigName).size() > 0) {
+        if (stepPropertiesBySig.get(sigName).size() > 0) { // x.steps in .... only leaf
           alloy.addSteps(sig, stepPropertiesBySig.get(sigName), true, true);
         } else {
           alloy.noXSteps(sig);
@@ -443,7 +459,6 @@ public class ToAlloy {
         alloy.addSteps(sig, stepPropertiesBySig.get(sigName), true, false);
     }
     return noStepsSigs;
-
   }
 
   // fact {all x: OFFoodService | x.eat in OFEat }
@@ -511,7 +526,7 @@ public class ToAlloy {
           inputsFields.add(AlloyUtils.getFieldFromSigOrItsParents(propertyName, sig));
         }
 
-        addInputsAndNoInputsX(sig, inputsFields, addNoInputsX, addEqual);
+        addInOrOutputsAndNoInOrOutputsX(sig, inputsFields, addNoInputsX, addEqual, Alloy.oinputs);
       } else {
         if (inputFlowFieldTypes.contains(sigName))// Integer is flowing
           alloy.noXInputsOrOutputs(sig, Alloy.oinputs);// fact {all x: Integer | no (x.inputs)}
@@ -532,11 +547,12 @@ public class ToAlloy {
           outputsFields.add(AlloyUtils.getFieldFromSigOrItsParents(propertyName, sig));
         }
         boolean addNoOutputsX = true;
-        addOutputsAndNoOutputsX(sig, outputsFields, addNoOutputsX, addEqual);
+        addInOrOutputsAndNoInOrOutputsX(sig, outputsFields, addNoOutputsX, addEqual,
+            Alloy.ooutputs);
       } else {
-        if (outputFlowFieldTypes.contains(sigName)) // Integer = type of what is flowing
+        if (outputFlowFieldTypes.contains(sigName)) {// Integer = type of what is flowing
           alloy.noXInputsOrOutputs(sig, Alloy.ooutputs);// fact {all x: Integer | no (x.outputs)}
-        else {
+        } else {
           alloy.noInputsXAndXInputsOrOutputsXAndXOutputs(sig, Alloy.ooutputs); // both "no
                                                                                // outputs.x" & "no
                                                                                // x.outputs"
