@@ -601,7 +601,15 @@ public class ToAlloy {
     }
   }
 
-  public String createAlloyFile(File outputFile, Set<Field> parameterFields) {
+  /**
+   * Convert alloy objects into the given outputFile
+   * 
+   * @param outputFile
+   * @param parameterFields - Set of Fields having <<Parameter>> stereotype. The fields with the
+   *        stereotype can's be disj.
+   * @return
+   */
+  public boolean createAlloyFile(File outputFile, Set<Field> parameterFields) {
 
     // Run commands
     // Command command = alloy.createCommand(moduleName, 10);
@@ -616,12 +624,9 @@ public class ToAlloy {
     if (outputFile != null) {
       String outputFileName = outputFile.getAbsolutePath();
       translator.generateAlsFileContents(alloyModule, outputFileName);
-      return outputFileName;
+      return true;
     }
-    // Utils.runX(mainSig, alloy.getAllSigs(), alloy.getOverAllFact(), command);
-
-
-    return "No outputfile ";
+    return false;
   }
 
   /**

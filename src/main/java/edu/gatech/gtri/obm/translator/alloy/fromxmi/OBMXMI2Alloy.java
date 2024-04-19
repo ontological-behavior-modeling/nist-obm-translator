@@ -53,12 +53,14 @@ public class OBMXMI2Alloy {
   // find the property type name and put in this Set
   Set<Field> valueTypeFields;
   Set<String> transferingTypeSig; // ie., [Integer] for Model::Basic::MultipleObjectFlowAlt
-  String message = "";
+  String errorMessage = "";
 
   // key = sigName, value = field names
-  Map<String, Set<String>> stepPropertiesBySig_all; // including inherited one - used in closure
+  Map<String, Set<String>> stepPropertiesBySig_all; // including inherited properties - used in
+                                                    // closure
   // (x.steps in ....)
-  Map<String, Set<String>> stepPropertiesBySig; // not include inherited one - used in all (.....
+  Map<String, Set<String>> stepPropertiesBySig; // not include inherited properties - used in all
+                                                // (.....
                                                 // in
   // x.steps)
   Set<Connector> redefinedConnectors; // Set of Connector used in processConnector method so
@@ -85,8 +87,10 @@ public class OBMXMI2Alloy {
   }
 
   /**
+   * initializing a new alloy translator
    * 
-   * @param working_dir where required alloy library (Transfer.als/ utilities package) is locating
+   * @param working_dir where required alloy library (Transfer.als and utilities directory) is
+   *        locating.
    */
   public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
     toAlloy = new ToAlloy(working_dir);
@@ -99,40 +103,48 @@ public class OBMXMI2Alloy {
   }
 
   /**
+   * Create an alloy (the given outputFile) of the qualifideName class in the xml file.
    * 
-   * @param xmiFile
+   * @param xmiFile - the xmi file contain a class to be translated to an alloy file.
    * @param qualifiedName of a UML:Class for translation (ie.,
    *        Model::FoodService::OFSingleFoodService)
-   * @param outputFile
-   * @return
-   * @throws FileNotFoundException
-   * @throws UMLModelErrorException
+   * @param outputFile - the output alloy file
+   * @return true if the given outputFile is created from the given xmlFile and the qualifiedName
    */
-  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile)
-      throws FileNotFoundException, UMLModelErrorException {
-
+  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile) {
     if (!xmiFile.exists() || !xmiFile.canRead()) {
       System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
       return false;
     }
     if (loadOBMAndCreateAlloy(xmiFile, qualifiedName)) {
-      String outputFileName = toAlloy.createAlloyFile(outputFile, this.parameterFields);
-      System.out.println(outputFileName + " is created");
-      return true;
+      boolean success = toAlloy.createAlloyFile(outputFile, this.parameterFields);
+      if (success)
+        System.out.println(outputFile.getAbsolutePath() + " is created");
+      else
+        System.out.println("Failed to create the alloy file as " + outputFile.getAbsolutePath());
+      return success;
     }
-    System.err.println(this.message);
+    System.err.println(this.errorMessage);
     return false;
   }
 
   /**
-   * @xmiFile xmi file containing activity
-   * @param _className QualifiedName of Class containing activities
-   * @return boolean true if success otherwise false
-   * @throws FileNotFoundException
-   * @throws UMLModelErrorException
-   * @throws Exception
+   * Get errorMessage collected while translating.
+   * 
+   * @return errorMessage
    */
-  private boolean loadOBMAndCreateAlloy(File xmiFile, String _className) {
+  public String getErrorMessage() {
+    return this.errorMessage;
+  }
+
+  /**
+   * Load the given xmi file and find the given class and create alloy objects in memory.
+   * 
+   * @xmiFile - the xml file contains a class to be converted to an alloy file
+   * @param - the qualifiedName of a class contained in the xml file
+   * @return boolean true if successfully created as alloy objects otherwise false
+   */
+  private boolean loadOBMAndCreateAlloy(File xmiFile, String className) {
 
     parameterFields = new HashSet<>();
     valueTypeFields = new HashSet<>();
@@ -141,7 +153,7 @@ public class OBMXMI2Alloy {
     try {
       rs = EMFUtil.createResourceSet();
     } catch (FileNotFoundException e1) {
-      this.message = "Failed to initialize EMFUtil.";
+      this.errorMessage = "Failed to initialize EMFUtil.";
       return false;
     }
     Resource r = EMFUtil.loadResourceWithDependencies(rs,
@@ -159,17 +171,17 @@ public class OBMXMI2Alloy {
       sysMLUtil = new SysMLUtil(rs);
       sysmladapter = new SysMLAdapter(xmiFile, null);
     } catch (UMLModelErrorException e1) {
-      this.message = "Failed to load SysML in EMFUtil.";
+      this.errorMessage = "Failed to load SysML in EMFUtil.";
       return false;
     } catch (FileNotFoundException e) {
-      this.message = xmiFile.getAbsolutePath() + " does not exist.";
+      this.errorMessage = xmiFile.getAbsolutePath() + " does not exist.";
       return false;
     }
 
-    org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, _className);
+    org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, className);
 
     if (mainClass == null) {
-      this.message = _className + " not found in " + xmiFile.getAbsolutePath();
+      this.errorMessage = className + " not found in " + xmiFile.getAbsolutePath();
       return false;
     }
 
