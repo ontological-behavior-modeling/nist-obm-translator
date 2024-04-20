@@ -66,14 +66,11 @@ public class ExpressionComparator {
 
 
     for (int i = 0; i < ee1.size(); i++) {
-      System.out.println("Comparing : " + ee1.get(i) + " & " + ee2.get(i));
       if (ee1.get(i).size() != ee2.get(i).size()) {
         System.err.println("The size of sorted grouped fact is different. " + ee1.get(i) + "("
             + ee1.get(i).size() + ") vs. " + ee2.get(i) + "(" + ee2.get(i).size() + ")");
         return false;
       }
-      if (ee1.get(i).size() > 1)
-        System.out.println("");
 
       Set<Integer> expr2usedJIndex = new HashSet<>();
       for (Expr expr1 : ee1.get(i)) {
