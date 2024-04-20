@@ -2,13 +2,13 @@ package obmtest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.ast.Command;
 import edu.mit.csail.sdg.ast.CommandScope;
@@ -45,30 +45,53 @@ public class ExpressionComparator {
 
   public boolean compareTwoExpressionsFacts(Expr e1, Expr e2) {
     visitedExpressions.clear();
+
+    int size1 = ((Collection<?>) ((ExprList) e1).args).size();
+    int size2 = ((Collection<?>) ((ExprList) e2).args).size();
+
+    if (size1 != size2) {
+      System.err.println("The size of facts is different. " + size1 + " vs. " + size2);
+      return false;
+    }
+    // e1.args.size() and ee1.size() are different. ee1 can contain like [(all x | no o/inputs . x),
+    // (all x | no o/inputs . x)] the two expr of the same
     List<List<Expr>> ee1 = sortExprList((ExprList) e1);
     List<List<Expr>> ee2 = sortExprList((ExprList) e2);
 
-    if (!compareTwoList(ee1, ee2)) {
-      List<Object> flat1 = ee1.stream().flatMap(List::stream).collect(Collectors.toList());
-      List<Object> flat2 = ee1.stream().flatMap(List::stream).collect(Collectors.toList());
-      System.err.println("size of facts are different. " + flat1.size() + " vs. " + flat2.size());
+    if (ee1.size() != ee2.size()) {
+      System.err.println(
+          "The size of sorted grouped facts are different. " + ee1.size() + " vs. " + ee2.size());
       return false;
     }
-    System.out.println("comparing facts: " + ee1.size() + " vs. " + ee2.size());
-    boolean found = false;
+
+
     for (int i = 0; i < ee1.size(); i++) {
       System.out.println("Comparing : " + ee1.get(i) + " & " + ee2.get(i));
-      found = false; // reset;
+      if (ee1.get(i).size() != ee2.get(i).size()) {
+        System.err.println("The size of sorted grouped fact is different. " + ee1.get(i) + "("
+            + ee1.get(i).size() + ") vs. " + ee2.get(i) + "(" + ee2.get(i).size() + ")");
+        return false;
+      }
+      if (ee1.get(i).size() > 1)
+        System.out.println("");
+
+      Set<Integer> expr2usedJIndex = new HashSet<>();
       for (Expr expr1 : ee1.get(i)) {
-        for (Expr expr2 : ee2.get(i)) {
-          if (!compareExpr(expr1, expr2))
-            continue;
-          else {
-            found = true;
-            break;
+        boolean expr1found = false;
+
+        for (int j = 0; j < ee2.get(i).size(); j++) {
+          if (!expr2usedJIndex.contains(j)) {
+            Expr expr2 = ee2.get(i).get(j);
+            if (!compareExpr(expr1, expr2))
+              continue;
+            else {
+              expr1found = true;
+              expr2usedJIndex.add(j);
+              break;
+            }
           }
         }
-        if (!found)
+        if (!expr1found)
           return false;
       }
     }

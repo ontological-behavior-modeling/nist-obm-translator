@@ -53,8 +53,8 @@ class OBMXMI2AlloyTest {
       "4.2.2 FoodService Object Flow - OFParallelFoodService_mw.als,Model::FoodService::OFParallelFoodService,true",
       "4.2.2 FoodService Object Flow - OFLoopFoodService_mw.als,Model::FoodService::OFLoopFoodService,true",
 
-      // mw test pass but shold be failing - bug needs to be fixed
-      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, true",
+      // mw test fails
+      "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
 
       "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow, true",
 
