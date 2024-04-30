@@ -1,5 +1,13 @@
 package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
@@ -15,59 +23,25 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
 
-// TODO: Auto-generated Javadoc
-/** The Class ExprVisitor. */
 public class ExprVisitor extends VisitQuery<String> {
 
-  /** The ignored exprs. */
   private final Set<Expr> ignoredExprs;
-
-  /** The is root sig. */
   public boolean isRootSig = false;
-
-  /** The is root expr list. */
   private boolean isRootExprList = true;
-
-  /** The field after sig. */
   private boolean fieldAfterSig = false;
-
-  /** The is implicit fact. */
   private boolean isImplicitFact = false;
-
-  /** The is sig fact. */
   private boolean isSigFact = false;
   // used to include disj fields or not
-  /** The parameter fields. */
-  // previously all fields with the same type are treated as disjoint fields
+  // disj fields are fields with the same type but not with Parameter stereotype
   private final Set<Sig.Field> parameterFields;
 
-  /**
-   * Instantiates a new expr visitor.
-   *
-   * @param ignoredExprs the ignored exprs
-   * @param pf the pf
-   */
-  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> pf) {
+
+  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> parameterFields) {
     this.ignoredExprs = ignoredExprs;
-    this.parameterFields = pf;
+    this.parameterFields = parameterFields;
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprBinary x) throws Err {
 
@@ -87,6 +61,7 @@ public class ExprVisitor extends VisitQuery<String> {
         return right;
       }
 
+
       return sb.append(left).append(x.op.toString()).append(right).toString();
     }
 
@@ -96,21 +71,10 @@ public class ExprVisitor extends VisitQuery<String> {
       op = "not in";
     }
 
-    return sb.append(x.left.accept(this))
-        .append(' ')
-        .append(op)
-        .append(' ')
-        .append(x.right.accept(this))
-        .toString();
+    return sb.append(x.left.accept(this)).append(' ').append(op).append(' ')
+        .append(x.right.accept(this)).toString();
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprCall x) throws Err {
 
@@ -137,13 +101,6 @@ public class ExprVisitor extends VisitQuery<String> {
     return sb.toString();
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprConstant x) throws Err {
 
@@ -156,13 +113,6 @@ public class ExprVisitor extends VisitQuery<String> {
     return x.toString();
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprList x) throws Err {
 
@@ -189,6 +139,7 @@ public class ExprVisitor extends VisitQuery<String> {
         } else if (isImplicitFact) {
           sb.append('\t').append(fact).append('\n');
         }
+
       }
 
       return sb.toString();
@@ -207,13 +158,6 @@ public class ExprVisitor extends VisitQuery<String> {
     return String.join(op, args);
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprQt x) throws Err {
 
@@ -235,23 +179,10 @@ public class ExprVisitor extends VisitQuery<String> {
     }
 
     StringBuilder sb = new StringBuilder();
-    return sb.append(op)
-        .append(' ')
-        .append(names)
-        .append(": ")
-        .append(AlloyUtils.removeSlash(sigType))
-        .append(" | ")
-        .append(sub)
-        .toString();
+    return sb.append(op).append(' ').append(names).append(": ")
+        .append(AlloyUtils.removeSlash(sigType)).append(" | ").append(sub).toString();
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprUnary x) throws Err {
 
@@ -291,26 +222,12 @@ public class ExprVisitor extends VisitQuery<String> {
     return out;
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(ExprVar x) throws Err {
     isRootSig = false;
     return ignoredExprs.contains(x) ? "" : x.label;
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
   @Override
   public String visit(Sig x) throws Err {
 
@@ -352,8 +269,7 @@ public class ExprVisitor extends VisitQuery<String> {
       int numberOfFields = x.getFields().size();
 
       if (numberOfFields > 0) {
-
-        // String[] fields = new String[numberOfFields];
+        // sb.append("\n");
         fieldAfterSig = true;
 
         Map<String, List<Sig.Field>> fieldByType = new HashMap<>(); // x.decl().expr.accept(this)
@@ -366,41 +282,38 @@ public class ExprVisitor extends VisitQuery<String> {
         List<String> sortedType = new ArrayList<>(fieldByType.keySet());
         Collections.sort(sortedType);
 
+
         for (String type : sortedType) {
           List<Sig.Field> fs = fieldByType.get(type);
           if (fs.size() == 1) {
-            fields =
-                (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
-                    .append(AlloyUtils.removeSlash(fs.get(0).label))
-                    .append(": ")
-                    .append(type)
-                    .toString();
+            fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))// sbb.append(",\n
+                                                                                // "))
+                .append(AlloyUtils.removeSlash(fs.get(0).label)).append(": ").append(type)
+                .toString();
           } else { // have to be > 1
 
             boolean isdisj = true;
             String[] labels = new String[fs.size()];
             for (int i = 0; i < fs.size(); i++) {
 
-              if (this.parameterFields.contains(fs.get(i))) isdisj = false;
+              if (this.parameterFields.contains(fs.get(i)))
+                isdisj = false;
               labels[i] = AlloyUtils.removeSlash(fs.get(i).label);
             }
             if (isdisj)
-              fields =
-                  (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
-                      .append("disj ")
-                      .append(String.join(", ", labels))
-                      .append(": ")
-                      .append(type)
-                      .toString();
+              fields = (fields.length() == 0 ? sbb.append(' ')
+                  : /* sbb.append(",\n ")) */sbb.append(", ")).append("disj ")
+                      .append(String.join(", ", labels)).append(": ").append(type).toString();
             else
-              fields =
-                  (fields.length() == 0 ? sbb.append(' ') : sbb.append(", "))
-                      .append(String.join(", ", labels))
-                      .append(": ")
-                      .append(type)
-                      .toString();
+              fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")) /*
+                                                                                    * sbb.
+                                                                                    * append(",\n "
+                                                                                    * ))
+                                                                                    */
+                  .append(String.join(", ", labels)).append(": ").append(type).toString();
           }
         }
+
 
         // // Produce strings for each field
         // for (int i = 0; i < numberOfFields; i++) {
@@ -409,10 +322,11 @@ public class ExprVisitor extends VisitQuery<String> {
         //
         // }
         // sb.append(String.join(",", fields)).append(' ');
-        sb.append(fields).append(' ');
-      }
+        sb.append(fields);/* .append('\n'); */
+        sb.append("}\n");
+      } else
+        sb.append("}\n");
 
-      sb.append("}\n");
       fieldAfterSig = false;
 
       // ========== End: signature fields ==========
@@ -445,16 +359,9 @@ public class ExprVisitor extends VisitQuery<String> {
     }
 
     return AlloyUtils.removeSlash(x.label);
+
   }
 
-  /**
-   * Sort fields.
-   *
-   * @param x the x
-   * @param map the map
-   * @return the map
-   * @throws Err the err
-   */
   public Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) throws Err {
 
     if (ignoredExprs.contains(x)) {
@@ -466,7 +373,8 @@ public class ExprVisitor extends VisitQuery<String> {
     if (fieldAfterSig) {
       String type = x.decl().expr.accept(this);
       List<Field> fs = null;
-      if (map.containsKey(type)) fs = map.get(type);
+      if (map.containsKey(type))
+        fs = map.get(type);
       else {
         fs = new ArrayList<>();
         map.put(type, fs);
@@ -477,13 +385,7 @@ public class ExprVisitor extends VisitQuery<String> {
     return map;
   }
 
-  /**
-   * Visit.
-   *
-   * @param x the x
-   * @return the string
-   * @throws Err the err
-   */
+
   @Override
   public String visit(Field x) throws Err {
 
@@ -496,24 +398,14 @@ public class ExprVisitor extends VisitQuery<String> {
     if (fieldAfterSig) {
 
       StringBuilder sb = new StringBuilder();
-      String output =
-          sb.append(' ')
-              .append(AlloyUtils.removeSlash(x.label))
-              .append(": ")
-              .append(x.decl().expr.accept(this))
-              .toString();
+      String output = sb.append(' ').append(AlloyUtils.removeSlash(x.label)).append(": ")
+          .append(x.decl().expr.accept(this)).toString();
       return output;
     }
 
     return x.label;
   }
 
-  /**
-   * Gets the names from decl.
-   *
-   * @param decl the decl
-   * @return the names from decl
-   */
   private String getNamesFromDecl(Decl decl) {
 
     isRootSig = false;

@@ -1,5 +1,10 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -16,10 +21,6 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 // TODO: Auto-generated Javadoc
 /** The Class ASTVisitor. */
@@ -65,13 +66,6 @@ public class ASTVisitor extends VisitQuery<Expr> {
     System.out.println("Number of nodes mapped:\t\t\t\t" + map.keySet().size());
   }
 
-  /** Prints the map. */
-  public void printMap() {
-    for (Expr expr : map.keySet()) {
-      System.out.println(expr);
-    }
-  }
-
   /**
    * Visit.
    *
@@ -84,8 +78,6 @@ public class ASTVisitor extends VisitQuery<Expr> {
     for (int i = 0; i < indent; i++) {
       System.out.print("\t");
     }
-    System.out.println("ExprBinary: " + x);
-
     if (!map.containsKey(x)) {
       map.put(x, new ArrayList<>());
     }
@@ -125,6 +117,7 @@ public class ASTVisitor extends VisitQuery<Expr> {
     for (Expr y : x.args) {
       map.get(x).add(y.accept(this));
     }
+    System.out.println("ExprConstant: " + x);
 
     indent--;
 
@@ -148,6 +141,7 @@ public class ASTVisitor extends VisitQuery<Expr> {
     if (!map.containsKey(x)) {
       map.put(x, new ArrayList<>());
     }
+    System.out.println("ExprITE: " + x);
 
     indent++;
 
@@ -182,12 +176,15 @@ public class ASTVisitor extends VisitQuery<Expr> {
   }
 
   /**
-   * Visits an ExprITE node (C - X else Y) by calling accept() on C, X, then Y.
+   * Visits an
+   * 
+   * ExprITE node (C - X else Y) by calling accept() on C, X, then Y.
    *
    * @param x the x
    * @return the expr
    * @throws Err the err
    */
+
   @Override
   public Expr visit(ExprITE x) throws Err {
     for (int i = 0; i < indent; i++) {
@@ -229,6 +226,7 @@ public class ASTVisitor extends VisitQuery<Expr> {
     }
 
     indent++;
+
 
     map.get(x).add(x.var.accept(this));
     map.get(x).add(x.expr.accept(this));
