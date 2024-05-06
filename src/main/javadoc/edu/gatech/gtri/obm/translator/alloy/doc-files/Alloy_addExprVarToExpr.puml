@@ -1,0 +1,15 @@
+@startuml
+start
+if (Expr is instance of ExprBinary) then (yes)
+:Add left side of ExprBinary to ExprVar;
+:Add right side of ExprBinary to ExprVar;
+if (ExprBinary Operation is PLUS) then (yes)
+:Return Added left side and right side;
+else (no)
+:Return ExprBinary joined to ExprVar;
+endif
+else(no)
+:Return original Expr joined to ExprVar;
+endif
+stop
+@enduml

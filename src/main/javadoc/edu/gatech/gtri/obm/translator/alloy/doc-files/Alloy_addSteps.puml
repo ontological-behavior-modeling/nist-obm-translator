@@ -1,0 +1,25 @@
+@startuml
+start
+:Make ExprVar;
+:Call osteps Function;
+:Create New Declaration;
+:Create New Array List;
+:Sort Step Fields;
+while(For all Step Fields)
+while(For All Signature Fields)
+if(Signature Field == Step Field) then (yes)
+if(expr = null) then (true)
+:Join Field to Signature;
+else(false)
+:Add Field to Expression 
+and Join Field to Signature;
+:Break;
+endif
+endif
+endwhile
+endwhile
+if(Expr != null) then (yes)
+:Add Both to Overall Fact;
+endif
+stop
+@enduml

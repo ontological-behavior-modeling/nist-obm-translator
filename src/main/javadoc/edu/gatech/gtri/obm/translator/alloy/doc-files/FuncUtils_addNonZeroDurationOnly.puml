@@ -1,0 +1,7 @@
+@startuml
+start
+:Get nonZeroDurationOnly Function;
+:Call nonZeroDurationOnly Expression;
+:Return Expression;
+stop
+@enduml

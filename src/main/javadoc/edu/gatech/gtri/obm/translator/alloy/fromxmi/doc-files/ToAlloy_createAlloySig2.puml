@@ -1,0 +1,19 @@
+@startuml
+start
+if(Signature Exists) then (yes)
+:Return Signature from List;
+stop
+else(no)
+:Create Signature;
+if (Parent Sig Does Not Exist) then (yes)
+:Create Sig as 
+Child of Occurrence;
+else(no)
+:Get Parent Sig from List;
+:Create Sig as 
+Child of Parent;
+endif
+:Add Signature to List
+:Return Signature;
+stop
+@enduml

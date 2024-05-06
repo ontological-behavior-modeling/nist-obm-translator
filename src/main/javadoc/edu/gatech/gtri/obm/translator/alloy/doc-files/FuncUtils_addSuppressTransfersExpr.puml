@@ -1,0 +1,9 @@
+@startuml
+start
+:Get Transfer Signature;
+:Create suppressTransfer Expression Body;
+:Create suppressTransfers Function;
+:Call suppressTransfersExpr;
+:Return suppressTransfersExpr;
+stop
+@enduml

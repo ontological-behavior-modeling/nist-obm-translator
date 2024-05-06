@@ -1,0 +1,10 @@
+@startuml
+start
+while(for all expression subnodes)
+:Print Sub node and class;
+if(subnode has nested subnodes?) then (yes)
+:printExpr with subnode;
+endif
+endwhile (empty)
+stop
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+start
+:Print fork->join->decision->merge Title;
+:Create Node ID, //p0//;
+:Create Node ID, //p1//;
+:Create Node ID, //p2//;
+:Create Node ID, //p3//;
+:Create Node ID, //p4//;
+:Create Node ID, //p5//;
+:Create Node ID, //p6//;
+:Create Node ID, //p7//;
+:Add Edge to //graph// between
+//p1// and //p2//;
+:Add Edge to //graph// between
+//p1// and //p3//;
+:Add Edge to //graph// between
+//p2// and //p4//;
+:Add Edge to //graph// between
+//p3// and //p5//;
+:Add Edge to //graph// between
+//p4// and //p5//;
+:Add Edge to //graph// between
+//p4// and //p6//;
+:Add Edge to //graph// between
+//p5// and //p7//;
+:Add Edge to //graph// between
+//p6// and //p7//;
+:Set oneof Attribute to true for 
+Edges //p4p5//, //p4p6//, //p5p7//, and //p6p7//;
+:Return p1Node;
+stop
+@enduml

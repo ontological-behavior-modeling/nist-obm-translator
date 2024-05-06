@@ -1,0 +1,7 @@
+@startuml
+start
+:Call bijectionFiltered Function;
+:Create new Declaration;
+:Add Bijection to Overall Fact;
+stop
+@enduml

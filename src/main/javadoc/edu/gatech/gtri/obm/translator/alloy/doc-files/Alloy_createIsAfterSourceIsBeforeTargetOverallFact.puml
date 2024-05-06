@@ -1,0 +1,10 @@
+@startuml
+start
+:Make ExprVar;
+:Create New Declaration;
+:Call isAfterSource;
+:Add isAfterSource to Overall Fact;
+:Call isBeforeTarget;
+:Add isBeforeTarget to Overall Fact;
+stop
+@enduml

@@ -1,0 +1,5 @@
+@startuml
+start
+:Construct ToAlloy Class;
+stop
+@enduml

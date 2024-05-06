@@ -1,0 +1,19 @@
+@startuml
+start
+:Create New HashMap //map//;
+:Create New ArrayList //names//;
+while(For Each IObject in //list//)
+if(Current IObject is an Instance of ONode) then (yes)
+:Put Current IObject in //map//;
+:Add Current IObject to //names//;
+else(no)
+:Print Not supported yet;
+endif
+endwhile
+:Sort //names//;
+:Instatiate //list// as New ArrayList;
+while(For Each String in //names//)
+:Add String to //list//;
+endwhile
+stop
+@enduml
