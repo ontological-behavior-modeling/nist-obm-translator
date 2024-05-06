@@ -1,0 +1,5 @@
+edu.gatech.gtri.obm
+edu.gatech.gtri.obm.translator.alloy
+edu.gatech.gtri.obm.translator.alloy.fromxmi
+edu.gatech.gtri.obm.translator.alloy.tofile
+edu.gatech.gtri.obm.translator.alloy.userinterface

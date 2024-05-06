@@ -1,0 +1,14 @@
+@startuml
+start
+while(for All Signature Fields)
+:Get Field Types;
+while(for All Field Types)
+if (Current Field Type == fieldTypeName) then (yes)
+:Return field;
+stop
+endif
+endwhile
+endwhile
+:Return null;
+stop
+@enduml

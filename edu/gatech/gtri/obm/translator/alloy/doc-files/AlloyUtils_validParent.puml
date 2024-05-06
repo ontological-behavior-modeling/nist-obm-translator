@@ -1,0 +1,12 @@
+@startuml
+start
+if(parentName == null or
+parentName == "BehaviorOccurence" or
+parentName == "Occurrence" or
+parentName == "Anything") then (yes)
+:Return False;
+else(no)
+:Return True;
+endif
+stop
+@enduml

@@ -1,0 +1,10 @@
+@startuml
+start
+:Create new Class ArrayList;
+:Add mainClass to List;
+while(Main has a Parent?)
+:Add Parent to List;
+endwhile
+:Return List;
+stop
+@enduml

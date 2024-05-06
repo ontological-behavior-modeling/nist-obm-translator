@@ -1,0 +1,9 @@
+@startuml
+start
+:Make ExprVar;
+:Call Inverse Function Filtered;
+:Create new ArrayList;
+:Create new Declaration;
+:Add Inverse Function Filtered to Overall Fact;
+stop
+@enduml

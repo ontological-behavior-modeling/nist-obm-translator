@@ -1,0 +1,29 @@
+@startuml
+start
+:Instantiate VizGUI;
+:Print Title Parsing+Typechecking;
+:Construct A4Options;
+:Set A4Option Solver to SAT4J;
+:Construct A4Reporter;
+:Print Title for Command;
+:Execute Command for A4Solution;
+while(A4Solution is Satisfiable)
+:Write XML from A4Solution;
+if (VizGUI == null) then (yes)
+:Construct VizGUI;
+else(no)
+if(//recentRefresh// == false) then (yes)
+else(no)
+:Change //recentRefresh// to false;
+:Load XML from VizGUI;
+endif
+endif
+if(//updated// == true) then (yes)
+:Change //recentRefresh// to true;
+:Return the Next Satisfiable Solution;
+:Update Updated;
+:Continue;
+endif
+endwhile
+stop
+@enduml

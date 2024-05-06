@@ -1,0 +1,12 @@
+@startuml
+start
+:Get Signature;
+:Create ExprVar Class;
+:Get Field from Sig;
+if (field != null) then (yes) 
+:Add Inputs;
+else(no)
+:Print Error;
+endif
+stop
+@enduml
