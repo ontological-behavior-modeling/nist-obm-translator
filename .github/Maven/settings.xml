@@ -16,3 +16,7 @@
     </server>
   </servers>
 </settings>
+
+<!-- reference: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry --> 
+<!-- modify your username and token and combine with your local settings.xml in C:\Users\<loginname>\.m2\settings.xml -->
+<!-- how to create github token: https://docs.github.com/en/enterprise-server@3.6/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens -->
