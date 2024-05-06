@@ -1,5 +1,8 @@
 package edu.gatech.gtri.obm.translator.alloy.userinterface;
 
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.OBMXMI2Alloy;
+import edu.umd.omgutil.EMFUtil;
+import edu.umd.omgutil.UMLModelErrorException;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -44,6 +47,8 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.emf.common.util.TreeIterator;
@@ -53,11 +58,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.internal.impl.ClassImpl;
-import edu.gatech.gtri.obm.translator.alloy.fromxmi.OBMXMI2Alloy;
-import edu.umd.omgutil.EMFUtil;
-import edu.umd.omgutil.UMLModelErrorException;
-import lombok.Getter;
-import lombok.Setter;
 
 // TODO: Auto-generated Javadoc
 /** The Class UserInterface. */
@@ -133,35 +133,36 @@ public class UserInterface {
   private ExecutorService executor = Executors.newFixedThreadPool(1);
 
   /** A callable method to conglomerate all the class elements within the xmi file. */
-  private Callable<String[]> findXmiClasses = () -> {
-    String[] classNames = null;
-    try {
-      ResourceSet rs = EMFUtil.createResourceSet();
+  private Callable<String[]> findXmiClasses =
+      () -> {
+        String[] classNames = null;
+        try {
+          ResourceSet rs = EMFUtil.createResourceSet();
 
-      Resource r = EMFUtil.loadResourceWithDependencies(rs,
-          URI.createFileURI(xmiFile.getAbsolutePath()), null);
+          Resource r =
+              EMFUtil.loadResourceWithDependencies(
+                  rs, URI.createFileURI(xmiFile.getAbsolutePath()), null);
 
-      List<String> resourceNames = new ArrayList<String>();
-      TreeIterator<EObject> xmiContent = r.getAllContents();
-      while (xmiContent.hasNext()) {
-        EObject current = xmiContent.next();
-        if (current.getClass().equals(ClassImpl.class)) {
-          String qn = ((ClassImpl) current).getQualifiedName();
-          if (qn != null)
-            resourceNames.add(qn);
+          List<String> resourceNames = new ArrayList<String>();
+          TreeIterator<EObject> xmiContent = r.getAllContents();
+          while (xmiContent.hasNext()) {
+            EObject current = xmiContent.next();
+            if (current.getClass().equals(ClassImpl.class)) {
+              String qn = ((ClassImpl) current).getQualifiedName();
+              if (qn != null) resourceNames.add(qn);
+            }
+          }
+          int size = resourceNames.size();
+          classNames = new String[size];
+          for (int i = 0; i < size; i++) {
+            classNames[i] = resourceNames.get(i);
+          }
+          Arrays.sort(classNames);
+        } catch (Exception e) {
+          e.printStackTrace();
         }
-      }
-      int size = resourceNames.size();
-      classNames = new String[size];
-      for (int i = 0; i < size; i++) {
-        classNames[i] = resourceNames.get(i);
-      }
-      Arrays.sort(classNames);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return classNames;
-  };
+        return classNames;
+      };
 
   /**
    * Launch the application.
@@ -173,20 +174,23 @@ public class UserInterface {
   public static void main(String[] args) throws FileNotFoundException, UMLModelErrorException {
     try {
       UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+    } catch (ClassNotFoundException
+        | InstantiationException
+        | IllegalAccessException
         | UnsupportedLookAndFeelException e) {
       e.printStackTrace();
     }
-    EventQueue.invokeLater(new Runnable() {
-      public void run() {
-        try {
-          new UserInterface();
-          frmObmAlloyTranslator.setVisible(true);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      }
-    });
+    EventQueue.invokeLater(
+        new Runnable() {
+          public void run() {
+            try {
+              new UserInterface();
+              frmObmAlloyTranslator.setVisible(true);
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+          }
+        });
   }
 
   /** Create the User Interface application. */
@@ -227,13 +231,14 @@ public class UserInterface {
     splitPaneSearch.setDividerSize(0);
 
     textField = new JTextField();
-    textField.addKeyListener(new KeyAdapter() {
-      @Override
-      public void keyReleased(KeyEvent e) {
-        String text = textField.getText();
-        searchList(text);
-      }
-    });
+    textField.addKeyListener(
+        new KeyAdapter() {
+          @Override
+          public void keyReleased(KeyEvent e) {
+            String text = textField.getText();
+            searchList(text);
+          }
+        });
     splitPaneSearch.setRightComponent(textField);
     textField.setColumns(10);
 
@@ -249,36 +254,37 @@ public class UserInterface {
 
     btnOpen = new JButton("Open XMI File");
     btnOpen.setFont(new Font("Tahoma", Font.PLAIN, 16));
-    btnOpen.addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseReleased(MouseEvent e) {
-        boolean b = chooseXMI();
-        if (b) {
-          String path = xmiFile.getAbsolutePath();
-          String sub = path.substring(path.lastIndexOf("\\"));
-          Popup p = new Popup("Loading File");
-          Future<String[]> future = executor.submit(findXmiClasses);
-          try {
-            allClassNames = future.get();
-          } catch (InterruptedException | ExecutionException e1) {
-            e1.printStackTrace();
+    btnOpen.addMouseListener(
+        new MouseAdapter() {
+          @Override
+          public void mouseReleased(MouseEvent e) {
+            boolean b = chooseXMI();
+            if (b) {
+              String path = xmiFile.getAbsolutePath();
+              String sub = path.substring(path.lastIndexOf("\\"));
+              Popup p = new Popup("Loading File");
+              Future<String[]> future = executor.submit(findXmiClasses);
+              try {
+                allClassNames = future.get();
+              } catch (InterruptedException | ExecutionException e1) {
+                e1.printStackTrace();
+              }
+              list.setListData(allClassNames);
+              btnOpen.setText("Open New XMI");
+              lblTop.setText("Select Class to Translate");
+              splitPaneFile.setLeftComponent(btnOpen);
+              lblFileName.setText(" ..." + sub);
+              lblTop.setVisible(true);
+              btmPanel.setVisible(true);
+              btnRefresh.setVisible(true);
+              scrollPane.setVisible(true);
+              frmObmAlloyTranslator.setMinimumSize(new Dimension(530, 450));
+              frmObmAlloyTranslator.pack();
+              p.getT().cancel();
+              p.getDialog().dispose();
+            }
           }
-          list.setListData(allClassNames);
-          btnOpen.setText("Open New XMI");
-          lblTop.setText("Select Class to Translate");
-          splitPaneFile.setLeftComponent(btnOpen);
-          lblFileName.setText(" ..." + sub);
-          lblTop.setVisible(true);
-          btmPanel.setVisible(true);
-          btnRefresh.setVisible(true);
-          scrollPane.setVisible(true);
-          frmObmAlloyTranslator.setMinimumSize(new Dimension(530, 450));
-          frmObmAlloyTranslator.pack();
-          p.getT().cancel();
-          p.getDialog().dispose();
-        }
-      }
-    });
+        });
     splitPaneFile.setLeftComponent(btnOpen);
 
     lblFileName = new JLabel("  No File Selected");
@@ -287,104 +293,112 @@ public class UserInterface {
 
     ImageIcon icon = new ImageIcon(getImage("refresh.png"));
     btnRefresh = new JButton(icon);
-    btnRefresh.addMouseListener(new MouseAdapter() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        File newXmiFile = new File(xmiFile.getAbsolutePath());
-        xmiFile = newXmiFile;
-        Popup p = new Popup("Refreshing, Please Wait");
-        Future<String[]> future = executor.submit(findXmiClasses);
-        try {
-          allClassNames = future.get();
-        } catch (InterruptedException | ExecutionException e1) {
-          e1.printStackTrace();
-        }
-        list.setListData(allClassNames);
-        p.getT().cancel();
-        p.getDialog().dispose();
-      }
-    });
+    btnRefresh.addMouseListener(
+        new MouseAdapter() {
+          @Override
+          public void mouseClicked(MouseEvent e) {
+            File newXmiFile = new File(xmiFile.getAbsolutePath());
+            xmiFile = newXmiFile;
+            Popup p = new Popup("Refreshing, Please Wait");
+            Future<String[]> future = executor.submit(findXmiClasses);
+            try {
+              allClassNames = future.get();
+            } catch (InterruptedException | ExecutionException e1) {
+              e1.printStackTrace();
+            }
+            list.setListData(allClassNames);
+            p.getT().cancel();
+            p.getDialog().dispose();
+          }
+        });
 
     btnCancel = new JButton("Cancel");
     btnCancel.setFont(new Font("Tahoma", Font.PLAIN, 16));
-    btnCancel.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        System.exit(0);
-      }
-    });
+    btnCancel.addActionListener(
+        new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            System.exit(0);
+          }
+        });
 
     btnOk = new JButton("OK");
     btnOk.setFont(new Font("Tahoma", Font.PLAIN, 16));
-    btnOk.addActionListener(new ActionListener() {
-      @Override
-      public void actionPerformed(ActionEvent e) {
-        String location = xmiFile.getAbsolutePath();
-        int slash = location.lastIndexOf("\\");
-        String path = xmiFile.getAbsolutePath().substring(0, slash);
-        if (list.getSelectedValue() != null) {
-          File transfer = new File(path + "/Transfer.als");
-          File relation = new File(path + "/utilities/types/relation.als");
-          if (!(transfer.exists() && relation.exists())) {
-            copyResources(transfer, relation);
-          }
-          Popup p = new Popup("Generating File");
-          int i = 1;
-          OBMXMI2Alloy obm = null;
-          try {
-            obm = new OBMXMI2Alloy(path);
-          } catch (FileNotFoundException | UMLModelErrorException e1) {
-            e1.printStackTrace();
-            p.getDialog().setTitle("Error" + e1);
-          }
-          List<String> mainClass = list.getSelectedValuesList();
-          int fileNum = mainClass.size();
-          String fileList = "File(s) Created";
-          for (String c : mainClass) {
-            p.getDialog().setTitle("Generating File " + i + "/" + fileNum);
-            p.getDialog().setVisible(true);
-            File alsFile = null;
-            if (!chckbxName.isSelected()) {
-              try {
-                alsFile = saveALS(c);
-                if (alsFile == null) {
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                      "No File Name Selected. Alloy file generation cancelled");
-                } else {
-                  if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                    JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
-                }
-              } catch (FileNotFoundException | UMLModelErrorException | NullPointerException e1) {
-                JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                    "Selected XMI file does not exist.\nTranslation Canceled.");
+    btnOk.addActionListener(
+        new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            String location = xmiFile.getAbsolutePath();
+            int slash = location.lastIndexOf("\\");
+            String path = xmiFile.getAbsolutePath().substring(0, slash);
+            if (list.getSelectedValue() != null) {
+              File transfer = new File(path + "/Transfer.als");
+              File relation = new File(path + "/utilities/types/relation.als");
+              if (!(transfer.exists() && relation.exists())) {
+                copyResources(transfer, relation);
               }
-            } else {
-              location = location.substring(0, slash + 1);
-              String name = c.substring(c.lastIndexOf(":") + 1);
-
-              DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
-              Date date = new Date();
-              String dt = dateFormat.format(date);
-              alsFile = new File(location + name + "_" + dt + ".als");
+              Popup p = new Popup("Generating File");
+              int i = 1;
+              OBMXMI2Alloy obm = null;
               try {
-                if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
+                obm = new OBMXMI2Alloy(path);
               } catch (FileNotFoundException | UMLModelErrorException e1) {
-                JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                    "Selected XMI file does not exist.\nTranslation Canceled.");
+                e1.printStackTrace();
+                p.getDialog().setTitle("Error" + e1);
               }
+              List<String> mainClass = list.getSelectedValuesList();
+              int fileNum = mainClass.size();
+              String fileList = "File(s) Created";
+              for (String c : mainClass) {
+                p.getDialog().setTitle("Generating File " + i + "/" + fileNum);
+                p.getDialog().setVisible(true);
+                File alsFile = null;
+                if (!chckbxName.isSelected()) {
+                  try {
+                    alsFile = saveALS(c);
+                    if (alsFile == null) {
+                      JOptionPane.showMessageDialog(
+                          frmObmAlloyTranslator,
+                          "No File Name Selected. Alloy file generation cancelled");
+                    } else {
+                      if (!obm.createAlloyFile(xmiFile, c, alsFile))
+                        JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
+                    }
+                  } catch (FileNotFoundException
+                      | UMLModelErrorException
+                      | NullPointerException e1) {
+                    JOptionPane.showMessageDialog(
+                        frmObmAlloyTranslator,
+                        "Selected XMI file does not exist.\nTranslation Canceled.");
+                  }
+                } else {
+                  location = location.substring(0, slash + 1);
+                  String name = c.substring(c.lastIndexOf(":") + 1);
+
+                  DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HHmmss");
+                  Date date = new Date();
+                  String dt = dateFormat.format(date);
+                  alsFile = new File(location + name + "_" + dt + ".als");
+                  try {
+                    if (!obm.createAlloyFile(xmiFile, c, alsFile))
+                      JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
+                  } catch (FileNotFoundException | UMLModelErrorException e1) {
+                    JOptionPane.showMessageDialog(
+                        frmObmAlloyTranslator,
+                        "Selected XMI file does not exist.\nTranslation Canceled.");
+                  }
+                }
+                p.getDialog().setVisible(false);
+                fileList = fileList + "\n" + alsFile.getAbsolutePath();
+                i++;
+              }
+              JOptionPane.showMessageDialog(frmObmAlloyTranslator, fileList);
+            } else {
+              JOptionPane.showMessageDialog(
+                  frmObmAlloyTranslator, "Please Select One or More Options\nfrom the List");
             }
-            p.getDialog().setVisible(false);
-            fileList = fileList + "\n" + alsFile.getAbsolutePath();
-            i++;
           }
-          JOptionPane.showMessageDialog(frmObmAlloyTranslator, fileList);
-        } else {
-          JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-              "Please Select One or More Options\nfrom the List");
-        }
-      }
-    });
+        });
 
     topTitle = new JPanel();
     topTitle.setLayout(new FlowLayout(1, 20, 5));
@@ -457,16 +471,18 @@ public class UserInterface {
         } else {
           // saved = new File(saved.toString() + ".als"); // append .als
           saved =
-              new File(saved.getParentFile(), FilenameUtils.getBaseName(saved.getName()) + ".als"); // ALTERNATIVELY:
-                                                                                                    // remove
-                                                                                                    // the
-                                                                                                    // extension
-                                                                                                    // (if
-                                                                                                    // any)
-                                                                                                    // and
-                                                                                                    // replace
-                                                                                                    // it
-                                                                                                    // with
+              new File(
+                  saved.getParentFile(),
+                  FilenameUtils.getBaseName(saved.getName()) + ".als"); // ALTERNATIVELY:
+          // remove
+          // the
+          // extension
+          // (if
+          // any)
+          // and
+          // replace
+          // it
+          // with
           // ".als"
         }
         return saved;
@@ -489,8 +505,7 @@ public class UserInterface {
   private void searchList(String field) {
     List<String> updatedList = new ArrayList<String>();
     for (String s : allClassNames) {
-      if ((s.toLowerCase()).contains((field.toLowerCase())))
-        updatedList.add(s);
+      if ((s.toLowerCase()).contains((field.toLowerCase()))) updatedList.add(s);
     }
 
     int size = updatedList.size();
@@ -531,8 +546,10 @@ public class UserInterface {
       t = true;
     }
     if (!relation.exists()) {
-      URL relUrl = Thread.currentThread().getContextClassLoader()
-          .getResource("utilities/types/relation.als");
+      URL relUrl =
+          Thread.currentThread()
+              .getContextClassLoader()
+              .getResource("utilities/types/relation.als");
       try {
         FileUtils.copyURLToFile(relUrl, relation);
       } catch (IOException e) {
@@ -541,13 +558,15 @@ public class UserInterface {
       r = true;
     }
     if (t && r) {
-      JOptionPane.showMessageDialog(frmObmAlloyTranslator,
+      JOptionPane.showMessageDialog(
+          frmObmAlloyTranslator,
           "Transfer.als and utilities/types/relation.als have " + "been created in your directory");
     } else if (t) {
-      JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-          "Transfer.als has " + "been created in your directory");
+      JOptionPane.showMessageDialog(
+          frmObmAlloyTranslator, "Transfer.als has " + "been created in your directory");
     } else if (r) {
-      JOptionPane.showMessageDialog(frmObmAlloyTranslator,
+      JOptionPane.showMessageDialog(
+          frmObmAlloyTranslator,
           "utilities/types/relation.als has " + "been created in your directory");
     }
   }

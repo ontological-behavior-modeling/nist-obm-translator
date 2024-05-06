@@ -1,10 +1,5 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -21,6 +16,10 @@ import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 // TODO: Auto-generated Javadoc
 /** The Class ASTVisitor. */
@@ -177,14 +176,13 @@ public class ASTVisitor extends VisitQuery<Expr> {
 
   /**
    * Visits an
-   * 
-   * ExprITE node (C - X else Y) by calling accept() on C, X, then Y.
+   *
+   * <p>ExprITE node (C - X else Y) by calling accept() on C, X, then Y.
    *
    * @param x the x
    * @return the expr
    * @throws Err the err
    */
-
   @Override
   public Expr visit(ExprITE x) throws Err {
     for (int i = 0; i < indent; i++) {
@@ -226,7 +224,6 @@ public class ASTVisitor extends VisitQuery<Expr> {
     }
 
     indent++;
-
 
     map.get(x).add(x.var.accept(this));
     map.get(x).add(x.expr.accept(this));

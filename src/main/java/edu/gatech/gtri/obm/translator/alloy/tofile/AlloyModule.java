@@ -1,10 +1,9 @@
 package edu.gatech.gtri.obm.translator.alloy.tofile;
 
-
-import java.util.ArrayList;
-import java.util.List;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
+import java.util.ArrayList;
+import java.util.List;
 
 // TODO: Auto-generated Javadoc
 /** The Class AlloyModule. */
@@ -59,5 +58,4 @@ public class AlloyModule {
   public List<Sig> getSignatures() {
     return new ArrayList<>(signatures);
   }
-
 }

@@ -1,6 +1,8 @@
 package edu.gatech.gtri.obm.translator.alloy.fromxmi;
 
-
+import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Sig;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -10,9 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import edu.gatech.gtri.obm.translator.alloy.tofile.AlloyModule;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Sig;
 
 /** The Class Translator. */
 public class Translator {
@@ -43,9 +42,13 @@ public class Translator {
   public void generateAlsFileContents(AlloyModule alloyModule, String outFilename) {
     StringBuilder sb = new StringBuilder();
 
-    sb.append("// This file is created with NIST OBM to Alloy Translator.\n\n").append("module ")
-        .append(alloyModule.getModuleName()).append('\n').append("open Transfer[Occurrence] as o\n")
-        .append("open utilities/types/relation as r\n").append("abstract sig Occurrence {}\n\n");
+    sb.append("// This file is created with NIST OBM to Alloy Translator.\n\n")
+        .append("module ")
+        .append(alloyModule.getModuleName())
+        .append('\n')
+        .append("open Transfer[Occurrence] as o\n")
+        .append("open utilities/types/relation as r\n")
+        .append("abstract sig Occurrence {}\n\n");
 
     Map<String, String> sigs = new HashMap<>();
     for (Sig sig : alloyModule.getSignatures()) {
@@ -94,7 +97,6 @@ public class Translator {
         newFacts.add(getFactBody(domainAndFacts));
         facts.put(domainAndFacts[0], newFacts);
       }
-
     }
     String newS = "";
     List<String> sigNames = new ArrayList<>(sigs.keySet());
@@ -108,8 +110,10 @@ public class Translator {
 
   private String getFacts(String sigName, Map<String, List<String>> facts) {
     String newS = "";
-    Optional<String> key = facts.keySet().stream()
-        .filter(akey -> akey.split(":")[1].trim().equals(sigName)).findFirst();
+    Optional<String> key =
+        facts.keySet().stream()
+            .filter(akey -> akey.split(":")[1].trim().equals(sigName))
+            .findFirst();
     if (key.isPresent()) {
       for (String fact : facts.get(key.get())) {
         newS += key.get() + "|" + fact + "\n";

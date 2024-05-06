@@ -1,5 +1,7 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
+import edu.gatech.gtri.obm.translator.alloy.fromxmi.ToAlloy;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -8,8 +10,6 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
 import org.eclipse.uml2.uml.NamedElement;
-import edu.gatech.gtri.obm.translator.alloy.fromxmi.ToAlloy;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
 public class MDUtils {
 
@@ -36,14 +36,12 @@ public class MDUtils {
     return leafClasses;
   }
 
-
-
   /**
    * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence".
    * Smaller the index, more ancestor. For example, for 4.2.1 FoodService Control Flow -
    * BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService where
    * mainClass passed if for BuffertService
-   * 
+   *
    * @param aClass
    * @return
    */
@@ -58,7 +56,7 @@ public class MDUtils {
 
   /**
    * return a parent of aClass. Assume only one parent (Alloy allows only one parent to be defined).
-   * 
+   *
    * @param aClass
    * @return
    */
@@ -68,14 +66,16 @@ public class MDUtils {
       if (parents.size() != 1) {
         // Only one parent is allowed in Alloy
         String parentName = parents.get(0).getName();
-        System.err.println("Only one parent is allowed. One parent \"" + parentName
-            + "\" is included as sig \"" + aClass.getName() + "\"'s parent");
+        System.err.println(
+            "Only one parent is allowed. One parent \""
+                + parentName
+                + "\" is included as sig \""
+                + aClass.getName()
+                + "\"'s parent");
       }
       // parentName == null , "BehaviorOccurrence", "Occurrence" or "Anything"
-      if (!AlloyUtils.validParent(((Class) parents.get(0)).getName()))
-        return null;
+      if (!AlloyUtils.validParent(((Class) parents.get(0)).getName())) return null;
       return (Class) parents.get(0);
-    } else
-      return null;
+    } else return null;
   }
 }

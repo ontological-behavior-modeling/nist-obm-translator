@@ -1,5 +1,14 @@
 package edu.gatech.gtri.obm.translator.alloy;
 
+import edu.mit.csail.sdg.alloy4.A4Reporter;
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Func;
+import edu.mit.csail.sdg.ast.Module;
+import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.Field;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.mit.csail.sdg.parser.CompModule;
+import edu.mit.csail.sdg.parser.CompUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,20 +22,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.NamedElement;
-import edu.mit.csail.sdg.alloy4.A4Reporter;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Func;
-import edu.mit.csail.sdg.ast.Module;
-import edu.mit.csail.sdg.ast.Sig;
-import edu.mit.csail.sdg.ast.Sig.Field;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.mit.csail.sdg.parser.CompModule;
-import edu.mit.csail.sdg.parser.CompUtil;
 
 public class AlloyUtils {
 
   // TODO? maybe just BehaviorOccurence is ok
-  final static List<String> invalidParentNames;
+  static final List<String> invalidParentNames;
+
   static {
     invalidParentNames = new ArrayList<>();
     invalidParentNames.add("BehaviorOccurrence");
@@ -36,7 +37,7 @@ public class AlloyUtils {
 
   /**
    * check if this sig has a field with <<Parameter>> stereotype.
-   * 
+   *
    * @param sig
    * @param parameterFields
    * @return
@@ -93,10 +94,8 @@ public class AlloyUtils {
    */
   public static boolean validParent(String parentName) {
     // System.out.println(parentName);
-    if (parentName == null || invalidParentNames.contains(parentName))
-      return false;
-    else
-      return true;
+    if (parentName == null || invalidParentNames.contains(parentName)) return false;
+    else return true;
   }
 
   public static List<Sig.Field> findFieldWithType(Sig ownerSig, String typeName) {
@@ -110,18 +109,15 @@ public class AlloyUtils {
           }
         }
       }
-
     }
     return ownerSigFields;
   }
-
-
 
   /**
    * find if the ownerSig has a field created by connector (ie., transferSupplierCustomer) with type
    * Transfer. If ownerSig has a field like "transferSupplierCustomer: set Transfer" then return
    * true, otherwise return false
-   * 
+   *
    * @param ownerSig sig which is checked to have a transfer field
    * @return true or false
    */
@@ -129,8 +125,8 @@ public class AlloyUtils {
     for (Sig.Field field : ownerSig.getFields()) {
       if (field.label.startsWith("transfer")) { // transferSupplierCustomer
         java.util.List<java.util.List<Sig.PrimSig>> folds = field.type().fold();
-        for (java.util.List<Sig.PrimSig> typeList : folds) {// [TransferProduct, o/BinaryLink] when
-                                                            // ownerSig == TransferProduct
+        for (java.util.List<Sig.PrimSig> typeList : folds) { // [TransferProduct, o/BinaryLink] when
+          // ownerSig == TransferProduct
           for (Sig.PrimSig type : typeList) {
             if (type.children().contains(Alloy.transferSig)) {
               return true;
@@ -138,39 +134,34 @@ public class AlloyUtils {
           }
         }
       }
-
     }
     return false;
   }
 
   public static Sig.Field getFieldFromSig(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) {
-      if (field.label.equals(fieldNameLookingFor))
-        return field;
+      if (field.label.equals(fieldNameLookingFor)) return field;
     }
     return null;
   }
 
-
   /**
    * Find Field from sig by fieldName. If not find in the sig, try to find in its parent
    * recursively.
-   * 
+   *
    * @param fieldNameLookingFor field's name looking for
    * @param sig PrimSig sig supposed to having the field
    * @return Field if found, otherwise return null
    */
   public static Sig.Field getFieldFromSigOrItsParents(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) {
-      if (field.label.equals(fieldNameLookingFor))
-        return field;
+      if (field.label.equals(fieldNameLookingFor)) return field;
     }
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
-                                 // null
+      // null
       // System.out.println(sig.parent);
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
-      if (field != null)
-        return field;
+      if (field != null) return field;
       else {
         sig = sig.parent; // reset
       }
@@ -180,11 +171,10 @@ public class AlloyUtils {
 
   public static Sig.Field getFieldFromParentSig(String fieldNameLookingFor, PrimSig sig) {
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
-                                 // null
+      // null
       // System.out.println(sig.parent);
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
-      if (field != null)
-        return field;
+      if (field != null) return field;
       else {
         sig = sig.parent; // reset
       }
@@ -195,11 +185,10 @@ public class AlloyUtils {
   // sig.domain(sigField) or parentSig.domain(parentSigField)
   public static Expr getSigDomainFileld(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) { // getFields does not include redefined fields
-      if (field.label.equals(fieldNameLookingFor))
-        return sig.domain(field);
+      if (field.label.equals(fieldNameLookingFor)) return sig.domain(field);
     }
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
-                                 // null
+      // null
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
       if (field != null)
         // return sig.domain(field);
@@ -214,13 +203,10 @@ public class AlloyUtils {
 
   public static Expr getSigOwnField(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) { // getFields does not include redefined fields
-      if (field.label.equals(fieldNameLookingFor))
-        return sig.domain(field);
+      if (field.label.equals(fieldNameLookingFor)) return sig.domain(field);
     }
     return null;
   }
-
-
 
   // Assume only one field with the same type
   // not searching through inherited fields
@@ -232,16 +218,14 @@ public class AlloyUtils {
       for (java.util.List<Sig.PrimSig> fold : folds) {
         // fold = [PaticipantTransfer, Custome]
         if (fold.get(fold.size() - 1).label.equals(fieldTypeName)) // last one
-          return field;
+        return field;
       }
     }
     return null;
   }
 
-
-
   public static void addAllReachableSig(Module m, List<Sig> allSigs) {
-    for (Iterator<Sig> iter = m.getAllReachableSigs().iterator(); iter.hasNext();) {
+    for (Iterator<Sig> iter = m.getAllReachableSigs().iterator(); iter.hasNext(); ) {
       allSigs.add(iter.next());
     }
   }
@@ -266,8 +250,7 @@ public class AlloyUtils {
    */
   public static Sig getReachableSig(Module m, String lookingFor) {
     for (Sig s : m.getAllReachableSigs()) {
-      if (s.label.equals(lookingFor))
-        return s;
+      if (s.label.equals(lookingFor)) return s;
     }
     return null;
   }
@@ -275,30 +258,27 @@ public class AlloyUtils {
   public static Module getAllReachableModuleByName(Module module, String lookingForModuleName) {
 
     for (Module m : module.getAllReachableModules()) {
-      if (m.getModelName().equals(lookingForModuleName))
-        return m;
+      if (m.getModelName().equals(lookingForModuleName)) return m;
     }
     return null;
   }
 
   /**
    * Get a function in module based on label
-   * 
+   *
    * @param module
    * @param lookingForFunctionLabel
    * @return function
    */
   public static Func getFunction(Module module, String lookingForFunctionLabel) {
     for (Func f : module.getAllFunc()) {
-      if (f.label.equals(lookingForFunctionLabel))
-        return f;
+      if (f.label.equals(lookingForFunctionLabel)) return f;
     }
     return null;
   }
 
-
-
-  public static Set<Field> getInheritedFields(PrimSig sig,
+  public static Set<Field> getInheritedFields(
+      PrimSig sig,
       HashMap<String, Set<String>> inputsOrOutputsPersig,
       Map<String, NamedElement> namedElementsBySigName) {
 
@@ -318,23 +298,25 @@ public class AlloyUtils {
 
   /**
    * Sort Fields based on its label alphabetically
-   * 
+   *
    * @param fields - the sig fields to be sorted
    * @return sorted List<Field>
    */
   public static List<Field> sortFields(Set<Field> fields) {
     List<Field> sortedFields = new ArrayList<>(fields);
-    Collections.sort(sortedFields, new Comparator<Field>() {
-      public int compare(Field o1, Field o2) {
-        return (o1.label).compareTo(o2.label);
-      }
-    });
+    Collections.sort(
+        sortedFields,
+        new Comparator<Field>() {
+          public int compare(Field o1, Field o2) {
+            return (o1.label).compareTo(o2.label);
+          }
+        });
     return sortedFields;
   }
 
   /**
    * Convert Set<Fileld> to Set<String> of field.label
-   * 
+   *
    * @param fields - the sig fields to be formatted as Set<String> of its label
    * @return Set<String> of fields's label
    */

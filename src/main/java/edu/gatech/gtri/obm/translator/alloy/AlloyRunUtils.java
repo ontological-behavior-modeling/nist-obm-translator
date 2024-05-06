@@ -13,7 +13,7 @@ public class AlloyRunUtils {
 
   /**
    * Run.
-   * 
+   *
    * <p><img src="doc-files/AlloyRunUtils_run.svg"/>
    *
    * <p>{@link edu.gatech.gtri.obm.translator.alloy.VisualizerHelper#generateVisualizer(Iterable,
@@ -56,7 +56,7 @@ public class AlloyRunUtils {
 
   /**
    * Run X.
-   * 
+   *
    * <p><img src="doc-files/AlloyRunUtils_runXcom.svg"/>
    *
    * <p>{@link edu.gatech.gtri.obm.translator.alloy.VisualizerHelper#generateVisualizer(Iterable,
@@ -74,7 +74,7 @@ public class AlloyRunUtils {
 
   /**
    * Run X.
-   * 
+   *
    * <p><img src="doc-files/AlloyRunUtils_runXint.svg"/>
    *
    * <p>{@link edu.gatech.gtri.obm.translator.alloy.AlloyRunUtils#runX(Sig, List, Expr, Command)}
