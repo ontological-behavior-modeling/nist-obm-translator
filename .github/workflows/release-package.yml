@@ -1,9 +1,9 @@
 name: Release New Version
 
 on:
-  workflow_run:
-   workflows: ["Start Workflows"]
-   types: [completed]
+  pull_request:
+    types:
+      - closed
       
 permissions:
   contents: write
@@ -13,7 +13,6 @@ permissions:
 jobs:
   on-success:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:        
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -23,6 +22,8 @@ jobs:
 
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: develop
         
       - name: Configure Git
         run: |
@@ -52,7 +53,7 @@ jobs:
 
       - name: Prepare Version
         run: mvn versions:revert
-
+        
       - name: Prepare Maven Release
         run: |
           mvn release:clean release:prepare -B
