@@ -6,12 +6,13 @@ name: Style Check
 on:
   pull_request:
     types: [opened, edited, synchronize]
+    branches: 
+     - 'main'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-
+    
     steps:
     - uses: actions/checkout@v4
       with:
