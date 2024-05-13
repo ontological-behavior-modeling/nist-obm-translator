@@ -1,4 +1,4 @@
-package edu.gatech.gtri.obm.translator.alloy.fromxmi;
+package edu.gatech.gtri.obm.alloy.translator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import edu.gatech.gtri.obm.translator.alloy.AlloyUtils;
 import edu.mit.csail.sdg.alloy4.Err;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -26,8 +25,8 @@ import edu.mit.csail.sdg.ast.VisitQuery;
 
 public class ExprVisitor extends VisitQuery<String> {
 
-  private final Set<Expr> ignoredExprs;
-  public boolean isRootSig = false;
+  private final Expr ignoredExprs;
+  protected boolean isRootSig = false;
   private boolean isRootExprList = true;
   private boolean fieldAfterSig = false;
   private boolean isImplicitFact = false;
@@ -37,7 +36,7 @@ public class ExprVisitor extends VisitQuery<String> {
   private final Set<Sig.Field> parameterFields;
 
 
-  public ExprVisitor(Set<Expr> ignoredExprs, Set<Sig.Field> parameterFields) {
+  public ExprVisitor(Expr ignoredExprs, Set<Sig.Field> parameterFields) {
     this.ignoredExprs = ignoredExprs;
     this.parameterFields = parameterFields;
   }
@@ -45,7 +44,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprBinary x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -78,7 +77,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprCall x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -104,7 +103,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprConstant x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -116,7 +115,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprList x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -128,7 +127,7 @@ public class ExprVisitor extends VisitQuery<String> {
       StringBuilder sb = new StringBuilder();
       for (Expr y : x.args) {
 
-        if (ignoredExprs.contains(y)) {
+        if (ignoredExprs.getSubnodes().contains(y)) {
           continue;
         }
 
@@ -161,7 +160,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprQt x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -186,7 +185,7 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprUnary x) throws Err {
 
-    if (ignoredExprs.contains(x)) {
+    if (ignoredExprs.getSubnodes().contains(x)) {
       return "";
     }
 
@@ -225,15 +224,11 @@ public class ExprVisitor extends VisitQuery<String> {
   @Override
   public String visit(ExprVar x) throws Err {
     isRootSig = false;
-    return ignoredExprs.contains(x) ? "" : x.label;
+    return ignoredExprs.getSubnodes().contains(x) ? "" : x.label;
   }
 
   @Override
   public String visit(Sig x) throws Err {
-
-    if (ignoredExprs.contains(x)) {
-      return "";
-    }
 
     if (isRootSig) {
 
@@ -364,10 +359,6 @@ public class ExprVisitor extends VisitQuery<String> {
 
   public Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) throws Err {
 
-    if (ignoredExprs.contains(x)) {
-      return map;
-    }
-
     isRootSig = false;
 
     if (fieldAfterSig) {
@@ -388,10 +379,6 @@ public class ExprVisitor extends VisitQuery<String> {
 
   @Override
   public String visit(Field x) throws Err {
-
-    if (ignoredExprs.contains(x)) {
-      return "";
-    }
 
     isRootSig = false;
 

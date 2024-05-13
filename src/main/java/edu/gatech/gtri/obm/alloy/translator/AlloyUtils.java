@@ -1,20 +1,18 @@
-package edu.gatech.gtri.obm.translator.alloy;
+package edu.gatech.gtri.obm.alloy.translator;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.eclipse.uml2.uml.Class;
-import org.eclipse.uml2.uml.NamedElement;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
+import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.ExprBinary;
+import edu.mit.csail.sdg.ast.ExprVar;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Module;
 import edu.mit.csail.sdg.ast.Sig;
@@ -30,24 +28,53 @@ public class AlloyUtils {
   static {
     invalidParentNames = new ArrayList<>();
     invalidParentNames.add("BehaviorOccurrence");
-    invalidParentNames.add("Occurrence");
+    invalidParentNames.add("Occurrence");// it is valid
     invalidParentNames.add("Anything");
   }
 
+
+
   /**
-   * check if this sig has a field with <<Parameter>> stereotype.
+   * Create a field and return
    * 
-   * @param sig
-   * @param parameterFields
-   * @return
+   * sig ownerSig { label: set sigType }
+   *
+   * @param fieldLabel the field name
+   * @param ownerSig the Sig the field belong to
+   * @param sigType the type of field
+   * @return a created field
    */
-  public static boolean hasParameterField(Sig sig, Set<Field> parameterFields) {
-    for (Field f : parameterFields) {
-      if (f.sig == sig) {
-        return true;
-      }
-    }
-    return false;
+  protected static Sig.Field addField(String fieldLabel, Sig ownerSig, Sig sigType) {
+    return ownerSig.addField(fieldLabel, sigType.setOf());
+  }
+
+  /**
+   * Create an transfer field and return.
+   *
+   * @param fieldLabel the field name
+   * @param ownerSig the Sig that the field belong to
+   * @return a created field
+   */
+  protected static Field addTransferField(String fieldLabel, Sig ownerSig) {
+    return addField(fieldLabel, ownerSig, Alloy.transferSig);
+  }
+
+
+
+  /**
+   * Create the tricky fields (disj) and return
+   * 
+   * sig ownerSig { disj field0, field1: set sigType}
+   *
+   * @param fieldNames the filed names
+   * @param ownerSig the Sig that the fields belong to
+   * @param sigType the type of fields
+   * @return created fields
+   */
+  protected static Sig.Field[] addTrickyFields(java.lang.String[] fieldNames, Sig ownerSig,
+      Sig sigType) {
+    // 3rd parameter is isDisjoint but does not affect to write out as disj
+    return ownerSig.addTrickyField(null, null, null, null, null, fieldNames, sigType.setOf());
   }
 
   /**
@@ -92,69 +119,27 @@ public class AlloyUtils {
    * @return true, if successful
    */
   public static boolean validParent(String parentName) {
-    // System.out.println(parentName);
     if (parentName == null || invalidParentNames.contains(parentName))
       return false;
     else
       return true;
   }
 
-  public static List<Sig.Field> findFieldWithType(Sig ownerSig, String typeName) {
-    List<Sig.Field> ownerSigFields = new ArrayList<>();
-    for (Sig.Field field : ownerSig.getFields()) {
-      List<List<Sig.PrimSig>> folds = field.type().fold();
-      for (List<Sig.PrimSig> typeList : folds) {
-        for (Sig.PrimSig type : typeList) {
-          if (type.label.equals(typeName)) {
-            ownerSigFields.add(field);
-          }
-        }
-      }
-
-    }
-    return ownerSigFields;
-  }
-
-
-
-  /**
-   * find if the ownerSig has a field created by connector (ie., transferSupplierCustomer) with type
-   * Transfer. If ownerSig has a field like "transferSupplierCustomer: set Transfer" then return
-   * true, otherwise return false
-   * 
-   * @param ownerSig sig which is checked to have a transfer field
-   * @return true or false
-   */
-  public static boolean hasTransferField(Sig ownerSig) {
-    for (Sig.Field field : ownerSig.getFields()) {
-      if (field.label.startsWith("transfer")) { // transferSupplierCustomer
-        java.util.List<java.util.List<Sig.PrimSig>> folds = field.type().fold();
-        for (java.util.List<Sig.PrimSig> typeList : folds) {// [TransferProduct, o/BinaryLink] when
-                                                            // ownerSig == TransferProduct
-          for (Sig.PrimSig type : typeList) {
-            if (type.children().contains(Alloy.transferSig)) {
-              return true;
-            }
-          }
-        }
-      }
-
+  public static boolean hasOwnOrInheritedFields(PrimSig sig) {
+    if (sig.getFields().size() > 0)
+      return true;
+    while (sig.parent != null) {
+      if (sig.parent.getFields().size() > 0)
+        return true;
+      else
+        sig = sig.parent;
     }
     return false;
   }
 
-  public static Sig.Field getFieldFromSig(String fieldNameLookingFor, PrimSig sig) {
-    for (Sig.Field field : sig.getFields()) {
-      if (field.label.equals(fieldNameLookingFor))
-        return field;
-    }
-    return null;
-  }
-
 
   /**
-   * Find Field from sig by fieldName. If not find in the sig, try to find in its parent
-   * recursively.
+   * Find Field from sig by fieldName. If not find in the sig, try to find in its parent recursively.
    * 
    * @param fieldNameLookingFor field's name looking for
    * @param sig PrimSig sig supposed to having the field
@@ -193,7 +178,7 @@ public class AlloyUtils {
   }
 
   // sig.domain(sigField) or parentSig.domain(parentSigField)
-  public static Expr getSigDomainFileld(String fieldNameLookingFor, PrimSig sig) {
+  public static Expr getSigDomainField(String fieldNameLookingFor, PrimSig sig) {
     for (Sig.Field field : sig.getFields()) { // getFields does not include redefined fields
       if (field.label.equals(fieldNameLookingFor))
         return sig.domain(field);
@@ -221,41 +206,6 @@ public class AlloyUtils {
   }
 
 
-
-  // Assume only one field with the same type
-  // not searching through inherited fields
-  public static Sig.Field getFieldFromSigByFieldType(String fieldTypeName, PrimSig sig) {
-    // 4.1.4 Transfers and Parameters1 - TransferProduct_modified
-    // Sig =PatifipantTransfer, String fieldType = Supplier
-    for (Sig.Field field : sig.getFields()) {
-      java.util.List<java.util.List<Sig.PrimSig>> folds = field.type().fold();
-      for (java.util.List<Sig.PrimSig> fold : folds) {
-        // fold = [PaticipantTransfer, Custome]
-        if (fold.get(fold.size() - 1).label.equals(fieldTypeName)) // last one
-          return field;
-      }
-    }
-    return null;
-  }
-
-
-
-  public static void addAllReachableSig(Module m, List<Sig> allSigs) {
-    for (Iterator<Sig> iter = m.getAllReachableSigs().iterator(); iter.hasNext();) {
-      allSigs.add(iter.next());
-    }
-  }
-
-  public static Field getReachableSigField(Module m, Sig sig, String fieldLabel) {
-
-    for (Field f : sig.getFields()) {
-      System.out.println(f.label);
-      if (f.label.equals(fieldLabel)) {
-        return f;
-      }
-    }
-    return null;
-  }
 
   /**
    * Gets a Signature lookingFor, in the Module m if it exists.
@@ -297,30 +247,11 @@ public class AlloyUtils {
   }
 
 
-
-  public static Set<Field> getInheritedFields(PrimSig sig,
-      HashMap<String, Set<String>> inputsOrOutputsPersig,
-      Map<String, NamedElement> namedElementsBySigName) {
-
-    List<Class> classInHierarchy =
-        MDUtils.createListIncludeSelfAndParents((Class) namedElementsBySigName.get(sig.label));
-
-    Set<Field> inputsOrOutputsFields = new HashSet<>();
-    for (int i = 0; i < classInHierarchy.size() - 1; i++) {
-      Set<String> fieldNames = inputsOrOutputsPersig.get(classInHierarchy.get(i).getName());
-      if (fieldNames != null)
-        for (String fieldName : fieldNames)
-          inputsOrOutputsFields.add(AlloyUtils.getFieldFromSigOrItsParents(fieldName, sig));
-    }
-
-    return inputsOrOutputsFields;
-  }
-
   /**
    * Sort Fields based on its label alphabetically
    * 
-   * @param fields - the sig fields to be sorted
-   * @return sorted List<Field>
+   * @param fields the set of fields to be sorted
+   * @return sorted list of fields
    */
   public static List<Field> sortFields(Set<Field> fields) {
     List<Field> sortedFields = new ArrayList<>(fields);
@@ -333,6 +264,22 @@ public class AlloyUtils {
   }
 
   /**
+   * Sort the strings alphabetically
+   * 
+   * @param strings the set of strings to be sorted
+   * @return sorted list of strings
+   */
+  public static List<String> sort(Set<String> strings) {
+    List<String> sortedStrings = new ArrayList<>();
+    for (String s : strings)
+      sortedStrings.add(s);
+    Collections.sort(sortedStrings);
+    return sortedStrings;
+  }
+
+
+
+  /**
    * Convert Set<Fileld> to Set<String> of field.label
    * 
    * @param fields - the sig fields to be formatted as Set<String> of its label
@@ -340,5 +287,37 @@ public class AlloyUtils {
    */
   public static Set<String> fieldsLabels(Set<Field> fields) {
     return fields.stream().map(e -> e.label).collect(Collectors.toSet());
+  }
+
+  public static Set<Expr> toSigAllFacts(Sig ownerSig, Set<Expr> exprs) {
+    Decl decl = AlloyFactory.makeDecl(ownerSig);
+    Set<Expr> rAll = new HashSet<>();
+    for (Expr expr : exprs) {
+      rAll.add(expr.forAll(decl));
+    }
+    return rAll;
+  }
+
+  /**
+   * support when Expr original is ExprBinary(ie., p1 + p2) to add ExprVar s in both so returns s.p1 and s.p2. if original is like "BuffetService <: (FoodService <: eat)" -> ((ExprBinary) original).op =
+   * "<:", in this case just return s.join(original) =
+   * 
+   * @param s
+   * @param original
+   * @return
+   */
+  public static Expr addExprVarToExpr(ExprVar s, Expr original) {
+    if (original instanceof ExprBinary) {
+      Expr left = addExprVarToExpr(s, ((ExprBinary) original).left);
+      Expr right = addExprVarToExpr(s, ((ExprBinary) original).right);
+      if (((ExprBinary) original).op == ExprBinary.Op.PLUS)
+        return left.plus(right);
+      else
+        return s.join(original); // x . BuffetService <: (FoodService <: eat) where original =
+                                 // "BuffetService <: (FoodService <: eat)" with ((ExprBinary)
+                                 // original).op = "<:"
+    } else {
+      return s.join(original); // x.BuffetService
+    }
   }
 }

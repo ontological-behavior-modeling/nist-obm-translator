@@ -1,25 +1,28 @@
-package edu.gatech.gtri.obm.translator.alloy;
+package edu.gatech.gtri.obm.alloy.translator;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
 import org.eclipse.uml2.uml.NamedElement;
-import edu.gatech.gtri.obm.translator.alloy.fromxmi.ToAlloy;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import org.eclipse.uml2.uml.Property;
 
 public class MDUtils {
 
-  public static Set<PrimSig> toSigs(Set<NamedElement> nes, ToAlloy toAlloy) {
-    Set<PrimSig> sigs = new HashSet<>();
-    for (NamedElement ne : nes) {
-      sigs.add(toAlloy.getSig(ne.getName()));
+
+  public static Map<String, String> toNameAndType(Set<Property> ps) {
+    Map<String, String> map = new HashMap<>();
+    for (Property p : ps) {
+      map.put(p.getName(), p.getType().getName());
     }
-    return sigs;
+    return map;
   }
+
 
   public static Set<NamedElement> findLeafClass(Set<NamedElement> allNEs) {
     Set<NamedElement> leafClasses = new HashSet<>();

@@ -1,4 +1,4 @@
-package edu.gatech.gtri.obm.translator.alloy.userinterface;
+package edu.gatech.gtri.obm.alloy.translator.userinterface;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -53,7 +53,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.internal.impl.ClassImpl;
-import edu.gatech.gtri.obm.translator.alloy.fromxmi.OBMXMI2Alloy;
+import edu.gatech.gtri.obm.alloy.translator.OBMXMI2Alloy;
 import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.UMLModelErrorException;
 import lombok.Getter;
@@ -352,7 +352,7 @@ public class UserInterface {
                       "No File Name Selected. Alloy file generation cancelled");
                 } else {
                   if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                    JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
+                    JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
                 }
               } catch (FileNotFoundException | UMLModelErrorException | NullPointerException e1) {
                 JOptionPane.showMessageDialog(frmObmAlloyTranslator,
@@ -368,7 +368,7 @@ public class UserInterface {
               alsFile = new File(location + name + "_" + dt + ".als");
               try {
                 if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessage());
+                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
               } catch (FileNotFoundException | UMLModelErrorException e1) {
                 JOptionPane.showMessageDialog(frmObmAlloyTranslator,
                     "Selected XMI file does not exist.\nTranslation Canceled.");
