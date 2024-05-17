@@ -4,7 +4,7 @@
 
   <groupId>edu.gatech.gtri.obm</groupId>
   <artifactId>nist-obm-translator</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1-SNAPSHOT</version>
 
   <scm>
     <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
