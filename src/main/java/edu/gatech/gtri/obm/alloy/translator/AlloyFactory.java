@@ -521,15 +521,23 @@ public class AlloyFactory {
 
     if (addXStepsIn) {// to only leaf sig - all fields including inherited/redefined
       Expr expr = null;
+      Expr expr2 = null;
       for (String fieldName : sortedFieldLabel) {
         // sig.domain(field) or sig.parent.domain(sig.parent.field)
         Expr sigDomainField = AlloyUtils.getSigDomainField(fieldName, sig); // including inherited
                                                                             // fields
-        if (sigDomainField != null)
+        if (sigDomainField != null) {
           expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
+          if (fieldName.startsWith("transfer")) // only transfer fields
+            expr2 =
+                expr2 == null ? varX.join(sigDomainField)
+                    : expr2.intersect(varX.join(sigDomainField)); // & = intersect
+        }
       }
       if (expr != null)
         rFacts.add(varX.join(ostepsExpr1).in(expr).forAll(decl)); // x.steps in .....
+      if (expr2 != null)
+        rFacts.add(expr2.no().forAll(decl)); // like {no x.transferOrderPay & x.transferOrderPrepare & x.transferOrderServe & x.transferPayEat & x.transferPrepareServe & x.transferServeEat} in OFControlLoopFoodService(leaf)
     }
 
     if (addInXSteps) {// for all sigs - own fields - not include redefined
