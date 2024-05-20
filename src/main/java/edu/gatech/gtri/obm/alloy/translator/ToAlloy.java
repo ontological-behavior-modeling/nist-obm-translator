@@ -334,10 +334,18 @@ public class ToAlloy {
         targetInputsSourceOutputsFields, toBeInherited));
 
     Set<Expr> facts = AlloyFactory.exprs_isAfterSourceIsBeforeTarget(ownerSig, transfer);
-    factsWithoutAll.addAll(facts);
 
-    // fact {all x: ParameterBehavior | isAfterSource[x.transferbeforeAB]}
-    // fact {all x: ParameterBehavior | isBeforeTarget[x.transferbeforeAB]}
+    if (!toBeInherited) {
+
+      // (!toBeInherited) filter added have
+      // fact {all x: OFFoodService | isAfterSource[x.transferOrderServe]}
+      // fact {all x: OFFoodService | isBeforeTarget[x.transferOrderServe]}
+      // but NOT in inherited OFSingleFoodServie like
+      // fact {all x: OFSingleFoodServie | isAfterSource[x.transferOrderServe]}
+      // fact {all x: OFSingleFoodServie | isBeforeTarget[x.transferOrderServe]}
+
+      factsWithoutAll.addAll(facts);
+    }
     alloy.addToOverallFacts(AlloyUtils.toSigAllFacts(ownerSig, facts));
     return factsWithoutAll;
   }
