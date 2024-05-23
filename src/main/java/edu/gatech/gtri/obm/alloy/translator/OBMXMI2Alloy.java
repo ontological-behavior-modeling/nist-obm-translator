@@ -634,7 +634,7 @@ public class OBMXMI2Alloy {
 
 
     for (EList<Element> oneOfSet : oneOfSets) {
-      handleOneOfConnectors(sigOfNamedElement, oneOfConnectors, oneOfSet, oneSourceProperties,
+      handleOneOfConnectors(oneOfSet, sigOfNamedElement, oneOfConnectors, oneSourceProperties,
           oneTargetProperties);
     }
     //
@@ -1063,6 +1063,8 @@ public class OBMXMI2Alloy {
     return names;
   }
 
+
+
   private String getConnecterEndPropertyName(ConnectorEnd ce, edu.umd.omgutil.uml.Type owner) {
     edu.umd.omgutil.uml.ConnectorEnd end =
         (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
@@ -1073,103 +1075,120 @@ public class OBMXMI2Alloy {
 
   }
 
-  private void handleOneOfConnectors(PrimSig ownerSig, Set<Connector> oneOfConnectors,
-      List<Element> oneOfSet, Set<ConnectableElement> oneSourceProperties,
+  /**
+   * Add bijection happensBefore or function and inverseFunction happensBefore facts.
+   * 
+   * 
+   * For example, oneOfSet is [order, end], with 3 one of connectors [c1 [eat,order],c2 [eat, end], c3[start, order]], c1 and c2 are the connector to be get information from. Then sources = [eat, eat]
+   * and targets = [order, end]. Since end is in the given oneTargetProperties and target-side has oneOf constraint, two facts: functionFiltered[happensBefore, eat, end+order} and
+   * inverseFunctionFiltered[happensBefore, eat, end] are added (order <-- eat --> end).
+   * 
+   * 
+   * @param oneOfSet List of ConnectableElement both having oneOf constraint. Both should be source-side or target-side.
+   * @param ownerSig the owner sig of one of connectors
+   * @param oneOfConnectors the one of connectors if the sig .
+   * @param oneSourceProperties list of connectableElements of the sig's one of connectors which has only one outgoing.
+   * @param oneTargetProperties list of connectableElements of the sig's one of connectors which has only one incoming.
+   */
+  private void handleOneOfConnectors(List<Element> oneOfSet, PrimSig ownerSig,
+      Set<Connector> oneOfConnectors,
+      Set<ConnectableElement> oneSourceProperties,
       Set<ConnectableElement> oneTargetProperties) {
 
-    // oneOfSet [start, eat] or [order, end]
-    List<String> sourceNames = new ArrayList<>();
-    List<String> targetNames = new ArrayList<>();
+    List<ConnectableElement> sources = new ArrayList<>();
+    List<ConnectableElement> targets = new ArrayList<>();
 
     boolean isSourceSideOneOf = false;
     for (org.eclipse.uml2.uml.Connector cn : oneOfConnectors) {
       for (ConnectorEnd ce : cn.getEnds()) {
         Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
         if (!found.isEmpty()) {
-          String[] names = getEndPropertyNames(cn, ce);
-
+          List<ConnectableElement> ces = MDUtils.getEndRolesForCEFirst(cn, ce);
+          if (ces == null) { // this should not happens
+            this.messages.add("A connector " + cn.getQualifiedName()
+                + " does not have two connector ends, so ignored.");
+            return;
+          }
           String definingEndName = ce.getDefiningEnd().getName();
           if (definingEndName.equals("happensAfter")) {
-            isSourceSideOneOf = true; // source-sides have oneof
-            sourceNames.add(names[0]);
-            targetNames.add(names[1]);
+            isSourceSideOneOf = true; // source-sides is oneOf
+            sources.add(ces.get(0));
+            targets.add(ces.get(1));
+
+
           } else if (definingEndName.equals("happensBefore")) {
-            isSourceSideOneOf = false; // target-side have oneof
-            targetNames.add(names[0]);
-            sourceNames.add(names[1]);
+            isSourceSideOneOf = false; // target-side is oneOf
+            sources.add(ces.get(1));// [eat, eat]
+            targets.add(ces.get(0)); // [order,end]
           }
         }
       }
-
     }
-
-    // sort so not x.p2 + x.p1 but be x.p1 + x.p2
-    Collections.sort(sourceNames);
-    Collections.sort(targetNames);
 
     Expr beforeExpr = null;
     Expr afterExpr = null;
-    if (isSourceSideOneOf) { // sourceSide need to be combined
-      // sourceNames = eat, start
-      // targetName = order
-
-      afterExpr = /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetNames.get(0),
-          ownerSig)/* ) */;
-      for (String sourceName : sourceNames) { // eat + start
+    if (isSourceSideOneOf) { // sourceSide needs to be combined
+      afterExpr = AlloyUtils.getFieldFromSigOrItsParents(targets.get(0).getName(), ownerSig);
+      List<String> sourceNames = // sorting source names alphabetically = how to be write out
+          sources.stream().map(e -> e.getName()).sorted().collect(Collectors.toList());
+      for (String sourceName : sourceNames) {
         beforeExpr = beforeExpr == null
-            ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(sourceName, ownerSig)// )
-            : beforeExpr.plus(/* ownerSig.domain( */AlloyUtils
-                .getFieldFromSigOrItsParents(sourceName, ownerSig))/* ) */;
+            ? AlloyUtils.getFieldFromSigOrItsParents(sourceName,
+                ownerSig)
+            : beforeExpr.plus(AlloyUtils
+                .getFieldFromSigOrItsParents(sourceName, ownerSig));
       }
 
-    } else {
+    } else { // targetSide needs to be combined
+      List<String> targetNames = // sorting target names alphabetically = to be write out
+          targets.stream().map(e -> e.getName()).sorted().collect(Collectors.toList());
       for (String targetName : targetNames) {
         afterExpr = afterExpr == null
-            ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetName, ownerSig)// )
-            : afterExpr.plus(/* ownerSig.domain( */AlloyUtils
-                .getFieldFromSigOrItsParents(targetName, ownerSig))/* ) */;
+            ? AlloyUtils.getFieldFromSigOrItsParents(targetName,
+                ownerSig)
+            : afterExpr.plus(AlloyUtils
+                .getFieldFromSigOrItsParents(targetName, ownerSig));
       }
-      beforeExpr = /* ownerSig.domain( */AlloyUtils
-          .getFieldFromSigOrItsParents(sourceNames.get(0), ownerSig)/* ) */;
+      beforeExpr = AlloyUtils
+          .getFieldFromSigOrItsParents(sources.get(0).getName(), ownerSig);
     }
 
-    // toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr, afterExpr);
-    if (isSourceSideOneOf) { // merge
-
+    if (isSourceSideOneOf) {
       boolean allSourceOneOf = true;
-      if (oneSourceProperties.size() == sourceNames.size()) {
+      if (oneSourceProperties.size() == sources.size()) {
         for (ConnectableElement ce : oneSourceProperties) {
-          if (!sourceNames.contains(ce.getName())) {
+          if (!sources.contains(ce)) {
             allSourceOneOf = false;
             break;
           }
         }
       } else
         allSourceOneOf = false;
-      if (allSourceOneOf) {
-        toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr, // eat + start
-            afterExpr);// order
-      } else {
 
+      // if both are one sourceProperties
+      if (allSourceOneOf) { // merge a + b -> c
+        toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr,
+            afterExpr);
+      } else {
         for (ConnectableElement ce : oneSourceProperties) {
-          // need fn start -> order
+          // need fn a -> b or a ->c
           Expr beforeExpr_modified = AlloyUtils.getFieldFromSigOrItsParents(ce.getName(),
               ownerSig); // start
           toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
               beforeExpr_modified,
               afterExpr);// order
         }
-        // fact {all x: OFControlLoopFoodService | inverseFunctionFiltered[happensBefore, x.eat + x.start, x.order]}
-        toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr, // eat + start
+        // inverse fn a + b -> c
+        // fact {all x: OFControlLoopFoodService | inverseFunctionFiltered[happensBefore, x.a + x.b, x.c]}
+        toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr, // a + b
             afterExpr);// order
       }
-
-    } else { // decision
+    } else { // targetSide has OneOf
 
       boolean allTargetOneOf = true;
-      if (oneTargetProperties.size() == targetNames.size()) {
+      if (oneTargetProperties.size() == targets.size()) {
         for (ConnectableElement ce : oneTargetProperties) {
-          if (!targetNames.contains(ce.getName())) {
+          if (!targets.contains(ce)) {
             allTargetOneOf = false;
             break;
           }
@@ -1177,19 +1196,17 @@ public class OBMXMI2Alloy {
       } else
         allTargetOneOf = false;
 
-
-
       // if both are one targetProperties
-      if (allTargetOneOf) {
-
+      if (allTargetOneOf) { // decision a -> b + c
         toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr,
             afterExpr);
       } else {
-        // fact {all x: OFControlLoopFoodService | functionFiltered[happensBefore, x.eat, x.end + x.order]}
+        // fn a -> b + c
+        // fact {all x: OFControlLoopFoodService | functionFiltered[happensBefore, x.a, x.b + x.c]}
         toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
             afterExpr);
 
-        // need invfn eat-> end
+        // inversefn a -> b or a -> c
         for (ConnectableElement ce : oneTargetProperties) {
           Expr afterExpr_modified = AlloyUtils.getFieldFromSigOrItsParents(ce.getName(),
               ownerSig);// end
@@ -1202,224 +1219,8 @@ public class OBMXMI2Alloy {
 
   }
 
-
-  private void handleOneOfConnectoror_xx(PrimSig ownerSig, Set<Connector> connectors,
-      List<Element> oneOfSet, Set<Connector> processedConnectors) {
-
-    List<String> sourceNames = new ArrayList<>(); // for each connector
-    List<String> targetNames = new ArrayList<>();
-    List<ConnectableElement> sources = new ArrayList<>();
-    List<ConnectableElement> targets = new ArrayList<>();
-    boolean isOneOfConnector = false;
-    boolean isSourceSideOneOf = false;
-    for (org.eclipse.uml2.uml.Connector cn : connectors) {
-
-      for (ConnectorEnd ce : cn.getEnds()) {
-
-        Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
-        if (!found.isEmpty()) {
-          // found.get() == ce
-          isOneOfConnector = true;
-          processedConnectors.add(cn);
-
-          ConnectorEnd ce1 = cn.getEnds().get(0); // source
-          ConnectorEnd ce2 = cn.getEnds().get(1); // target
-          ConnectableElement p1 = ce1.getRole();
-          ConnectableElement p2 = ce2.getRole();
-          System.out.println(p1.getQualifiedName());
-          System.out.println(p2.getQualifiedName());
-          sources.add(p1);
-          targets.add(p2);
-          String[] names = getEndPropertyNames(cn, ce);
-          System.out.println(names[0]);
-          System.out.println(names[1]);
-
-          String definingEndName = ce.getDefiningEnd().getName();
-          if (definingEndName.equals("happensAfter")) {
-            isSourceSideOneOf = true; // source-sides have oneof
-            sourceNames.add(names[0]);
-            targetNames.add(names[1]);
-          } else if (definingEndName.equals("happensBefore")) {
-            isSourceSideOneOf = false; // target-side have oneof
-            targetNames.add(names[0]);
-            sourceNames.add(names[1]);
-          }
-        }
-      }
-    }
-
-    System.out.println(sources);
-    System.out.println(targets);
-
-    // sort so not x.p2 + x.p1 but be x.p1 + x.p2
-    Collections.sort(sourceNames);
-    Collections.sort(targetNames);
-
-    // handling case of self-loop
-    // [p1,p2][p2,p2] => p2, [p2,p2][p2,p3] => p2
-    Set<String> inSourceAndTarget = sourceNames.stream()
-        .distinct()
-        .filter(targetNames::contains)
-        .collect(Collectors.toSet());
-
-    // List<String> sourceInTarget = getAsContainInBs(sourceNames, targetNames);
-    // List<String> targetInSource = getAsContainInBs(targetNames, sourceNames);
-
-
-
-    if (inSourceAndTarget.size() > 0 && isOneOfConnector && isSourceSideOneOf) { // sourceSide
-      Expr beforeExpr_filtered = null; // p1
-      Expr beforeExpr_all = null; // p1 + p2
-
-      Expr afterExpr = /* ownerSig.domain( */AlloyUtils
-          .getFieldFromSigOrItsParents(targetNames.get(0), ownerSig)/* ) */;
-      for (String sourceName : sourceNames) {
-        if (!inSourceAndTarget.contains(sourceName)) {
-          beforeExpr_filtered = beforeExpr_filtered == null
-              ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(sourceName, ownerSig)// )
-              : beforeExpr_filtered.plus(/* ownerSig.domain( */AlloyUtils
-                  .getFieldFromSigOrItsParents(sourceName, ownerSig))/* ) */;
-        }
-      }
-      for (String sourceName : sourceNames) {
-        beforeExpr_all = beforeExpr_all == null
-            ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(sourceName, ownerSig)// )
-            : beforeExpr_all.plus(/* ownerSig.domain( */AlloyUtils
-                .getFieldFromSigOrItsParents(sourceName, ownerSig))/* ) */;
-      }
-
-      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr_filtered,
-          afterExpr); // not include source in source
-      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
-          beforeExpr_all, afterExpr);
-    } else if (inSourceAndTarget.size() > 0 && isOneOfConnector && !isSourceSideOneOf) {
-      Expr afterExpr_filtered = null; // p3
-      Expr afterExpr_all = null; // p2 + p3
-
-      Expr beforeExpr = /* ownerSig.domain( */AlloyUtils
-          .getFieldFromSigOrItsParents(sourceNames.get(0), ownerSig)/* ) */;
-      for (String targetName : targetNames) {
-        if (!inSourceAndTarget.contains(targetName)) {
-          afterExpr_filtered = afterExpr_filtered == null
-              ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetName, ownerSig)// )
-              : afterExpr_filtered.plus(/* ownerSig.domain( */AlloyUtils
-                  .getFieldFromSigOrItsParents(targetName, ownerSig))/* ) */;
-        }
-      }
-      for (String targetName : targetNames) {
-        afterExpr_all = afterExpr_all == null
-            ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetName, ownerSig)// )
-            : afterExpr_all.plus(/* ownerSig.domain( */AlloyUtils
-                .getFieldFromSigOrItsParents(targetName, ownerSig))/* ) */;
-      }
-
-      toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-          afterExpr_all); // not include target in source
-      toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-          afterExpr_filtered);
-
-    } // non self-loop
-    else {
-      System.out.println(isOneOfConnector);
-      System.out.println(isSourceSideOneOf);
-      System.out.println(sourceNames);
-      System.out.println(targetNames);
-
-      Expr beforeExpr = null;
-      Expr afterExpr = null;
-      if (isSourceSideOneOf) { // sourceSide need to be combined
-        // sourceNames = eat, start
-        // targetName = order
-
-        afterExpr = /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetNames.get(0),
-            ownerSig)/* ) */;
-        for (String sourceName : sourceNames) { // eat + start
-          beforeExpr = beforeExpr == null
-              ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(sourceName, ownerSig)// )
-              : beforeExpr.plus(/* ownerSig.domain( */AlloyUtils
-                  .getFieldFromSigOrItsParents(sourceName, ownerSig))/* ) */;
-        }
-
-      } else {
-        for (String targetName : targetNames) {
-          afterExpr = afterExpr == null
-              ? /* ownerSig.domain( */AlloyUtils.getFieldFromSigOrItsParents(targetName, ownerSig)// )
-              : afterExpr.plus(/* ownerSig.domain( */AlloyUtils
-                  .getFieldFromSigOrItsParents(targetName, ownerSig))/* ) */;
-        }
-        beforeExpr = /* ownerSig.domain( */AlloyUtils
-            .getFieldFromSigOrItsParents(sourceNames.get(0), ownerSig)/* ) */;
-      }
-
-      // toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr, afterExpr);
-      if (isSourceSideOneOf) {
-        // need fn start -> order
-        Expr beforeExpr_modified = null; // start
-        // toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
-        // beforeExpr_modified,
-        // afterExpr);// order
-        // fact {all x: OFControlLoopFoodService | inverseFunctionFiltered[happensBefore, x.eat + x.start, x.order]}
-        toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr, // eat + start
-            afterExpr);// order
-
-      } else {
-        // fact {all x: OFControlLoopFoodService | functionFiltered[happensBefore, x.eat, x.end + x.order]}
-        toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-            afterExpr);
-        // need invfn eat-> end
-        // Expr afterExpr_modified = null;
-        // toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-        // afterExpr_modified);
-      }
-    }
-  }
-
-  //
-  // /**
-  // * Find any a contained in b as List of String
-  // *
-  // * @param a
-  // * @param b
-  // * @return
-  // */
-  private List<String> getAsContainInBs(List<String> a, List<String> b) {
-    List<String> contained = new ArrayList<String>();
-    for (String s : a) {
-      if (b.contains(s))
-        contained.add(s);
-    }
-    return contained;
-  }
-
-
-  // sig BuffetService
-  // private void handleHappensBefore(PrimSig sig, Field sourceField, Field targetField) {
-  //
-  // // Field sourceField = AlloyUtils.getFieldFromSigOrItsParents(source, sig); // FoodService <:
-  // // Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sig);
-  //
-  // // if (sourceField != null && targetField != null) {
-  // toAlloy.createBijectionFilteredHappensBefore(sig, sourceField, targetField);
-  // // } else
-  // // this.errorMessages.add("source or target for HappensBefore not in " + sig.label);
-  // }
-
-  // private void handleHappensDuring(PrimSig sig, String source, String target) {
-  //
-  // Field sourceField = AlloyUtils.getFieldFromSigOrItsParents(source, sig);
-  // Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sig);
-  //
-  // if (sourceField != null && targetField != null) {
-  // toAlloy.createBijectionFilteredHappensDuring(sig, sourceField, targetField);
-  // } else
-  // this.errorMessages.add("source or target for handleHappensDuring not in " + sig.label);
-  // }
-  //
-
-
   private List<Set<String>> handleTransferAndTransferBeforeInputsAndOutputs(
-      org.eclipse.uml2.uml.Connector cn
-  /* PrimSig sig , String source, String target, String sourceTypeName, String targetTypeName */) {
+      org.eclipse.uml2.uml.Connector cn) {
 
 
     List<Set<String>> sourceOutputAndTargetInputProperties = new ArrayList<>();
@@ -1434,21 +1235,15 @@ public class OBMXMI2Alloy {
     List<Property> sos = null;
     List<Property> tis = null;
 
-    if (stTagObjectFlowValues != null) {
-      sos = stTagObjectFlowValues.get(stTagNames[0]); // sourceOutputProperty
-      tis = stTagObjectFlowValues.get(stTagNames[1]); // targetInputProperty
-      System.out.println("ObjectFlow");
-      System.out.println(sos); // = x.outputs
-      System.out.println(tis); // = x.inputs
+    if (stTagObjectFlowValues != null) { // ObjectFlow
+      sos = stTagObjectFlowValues.get(stTagNames[0]); // sourceOutputProperty = x.outputs
+      tis = stTagObjectFlowValues.get(stTagNames[1]); // targetInputProperty = x.inputs
     }
 
-    if (stTagItemFlowValues != null) {
+    if (stTagItemFlowValues != null) { // ItemFlow
       sos = stTagItemFlowValues.get(stTagNames[0]); // sourceOutputProperty
       tis = stTagItemFlowValues.get(stTagNames[1]); // targetInputProperty - name is
                                                     // "receivedProduct"
-      System.out.println("ItemFlow");
-      System.out.println(sos);
-      System.out.println(tis);
     }
     Class sosOwner = null;
     Class tisOwner = null;

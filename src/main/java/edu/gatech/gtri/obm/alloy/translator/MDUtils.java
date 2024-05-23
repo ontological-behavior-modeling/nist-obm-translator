@@ -9,11 +9,33 @@ import java.util.Set;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
+import org.eclipse.uml2.uml.ConnectableElement;
+import org.eclipse.uml2.uml.Connector;
+import org.eclipse.uml2.uml.ConnectorEnd;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
 
+
 public class MDUtils {
 
+  /**
+   * Return the rules(connectableElements) of connector end of the connector. The first in the array is for the given connector end. If the connector did not have two ends, the method return null.
+   * 
+   * @param cn A connector having rules/connectableElements
+   * @param ce A connector end having the rule/connectableElement as the first element of the return list.
+   * @return List of ConnectableElement. Its size should be two, otherwiser return null
+   */
+  public static List<ConnectableElement> getEndRolesForCEFirst(Connector cn, ConnectorEnd ce) {
+    List<ConnectableElement> ces = new ArrayList<>();
+    ces.add(ce.getRole());
+    for (ConnectorEnd end : cn.getEnds()) {
+      if (end != ce) {
+        ces.add(end.getRole());
+        return ces;
+      }
+    }
+    return null;
+  }
 
   public static Map<String, String> toNameAndType(Set<Property> ps) {
     Map<String, String> map = new HashMap<>();
@@ -42,10 +64,8 @@ public class MDUtils {
 
 
   /**
-   * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence".
-   * Smaller the index, more ancestor. For example, for 4.2.1 FoodService Control Flow -
-   * BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService where
-   * mainClass passed if for BuffertService
+   * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence". Smaller the index, more ancestor. For example, for 4.2.1 FoodService Control Flow - BuffetService.als, [0]
+   * = Food Service, [1] = SingleFoodService, and [2] = BuffetService where mainClass passed if for BuffertService
    * 
    * @param aClass
    * @return
