@@ -45,21 +45,40 @@ class OBMXMI2AlloyTest {
   // pass and fact {all x: SimpleSequence | x.p2 + x.p1 in x.steps} fails
   @CsvSource({
 
-      // "4.2.1 FoodService Control Flow - BuffetService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::BuffetService, true",
-      // "4.2.1 FoodService Control Flow - FastFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::FastFoodService, true",
-      // "4.2.1 FoodService Control Flow - ChurchSupper.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::ChurchSupper, true",
-      // "4.2.1 FoodService Control Flow - RestaurantService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::RestaurantService, true",
-      // "4.2.1 FoodService Control Flow - SingleFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::SingleFoodService, true",
-      // UsatisfiableFoodService to UnsatisfiableFoodService, comment out pred and run
-      "4.2.1 FoodService Control Flow - UnsatisfiableFoodService_mw.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",
+      "4.1.1 Time Orderings - AllControl.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::AllControl, true",
+      "4.1.1 Time Orderings - Decision.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Decision, true",
+      "4.1.1 Time Orderings - Fork.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork, true",
+      "4.1.1 Time Orderings - Join.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Join, true",
+      "4.1.1 Time Orderings - Merge.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Merge, true",
+      "4.1.1 Time Orderings - SimpleSequence.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence, true",
+      "4.1.2 Loops - Loop.als, Model::4.1 Basic Examples::4.1.2 Loop::Loop ,true",
+      "4.1.3 Behaviors with Steps - Composed.als, Model::4.1 Basic Examples::4.1.3 Behaviors with Steps::Composed, true",
+      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
+      "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
+      // mw test fails "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
+      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
 
-      // order in fields and step matters
-      // line 202 modified from OFControlLoopFoodService to OFSingleFoodService
-      "4.2.2 FoodService Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
-      "4.2.2 FoodService Object Flow (Orig Parallel-Full Hierarchy).als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
-      "4.2.2 FoodService Object Flow (Orig Loop-Full Hierarchy).als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
+      "4.1.6 Unsatisfiable - UnsatisfiableAsymmetry.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableAsymmetry, true",
+      "4.1.6 Unsatisfiable - UnsatisfiableComposition1.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableComposition1, true",
+      "4.1.6 Unsatisfiable - UnsatisfiableComposition2.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableComposition2, true",
+      "4.1.6 Unsatisfiable - UnsatisfiableMultiplicity.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableMultiplicity, true",
+      "4.1.6 Unsatisfiable - UnsatisfiableTransitivity.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableTransitivity, true",
+
+      "4.2.1 Food Service Control Flow - BuffetService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::BuffetService, true",
+      "4.2.1 Food Service Control Flow - FastFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::FastFoodService, true",
+      "4.2.1 Food Service Control Flow - ChurchSupper.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::ChurchSupper, true",
+      "4.2.1 Food Service Control Flow - RestaurantService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::RestaurantService, true",
+      "4.2.1 Food Service Control Flow - SingleFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::SingleFoodService, true",
+      "4.2.1 Food Service Control Flow - UnsatisfiableFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",
+
+      "4.2.2 Food Service Object Flow - OFFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFFoodService, true",
+      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
+      "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
+      "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
+
   /*
-   * // mw test fails "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
+   * 
    * 
    * "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow, true",
    * 
@@ -68,14 +87,16 @@ class OBMXMI2AlloyTest {
    * "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als, Model::Basic::MultipleObjectFlow,true",
    * 
    * // mw ok email from Jeremy 4/15/24 "4.1.4 Transfers and Parameters2 - ParameterBehavior.als,Model::Basic::ParameterBehavior,true", // mw change = x.inputs to in x.inputs okd email from Jeremy
-   * 4/15/24 "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct,true", // mw "4.1.1 Control Nodes6 - AllControl_mw.als, Model::Basic::AllControl,true",
+   * 4/15/24 "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct,true",
    * 
-   * "4.1.1 Control Nodes1 - SimpleSequence.als, Model::Basic::SimpleSequence,true", "4.1.1 Control Nodes2 - Fork.als, Model::Basic::Fork,true",
-   * "4.1.1 Control Nodes3 - Join.als, Model::Basic::Join,true", "4.1.1 Control Nodes4 - Decision.als, Model::Basic::Decision,true",
    * 
-   * "4.1.1 Control Nodes5 - Merge.als, Model::Basic::Merge,true",
    * 
-   * "4.1.2 Loop.als, Model::Basic::Loop,true",
+   * 
+   * 
+   * 
+   * 
+   * 
+   * 
    * 
    * "4.1.3 CallingBehaviors.als, Model::Basic::Composed,true",
    * 
@@ -119,8 +140,7 @@ class OBMXMI2AlloyTest {
     System.setErr(o);
 
     File apiFile = new File(output_and_testfiles_dir,
-        manualFileName + "_Generated-" + sysMLClassQualifiedName.replaceAll("::", "_")
-            .replace("(", "_").replace(")", "_") + ".als");
+        manualFileName + "_Generated" + ".als");
 
 
 
