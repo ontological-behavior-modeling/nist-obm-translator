@@ -301,9 +301,7 @@ public class ExprVisitor extends VisitQuery<String> {
                       .append(String.join(", ", labels)).append(": ").append(type).toString();
             else
               fields = (fields.length() == 0 ? sbb.append(' ') : sbb.append(", ")) /*
-                                                                                    * sbb.
-                                                                                    * append(",\n "
-                                                                                    * ))
+                                                                                    * sbb. append(",\n " ))
                                                                                     */
                   .append(String.join(", ", labels)).append(": ").append(type).toString();
           }

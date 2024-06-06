@@ -330,13 +330,7 @@ public class UserInterface {
           }
           Popup p = new Popup("Generating File");
           int i = 1;
-          OBMXMI2Alloy obm = null;
-          try {
-            obm = new OBMXMI2Alloy(path);
-          } catch (FileNotFoundException | UMLModelErrorException e1) {
-            e1.printStackTrace();
-            p.getDialog().setTitle("Error" + e1);
-          }
+          OBMXMI2Alloy obm = new OBMXMI2Alloy(path);
           List<String> mainClass = list.getSelectedValuesList();
           int fileNum = mainClass.size();
           String fileList = "File(s) Created";
@@ -345,18 +339,13 @@ public class UserInterface {
             p.getDialog().setVisible(true);
             File alsFile = null;
             if (!chckbxName.isSelected()) {
-              try {
-                alsFile = saveALS(c);
-                if (alsFile == null) {
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                      "No File Name Selected. Alloy file generation cancelled");
-                } else {
-                  if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                    JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
-                }
-              } catch (FileNotFoundException | UMLModelErrorException | NullPointerException e1) {
+              alsFile = saveALS(c);
+              if (alsFile == null) {
                 JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                    "Selected XMI file does not exist.\nTranslation Canceled.");
+                    "No File Name Selected. Alloy file generation cancelled");
+              } else {
+                if (!obm.createAlloyFile(xmiFile, c, alsFile))
+                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
               }
             } else {
               location = location.substring(0, slash + 1);
@@ -366,13 +355,9 @@ public class UserInterface {
               Date date = new Date();
               String dt = dateFormat.format(date);
               alsFile = new File(location + name + "_" + dt + ".als");
-              try {
-                if (!obm.createAlloyFile(xmiFile, c, alsFile))
-                  JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
-              } catch (FileNotFoundException | UMLModelErrorException e1) {
-                JOptionPane.showMessageDialog(frmObmAlloyTranslator,
-                    "Selected XMI file does not exist.\nTranslation Canceled.");
-              }
+              if (!obm.createAlloyFile(xmiFile, c, alsFile))
+                JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
+
             }
             p.getDialog().setVisible(false);
             fileList = fileList + "\n" + alsFile.getAbsolutePath();

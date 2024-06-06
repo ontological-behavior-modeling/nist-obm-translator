@@ -20,31 +20,15 @@ import edu.umd.omgutil.UMLModelErrorException;
 
 
 /*
- * Testing set up
- *
- * als files
- *
- * from:Box\NIST OBM Translator\Alloy Models\obm-alloy-code_2023-09-25. zip\obm\*
- *
- * to:obm-alloy-code_2023-09-25\obm
- *
- * xmi files
- *
- * from:Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25. zip\obmsmttrans\samples\OBMModel.xmi Box\NIST OBM Translator\NIST UML-SysML OBM Models\obmsmttrans_2023-09-25.
- * zip\obmsmttrans\samples\OBM.xmi
- *
- * to:obm-alloy-code_2023-09-25\obm
+ * JUnit Test for translation.
+ * 
  */
 class OBMXMI2AlloyTest {
 
   @ParameterizedTest
-
-
-  // The order of fields in sig does not matter even trasfer (ie., transferP1P3)
-  // The order of fact fields matter (ie., fact {all x: SimpleSequence | x.p1 + x.p2 in x.steps}
-  // pass and fact {all x: SimpleSequence | x.p2 + x.p1 in x.steps} fails
   @CsvSource({
 
+      // alloy file in name, qualifiedName of behavior model(class), boolean true if expected to pass, false if expected to fail
       "4.1.1 Time Orderings - AllControl.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::AllControl, true",
       "4.1.1 Time Orderings - Decision.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Decision, true",
       "4.1.1 Time Orderings - Fork.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork, true",
@@ -55,7 +39,6 @@ class OBMXMI2AlloyTest {
       "4.1.3 Behaviors with Steps - Composed.als, Model::4.1 Basic Examples::4.1.3 Behaviors with Steps::Composed, true",
       "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
       "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
-      // mw test fails "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_Fail.als, Model::Basic::MultipleControlFlow, false",
       "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
       "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
 
@@ -77,37 +60,8 @@ class OBMXMI2AlloyTest {
       "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
       "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
 
-  /*
-   * 
-   * 
-   * "4.1.5 Multiple Execution Steps1 - Multiple Control Flow_mw.als, Model::Basic::MultipleControlFlow, true",
-   * 
-   * 
-   * // mw // "4.1.5 Multiple Execution Steps2 - Multiple Object Flow Alt_mw.als, Model::Basic::MultipleObjectFlowAlt,true", // mw
-   * "4.1.5 Multiple Execution Steps2 - Multiple Object Flow_mw.als, Model::Basic::MultipleObjectFlow,true",
-   * 
-   * // mw ok email from Jeremy 4/15/24 "4.1.4 Transfers and Parameters2 - ParameterBehavior.als,Model::Basic::ParameterBehavior,true", // mw change = x.inputs to in x.inputs okd email from Jeremy
-   * 4/15/24 "4.1.4 Transfers and Parameters1 - TransferProduct.als, Model::Basic::TransferProduct,true",
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * 
-   * "4.1.3 CallingBehaviors.als, Model::Basic::Composed,true",
-   * 
-   * 
-   * 
-   * // // 4.1.6 // fact {all x: AtomicBehavior | no y: Transfer | y in x.steps} to fact {all x: AtomicBehavior // | no x.steps}
-   * "4.1.6 Unsatisfiable - Asymmetry_mw.als, Model::Basic::UnsatisfiableAsymmetry, true", // not available from jeremy
-   * "4.1.6 UnsatisfiableTransitivity_mw.als, Model::Basic::UnsatisfiableTransitivity, true", "4.1.6 UnsatisfiableMultiplicity_mw.als, Model::Basic::UnsatisfiableMultiplicity, true",
-   * "4.1.6 UnsatisfiableComposition1_mw.als, Model::Basic::UnsatisfiableComposition1, true", "4.1.6 UnsatisfiableComposition2_mw.als, Model::Basic::UnsatisfiableComposition2, true",
-   */
-
+      // expected to fail
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
   })
 
 
@@ -122,21 +76,22 @@ class OBMXMI2AlloyTest {
    * @throws FileNotFoundException
    * @throws UMLModelErrorException
    */
-  void compare(String manualFileName, String sysMLClassQualifiedName, boolean expectedResult)
+  void compare(String manualFileName, String sysMLClassQualifiedName,
+      boolean expectedResult)
       throws FileNotFoundException, UMLModelErrorException {
 
     System.out.println("Manually created alloy file = " + manualFileName);
     System.out.println("Comparing QualifiedName for a class = " + sysMLClassQualifiedName);
-
+    System.out.println("error log is available in error.log");
     // ========== Create Alloy model from OBM XMI file & write as a file ==========
 
     String ombmodel_dir = "src/test/resources";
     String output_and_testfiles_dir = "src/test/resources";
     File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
-    // File xmiFile = new File(ombmodel_dir, "OBMModel2.xml");
+
 
     // write any errors to be in error file
-    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.txt"));
+    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.log"));
     System.setErr(o);
 
     File apiFile = new File(output_and_testfiles_dir,
@@ -180,7 +135,7 @@ class OBMXMI2AlloyTest {
       assertFalse(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
 
 
-    ///////////////////////// Comparing Sigs ////////////////////
+    ///////////////////////// Comparing Signature ////////////////////
     // API
     List<Sig> api_reachableDefinedSigs = apiModule.getAllReachableUserDefinedSigs();
     Map<String, Sig> api_SigByName = new HashMap<>(); // test.getAllReachableUserDefinedSigs();
@@ -194,10 +149,10 @@ class OBMXMI2AlloyTest {
       test_SigByName.put(sig.label, sig);
     }
 
-    // Compare - Sig size
+    // Compare - Signature size
     assertTrue(api_SigByName.size() == test_SigByName.size());
 
-    // Compare - Each sig
+    // Compare - Each Signature (Signatures and Facts)
     for (String sigName : api_SigByName.keySet()) {
       Sig alloyFileSig = test_SigByName.get(sigName);
       Sig apiSig = api_SigByName.get(sigName);

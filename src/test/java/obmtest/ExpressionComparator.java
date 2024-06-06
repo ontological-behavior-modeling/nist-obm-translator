@@ -28,24 +28,46 @@ import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Type;
 
+/**
+ * Comparator for two alloy objects.
+ * 
+ * @author Shinjo Andrew H, GIRI Intern, Georgia Tech
+ * @author Wilson Miyako, ASDL, Georgia Tech
+ *
+ */
 
 public class ExpressionComparator {
 
+  /** used to prevent comparison to run forever */
   private final Set<List<Expr>> visitedExpressions;
 
   public ExpressionComparator() {
     visitedExpressions = new HashSet<>();
   }
 
-
+  /**
+   * Compare two Signatures (name, a parent, fields)
+   * 
+   * @param s1 - a Signature to be compared
+   * @param s2 - a Signature to be compared
+   * @return true if the same, otherwise return false
+   */
   public boolean compareTwoExpressionsSigs(Sig s1, Sig s2) {
     visitedExpressions.clear();
     return compareExpr(s1, s2);
   }
 
+  /**
+   * Compare two facts
+   * 
+   * @param e1 - an expression containing one or more fact expressions
+   * @param e2 - an expression containing one or more fact expressions
+   * @return
+   */
   public boolean compareTwoExpressionsFacts(Expr e1, Expr e2) {
     visitedExpressions.clear();
 
+    // compare facts size
     int size1 = ((Collection<?>) ((ExprList) e1).args).size();
     int size2 = ((Collection<?>) ((ExprList) e2).args).size();
 
@@ -55,6 +77,9 @@ public class ExpressionComparator {
     }
     // e1.args.size() and ee1.size() are different. ee1 can contain like [(all x | no o/inputs . x),
     // (all x | no o/inputs . x)] the two expr of the same
+    // Expressions as string are the same but what x represents(Signature) are different. For example,
+    // fact {all x: AtomicBehavior | no inputs.x} vs.
+    // fact {all x: MultipleControlFlow | no inputs.x}
     List<List<Expr>> ee1 = sortExprList((ExprList) e1);
     List<List<Expr>> ee2 = sortExprList((ExprList) e2);
 
@@ -64,7 +89,6 @@ public class ExpressionComparator {
       return false;
     }
 
-
     for (int i = 0; i < ee1.size(); i++) {
       if (ee1.get(i).size() != ee2.get(i).size()) {
         System.err.println("The size of sorted grouped fact is different. " + ee1.get(i) + "("
@@ -72,10 +96,10 @@ public class ExpressionComparator {
         return false;
       }
 
+      // make sure each expression in ee1.get(i) and ee2.get(i) are the same - expression is string and which signature the expression is for.
       Set<Integer> expr2usedJIndex = new HashSet<>();
       for (Expr expr1 : ee1.get(i)) {
         boolean expr1found = false;
-
         for (int j = 0; j < ee2.get(i).size(); j++) {
           if (!expr2usedJIndex.contains(j)) {
             Expr expr2 = ee2.get(i).get(j);
@@ -98,9 +122,9 @@ public class ExpressionComparator {
 
   public boolean compareCommand(Command c1, Command c2) {
 
-    if (c1 == null && c2 == null) {
+    if (c1 == null && c2 == null)
       return true;
-    }
+
     if (c1 == null || c2 == null) {
       System.err.println("compareCommand: c1 == null || c2 == null");
       return false;
@@ -643,58 +667,6 @@ public class ExpressionComparator {
     return true;
   }
 
-  private boolean compareExprListStart(ExprList expr1, ExprList expr2) {
-    if (expr1 == null && expr2 == null) {
-      System.err.println("compareExprList: " + "expr1 == null && expr2 == null");
-      return true;
-    }
-    if (expr1 != null && expr2 == null) {
-      System.err.println(
-          "compareExprList: " + "expr1 != null && expr2 == null (" + expr1 + " vs. " + expr2 + ")");
-      return false;
-    }
-    if (expr1 == null && expr2 != null) {
-      System.err.println(
-          "compareExprList: " + "expr1 == null && expr2 != null (" + expr1 + " vs. " + expr2 + ")");
-      return false;
-    }
-
-    if (expr1.op != expr2.op) {
-      System.err
-          .println("compareExprList: expr1.op != expr2.op (" + expr1.op + " vs. " + expr2.op + ")");
-      return false;
-    }
-
-    if (expr1.args.size() != expr2.args.size()) {
-      System.err.println("compareExprList: " + "expr1.args.size() != expr2.args.size() ("
-          + expr1.args.size() + " vs. " + expr2.args.size() + ")");
-      return false;
-    }
-    // for each expr1.arg
-    for (int i = 0; i < expr1.args.size(); i++) {
-      boolean found = false;
-      for (int j = 0; j < expr2.args.size(); j++) {
-        // first compare as string. Both could be the same as string like (all x | no x .o/inputs)
-        // but one may be contained in sig A and the other may be contained in sig ParameterBehavior
-        visitedExpressions.clear();
-        if (compareAsString(expr1.args.get(i), expr2.args.get(j))) {
-          if (!compareExpr(expr1.args.get(i), expr2.args.get(j))) {
-            // expr1.args.get(i) == expr2.args.get(j) but not belong to same sig ParameterBehavior
-            // vs. A then should continue the search
-            found = false;
-          } else {
-            found = true;
-            break;
-          }
-        }
-      } // end of j loop
-      if (!found) {
-        System.err.println(expr1.args.get(i) + " not found in " + expr2.args);
-        return false;
-      }
-    }
-    return true;
-  }
 
   private boolean compareExprList(ExprList expr1, ExprList expr2) {
     if (expr1 == null && expr2 == null) {
@@ -1249,10 +1221,8 @@ public class ExpressionComparator {
   }
 
   // util methods
-
   /**
-   * sort ExprList of Expr in alphabetical order using expr.toString() method return is List of
-   * List<Expr> because some fact's have the same toString() even its belong to different sigs (ie.,
+   * sort ExprList of Expr in alphabetical order using expr.toString() method return is List of List<Expr> because some fact's have the same toString() even its belong to different Signatures (ie.,
    * inputs.x)
    * 
    * @param e1 ExprList
@@ -1285,22 +1255,5 @@ public class ExpressionComparator {
     return sortedList;
   }
 
-  /**
-   * compare two List of List<Expr>'s size
-   * 
-   * @param l1
-   * @param l2
-   * @return true if outer list and each inner list size are the same.
-   */
-  private static boolean compareTwoList(List<List<Expr>> l1, List<List<Expr>> l2) {
-
-    if (l1.size() != l2.size())
-      return false;
-    for (int i = 0; i < l1.size(); i++) {
-      if (l1.get(i).size() != l2.get(i).size())
-        return false;
-    }
-    return true;
-  }
 }
 

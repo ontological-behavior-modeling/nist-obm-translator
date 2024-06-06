@@ -20,52 +20,81 @@ import edu.mit.csail.sdg.parser.CompUtil;
 
 public class Alloy {
 
-  protected static PrimSig occSig;
-  private static Module templateModule;
-  private static Module transferModule;
+  /**
+   * List of Signatures consist of created for the translation as well as the ignoredSigs from library
+   */
+  protected List<Sig> allSigs;
+  /**
+   * Expr of facts consist of facts created for the translation as well as the ignoredExpr from library
+   */
+  protected Expr allFacts;
 
+  /**
+   * Signatures not to be written out in the translated file. They are signatures in the library (from Translator.als and utilities/*.als files)
+   * 
+   * [this/Occurrence, o/TransferBefore, o/TransferBeforeSig, o/Transfer, o/TransferSig, o/BinaryLink, o/BinaryLinkSig, o/OccurrenceSig]
+   */
   private static ConstList<Sig> ignoredSigs;
+  /**
+   * Facts not be written out in the translated file. Those facts are in the library (from Translator.als and utilities/*.als files)
+   * 
+   * AND[(all t | AND[o/isAfterSource[t], o/isBeforeTarget[t]] <=> t in o/TransferBefore), (all t | # t . o/items > 0), o/r/acyclic[o/items, o/Transfer], o/r/acyclic[o/sources, o/Transfer],
+   * o/r/acyclic[o/targets, o/Transfer], (all t | (all item | o/during[t, item])), (all t,t' | AND[t . o/items = t' . o/items, t . o/sources = t' . o/sources, t . o/targets = t' . o/targets] => t = t'),
+   * (all t | (all src | (all tgt | OR[t in src . o/stepsAndSubsteps, t in tgt . o/stepsAndSubsteps => t !in o/TransferBefore]))), (all x,y | ! OR[o/before[x, y], o/before[y, x], o/during[x, y],
+   * o/during[y, x]] <=> o/overlap[x, y]), (all o | (all input | o/during[o, input])), (all o | (all output | o/during[o, output])), (all x,y | y in x . o/steps => ! x in y . o/steps), (all x,y,z |
+   * AND[y in x . o/steps, z in y . ^ o/steps] => z !in x . o/steps), (all x | # x . ~ o/steps <= 1), (all x,y,z | AND[o/before[x, y], o/before[y, z]] => o/before[x, z]), (all x | ! o/before[x, x]),
+   * (all x | o/during[x, x]), (all x,y,z | AND[o/during[x, y], o/during[y, z]] => o/during[x, z]), (all x,y,z | AND[o/before[x, y], o/during[z, y]] => o/before[x, z]), (all x,y,z | AND[o/before[y, x],
+   * o/during[z, y]] => o/before[z, x]), (all x,y | y in x . o/steps => o/during[y, x])]
+   */
   private static Expr ignoredExprs;
 
+  /**
+   * String used to load library into the templateModule that necessary for the translator.
+   */
+  protected static final String templateString =
+      "open Transfer[Occurrence] as o \n" + "abstract sig Occurrence{}";
+
+  /**
+   * Module created from templateString and Signatures and Facts by the translator.
+   */
+  private static Module templateModule;
+  /**
+   * Module from the Transfer.als
+   */
+  private static Module transferModule;
+
+  /** Functions constructed from the transfer module */
   protected static Func happensBefore;
   protected static Func happensDuring;
-
   protected static Func sources;
   protected static Func targets;
   protected static Func subsettingItemRuleForSources;
   protected static Func subsettingItemRuleForTargets;
   protected static Func isAfterSource;
   protected static Func isBeforeTarget;
-
   protected static Func bijectionFiltered;
   protected static Func functionFiltered;
   protected static Func inverseFunctionFiltered;
-
   protected static Func osteps;
   protected static Func oinputs;
   protected static Func ooutputs;
   protected static Func oitems;
 
+  /** Signatures constructed from the transfer module */
   protected static Sig transferSig;
   protected static Sig transferBeforeSig;
+  protected static PrimSig occSig; // default parent/super type of Signature
 
-
-
-  protected Expr overallFact;
-  protected List<Sig> allSigs;
   /**
-   * The module name used to write out the alloy file. Assigned using mainSig name. i.e.,) if the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
+   * The templateModule name string defined for the translator. Set using mainSig name. i.e.,) if the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
    */
   private String moduleName;
 
 
-
-  protected static final String templateString =
-      "open Transfer[Occurrence] as o \n" + "abstract sig Occurrence{}";
-
   /**
+   * Create a new Alloy assuming the required alloy library files (*.als) are locating at the given working directory.
    * 
-   * @param working_dir where required alloy library defined in templateString is locating.
+   * @param working_dir - The absolute filename
    */
   protected Alloy(String working_dir) {
 
@@ -74,12 +103,14 @@ public class Alloy {
 
     ignoredSigs = templateModule.getAllReachableUserDefinedSigs();
 
+    // initialize list of Signatures to be created by the translator
     allSigs = new ArrayList<Sig>();
+    // add Signatures from Transfer.als
     allSigs.addAll(ignoredSigs);
 
     // For this templateModule, contains ExprList<ExprUnary>
     ignoredExprs = templateModule.getAllReachableFacts();
-    overallFact = ignoredExprs;
+    allFacts = ignoredExprs;
 
     // abstract
     occSig = (PrimSig) AlloyUtils.getReachableSig(templateModule, "this/Occurrence");
@@ -111,15 +142,16 @@ public class Alloy {
     transferBeforeSig = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
   }
 
-  protected void setModuleName(String m) {
-    this.moduleName = m;
-  }
-
+  // Modules
   protected String getModuleName() {
     return this.moduleName;
   }
 
+  protected void setModuleName(String m) {
+    this.moduleName = m;
+  }
 
+  // Signatures
   protected List<Sig> getAllSigs() {
     return this.allSigs;
   }
@@ -128,29 +160,33 @@ public class Alloy {
     allSigs.add(sig);
   }
 
-  protected Expr getOverAllFact() {
-    return this.overallFact;
+  // Facts
+  protected Expr getFacts() {
+    return this.allFacts;
   }
 
-  protected void addToOverallFact(Expr expr) {
-    overallFact = overallFact.and(expr);
+  protected void addToFacts(Expr expr) {
+    allFacts = allFacts.and(expr);
   }
 
-  protected void addToOverallFacts(Set<Expr> exprs) {
+  protected void addToFacts(Set<Expr> exprs) {
     for (Expr expr : exprs)
-      overallFact = overallFact.and(expr);
+      allFacts = allFacts.and(expr);
   }
 
-  protected ConstList<Sig> getIgnoredSigs() {
-    return ignoredSigs;
-  }
-
+  // Ignored
   protected Expr getIgnoredExprs() {
     return ignoredExprs;
   }
 
 
-
+  /**
+   * Write an alloy file from all Signatures and Facts.
+   * 
+   * @param outputFileName - an absolute file name for the alloy output file.
+   * @param parameterFields - used to determine fields to be disj constraint (parameter files are not disj)
+   * @throws FileNotFoundException - happens when the outputFileName is failed to be created (not exist, not writable etc...)
+   */
   protected void toFile(String outputFileName, Set<Sig.Field> parameterFields)
       throws FileNotFoundException {
 
@@ -170,7 +206,7 @@ public class Alloy {
       }
     }
 
-    String s = exprVisitor.visitThis(this.overallFact);
+    String s = exprVisitor.visitThis(this.allFacts);
     String formats = format(s, sigsByLabel);
     sb.append(formats);
 
@@ -181,21 +217,24 @@ public class Alloy {
 
 
   /**
-   * String collected with ExprVisitor to format to be write out
+   * Format this alloy object (Signatures/Fields and Facts) to string by grouping Signature/Fields and Facts for the Signature together.
    * 
-   * @param s
-   * @param sigs
-   * @return
+   * @param factListInString
+   * @param signatureBlockBySignature - Map (key = Signature name string, value = Signature and fields as written in the alloy file).
+   * @return string of Signatures, Fields, and Facts grouped by Signature.
    */
-  private static String format(String s, Map<String, String> sigs) {
+  private static String format(String factListInString,
+      Map<String, String> signatureBlockBySignature) {
 
     Map<String, List<String>> facts = new HashMap<>();
-    String[] lines = s.split("\n");
-    for (int i = 0; i < lines.length; i++) {
-      String line = lines[i];
-      String[] domainAndFacts = line.split("\\|");
+    String[] factlines = factListInString.split("\n");
+    for (int i = 0; i < factlines.length; i++) {
+      String factline = factlines[i];
+      // separate factline into [signature, fact]
+      // (ie., for " fact {all x: MultipleControlFlow | no y: Transfer | y in x.steps}" to ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"]
+      String[] domainAndFacts = factline.split("\\|");
 
-      if (facts.containsKey(domainAndFacts[0])) {
+      if (facts.containsKey(domainAndFacts[0])) { // to identify Signature "fact {all x: AtomicBehavior"
         List<String> existingFacts = facts.get(domainAndFacts[0]);
         existingFacts.add(getFactBody(domainAndFacts));
         facts.put(domainAndFacts[0], existingFacts);
@@ -205,18 +244,24 @@ public class Alloy {
         // key = fact {all x: OFServe, value = [,,,]
         facts.put(domainAndFacts[0], newFacts);
       }
-
     }
     String newS = "";
-    List<String> sigNames = new ArrayList<>(sigs.keySet());
+    List<String> sigNames = new ArrayList<>(signatureBlockBySignature.keySet());
     Collections.sort(sigNames);
     for (String sigName : sigNames) {
-      newS += sigs.get(sigName);
-      newS += getFacts(sigName, facts);
+      newS += signatureBlockBySignature.get(sigName); // sig AllControl extends Occurrence { disj p1, p2, p3, p4, p5, p6, p7: set AtomicBehavior}
+      newS += getFacts(sigName, facts); // fact {...}\n fact {...}\n
     }
     return newS;
   }
 
+  /**
+   * Return fact body without the Signature portion from string array separated by "|". For example, String[] domainAndFacts for index = 1 or more of "fact {all x: MultipleControlFlow | no y: Transfer |
+   * y in x.steps}" is ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"], this methods return "no y: Transfer | y in x.steps".
+   * 
+   * @param domainAndFacts - string array for a fact expression seperated by "|".
+   * @return the fact body in a string
+   */
   private static String getFactBody(String[] domainAndFacts) {
     String s = domainAndFacts[1];
     for (int i = 2; i < domainAndFacts.length; i++) {
@@ -225,8 +270,16 @@ public class Alloy {
     return s;
   }
 
+  /**
+   * Return string facts (separated by "\n") for the given Signature name string
+   * 
+   * @param sigName - Signature name string
+   * @param facts - Map (key = Signature name string, value = facts for the signature)
+   * @return facts in string for the given Signature
+   */
   private static String getFacts(String sigName, Map<String, List<String>> facts) {
     String newS = "";
+    // ie., fact key = "fact {all x: AtomicBehavior" => key = "AutomaticBehavior"
     Optional<String> key = facts.keySet().stream()
         .filter(akey -> akey.split(":")[1].trim().equals(sigName)).findFirst();
     if (key.isPresent()) {

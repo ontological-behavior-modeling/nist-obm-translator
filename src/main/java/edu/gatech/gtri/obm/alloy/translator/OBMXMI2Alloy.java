@@ -41,62 +41,117 @@ import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 import edu.umd.omgutil.uml.OpaqueExpression;
 
 
-
+/**
+ * Translate SysML Behavior Model in a xmi file into an Alloy file.
+ * 
+ * Usage:
+ * 
+ * OBMXMI2Alloy translator = new OBMXMI2Alloy("C:\\temp\\OBMModel.xmi"); translator.createAlloyFile(new File("C:\\OBMModel.xmi"), "Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence", new
+ * File("C:\\output.als"));
+ * 
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
 public class OBMXMI2Alloy {
-
+  /**
+   * errorMessages collected during the translation. Resetting by each createAlloyFile method call.
+   */
   List<String> errorMessages;
+  /**
+   * messages collected during the translation. Resetting by each createAlloyFile method call.
+   */
   List<String> messages;
+  /**
+   * A class connect this and Alloy class
+   */
   ToAlloy toAlloy;
+  /**
+   * omgutil SysMLAdapter - Adapter for SysML from omgutil
+   */
   SysMLAdapter sysmladapter;
-  SysMLUtil sysMLUtil;// omgutil created from ResourceSet used through out the translator
-  Set<Field> parameterFields; // A set of Field mapped from a Property with <<Parameter>> stereotype
-  // Each connector with <<ObjectFlow>>, get sourceOutputProperty and targetInputProperty,
-  // find the property type name and put in this Set
+  /**
+   * omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation
+   */
+  SysMLUtil sysMLUtil;
+  /**
+   * A set of Alloy fields created for Properties with <<Parameter>> stereotype
+   */
+  Set<Field> parameterFields;
+
+  /**
+   * A set of Alloy fields mapped from <<ObjectFlow>> connectors's sourceOutputProperty and targetInputProperty.
+   */
   Set<Field> valueTypeFields;
-  Set<String> transferingTypeSig; // ie., [Integer] for Model::Basic::MultipleObjectFlowAlt
 
+  /**
+   * A set of string representing the type of transfer fields (ie., Integer)
+   */
+  Set<String> transferingTypeSig;
 
-  // key = sigName, value = field names
-  Map<String, Set<String>> stepPropertiesBySig_all; // including inherited properties - used in
-                                                    // closure
-  // (x.steps in ....)
-  Map<String, Set<String>> stepPropertiesBySig; // not include inherited properties - used in all
-                                                // (.....
-                                                // in
-  // x.steps)
-  Set<Connector> redefinedConnectors; // Set of Connector used in processConnector method so
-                                      // connector not to be processed by parents
-  Map<String, Set<String>> sigToTransferFieldMap; // key = signame of parent having transfer fields,
-                                                  // value = Set<String> transferfields names
+  /**
+   * A map where key is sig name string and value is a set of field name strings. This includes inherited fields/properties and used in closure facts.
+   */
+  Map<String, Set<String>> stepPropertiesBySig;
+
+  /**
+   * A set of connectors redefined by children so that the connectors are ignored by the parent.
+   */
+  Set<Connector> redefinedConnectors;
+
+  /**
+   * A dictionary contains signature name as key and a set of transfer field names as value.
+   */
+  Map<String, Set<String>> sigToTransferFieldMap;
+
+  /**
+   * A dictionary contains signature name as key and a set of fact expression as value.
+   */
   Map<String, Set<Expr>> sigToFactsMap;
+
+  /**
+   * A dictionary contains signature as key and a set of properties as value.
+   */
   Map<PrimSig, Set<Property>> redefinedPropertiesBySig;
+
+  /**
+   * A set of leaf signatures
+   */
   Set<PrimSig> leafSigs;
 
-
+  /** Stereotype qualified names */
   private static String STEREOTYPE_STEP = "Model::OBM::Step";
   private static String STEREOTYPE_PATICIPANT = "SysML::ParticipantProperty";
-  public static String STEREOTYPE_PAREMETER = "Model::OBM::Parameter";// property
-  public static String STEREOTYPE_VALUETYPE = "SysML::Blocks::ValueType";
+  private static String STEREOTYPE_PAREMETER = "Model::OBM::Parameter";// property
+  private static String STEREOTYPE_VALUETYPE = "SysML::Blocks::ValueType";
   private static String STEREOTYPE_ITEMFLOW = "Model::OBM::ItemFlow";
   private static String STEREOTYPE_OBJECTFLOW = "Model::OBM::ObjectFlow";
   private static String STEREOTYPE_BINDDINGCONNECTOR = "SysML::BindingConnector";
 
-
+  /**
+   * An absolute path name string for the required library folder containing Transfer.als and utilities(folder) necessary for creating own OBMUtil alloy object.
+   */
+  private String alloyLibPath;
 
   private enum CONNECTOR_TYPE {
     HAPPENS_BEFORE, HAPPENS_DURING, TRANSFER;
   }
 
   /**
-   * initializing a new alloy translator
+   * A constructor to set the given alloyLibPath as an instance variable.
    * 
-   * @param working_dir where required alloy library (Transfer.als and utilities directory) is locating.
+   * @param alloyLibPath the abstract pathname.
    */
-  public OBMXMI2Alloy(String working_dir) throws FileNotFoundException, UMLModelErrorException {
-    toAlloy = new ToAlloy(working_dir);
+  public OBMXMI2Alloy(String _alloyLibPath) {
+    this.alloyLibPath = _alloyLibPath;
+  }
+
+  /**
+   * initialize the translator. Called by createAlloyFile method.
+   */
+  private void reset() {
+    toAlloy = new ToAlloy(alloyLibPath);
     redefinedConnectors = new HashSet<Connector>();
-    // key = sigName, value = field names
-    stepPropertiesBySig_all = new HashMap<>();
     stepPropertiesBySig = new HashMap<>();
     sigToTransferFieldMap = new HashMap<>();
     sigToFactsMap = new HashMap<>();
@@ -105,39 +160,46 @@ public class OBMXMI2Alloy {
   }
 
   /**
-   * Create an alloy (the given outputFile) of the qualifideName class in the xml file.
+   * Initialize the translator and create an alloy output file of the qualifideName class/behavior model in the xml file. If this method return false, you may use getErrorMessages() to know why failed.
    * 
    * @param xmiFile - the xmi file contain a class to be translated to an alloy file.
    * @param qualifiedName of a UML:Class for translation (ie., Model::FoodService::OFSingleFoodService)
    * @param outputFile - the output alloy file
-   * @return true if the given outputFile is created from the given xmlFile and the qualifiedName
-   * @throws UMLModelErrorException
-   * @throws FileNotFoundException
+   * @return true if the given outputFile is created from the given xmlFile and the qualifiedName; false if fails.
    */
-  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile)
-      throws FileNotFoundException, UMLModelErrorException {
+  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile) {
+    reset();
     if (!xmiFile.exists() || !xmiFile.canRead()) {
-      System.err.println("File " + xmiFile.getAbsolutePath() + " does not exist or read.");
+      this.errorMessages.add(
+          "A file " + xmiFile.getAbsolutePath() + " does not exist or no permission to read.");
       return false;
     }
-    if (loadOBMAndCreateAlloy(xmiFile, qualifiedName)) {
-      try {
-        boolean success = toAlloy.createAlloyFile(outputFile, this.parameterFields);
-        if (success)
-          this.messages.add(outputFile.getAbsolutePath() + " is created");
-        else
-          this.errorMessages.add("Failed to create the alloy file as "
-              + outputFile.getAbsolutePath() + ". May not have writing permission.");
-        return success;
-      } catch (IOException e) {
-        this.errorMessages.add("Failed to create the alloy file: " + e.getMessage());
+    try {
+      if (loadOBMAndCreateAlloy(xmiFile, qualifiedName)) {
+        try {
+          boolean success = toAlloy.createAlloyFile(outputFile, this.parameterFields);
+          if (success)
+            this.messages.add(outputFile.getAbsolutePath() + " is created");
+          else
+            this.errorMessages.add("Failed to create the alloy file as "
+                + outputFile.getAbsolutePath() + ". May not have write permission.");
+          return success;
+        } catch (IOException e) {
+          this.errorMessages.add("Failed to translator the alloy file: " + e.getMessage());
+        }
       }
+    } catch (FileNotFoundException e) {
+      // error message is set in createAlloyFile method
+      // happens the xmi file having behavior model does not exist.
+    } catch (UMLModelErrorException e) {
+      // error message is set in createAlloyFile method
+      // happens when the alloy library resource could not initialized.
     }
     return false;
   }
 
   /**
-   * Get a errorMessage collected while translating.
+   * Get errorMessages collected while the translation.
    * 
    * @return errorMessage
    */
@@ -162,7 +224,7 @@ public class OBMXMI2Alloy {
     try {
       rs = EMFUtil.createResourceSet();
     } catch (FileNotFoundException e1) {
-      this.errorMessages.add("Failed to initialize EMFUtil.");
+      this.errorMessages.add("Failed to initialize OmgUtil.");
       return false;
     }
     Resource r = EMFUtil.loadResourceWithDependencies(rs,
@@ -170,7 +232,7 @@ public class OBMXMI2Alloy {
 
     try {
       while (!r.isLoaded()) {
-        System.out.println("not loaded yet wait 1 milli sec...");
+        System.out.println("Resource not loaded yet wait 1 milli sec...");
         Thread.sleep(1000);
       }
     } catch (Exception e) {
@@ -178,17 +240,21 @@ public class OBMXMI2Alloy {
 
     try {
       sysMLUtil = new SysMLUtil(rs);
+    } catch (UMLModelErrorException e) {
+      this.errorMessages.add("Failed to initialize OmgUtil.");
+      throw e;
+    }
+    try {
       sysmladapter = new SysMLAdapter(xmiFile, null);
-    } catch (UMLModelErrorException e1) {
-      this.errorMessages.add("Failed to load SysML in EMFUtil.");
-      throw e1;
     } catch (FileNotFoundException e) {
       this.errorMessages.add(xmiFile.getAbsolutePath() + " does not exist.");
+      throw e;
+    } catch (UMLModelErrorException e) {
+      this.errorMessages.add("Failed to load " + xmiFile + " into OmgUtil");
       throw e;
     }
 
     org.eclipse.uml2.uml.NamedElement mainClass = EMFUtil.getNamedElement(r, className);
-    System.out.println(mainClass);
 
     if (mainClass == null) {
       this.errorMessages.add(className + " not found in " + xmiFile.getAbsolutePath());
@@ -200,18 +266,19 @@ public class OBMXMI2Alloy {
     Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass =
         new HashMap<>();
     if (mainClass instanceof Class) {
-      // The mainclass will be the last in the list
+      // The main class will be the last in this list
       List<org.eclipse.uml2.uml.Class> classInHierarchyForMain =
           MDUtils.createListIncludeSelfAndParents((Class) mainClass);
       PrimSig parentSig = Alloy.occSig; // oldest's parent is always Occurrence
-      for (Class aClass : classInHierarchyForMain) { // loop through oldest to youngest where main
-                                                     // is the youngest
+      for (Class aClass : classInHierarchyForMain) { // loop through oldest to youngest(main
+                                                     // is the youngest)
         boolean isMainSig = (aClass == mainClass) ? true : false;
-        // create Sig - returned parentSig will be the next aClass(sig)'s parent
+        // create Signature - returned parentSig will be the next aClass(Signature)'s parent
         parentSig = toAlloy.createSig(aClass.getName(), parentSig, isMainSig);
         if (parentSig == null) {
           this.errorMessages.add(
-              "Sig named \"" + aClass.getName() + "\" is exisiting.  The name must be unique.");
+              "Signature named \"" + aClass.getName()
+                  + "\" already existed (possibly in the required library).  The name must be unique.");
           return false;
         }
         processClassToSig(aClass, propertiesByClass);
@@ -311,12 +378,12 @@ public class OBMXMI2Alloy {
         mainSigInheritingTransferRelatedFacts.addAll(possibleMainSigInheritingTransferRelatedFacts);
     }
     // add mainSig's inherited transfer fields to step Properties for the mainSig
-    stepPropertiesBySig_all.get(mainClass.getName()).addAll(mainSigInheritingTransferFields);
+    stepPropertiesBySig.get(mainClass.getName()).addAll(mainSigInheritingTransferFields);
 
     toAlloy.addFacts(mainClass.getName(), mainSigInheritingTransferRelatedFacts);
 
 
-    Set<Sig> noStepsSigs = toAlloy.addStepsFacts(stepPropertiesBySig_all, leafSigs);
+    Set<Sig> noStepsSigs = toAlloy.addStepsFacts(stepPropertiesBySig, leafSigs);
     // if "no x.steps" and sig with fields with type Transfer should not have below:
     // fact {all x: BehaviorWithParameterOut | no y: Transfer | y in x.steps}
     sigWithTransferFields.addAll(noStepsSigs);
@@ -364,26 +431,13 @@ public class OBMXMI2Alloy {
       }
     }
     // for PrimitiveType (ie., Real, Integer), empty Set is added
-    stepPropertiesBySig_all.put(ne.getName(), stepProperties_all);
-
-    Set<String> stepProperties = new HashSet<>();
-    if (ne instanceof org.eclipse.uml2.uml.Class) { // ne can be PrimitiveType
-      Set<org.eclipse.uml2.uml.Property> atts =
-          sysMLUtil.getOwnedAttributes((org.eclipse.uml2.uml.Class) ne);
-      for (Property p : atts) {
-        if (p.getAppliedStereotype(STEREOTYPE_STEP) != null
-            || p.getAppliedStereotype(STEREOTYPE_PATICIPANT) != null) {
-          stepProperties.add(p.getName());
-        }
-      }
-    }
-    stepPropertiesBySig.put(ne.getName(), stepProperties);
+    stepPropertiesBySig.put(ne.getName(), stepProperties_all);
   }
 
   /**
    * 
    * @param ne
-   * @param stepPropertiesBySig_all
+   * @param stepPropertiesBySig
    * @param inputs
    * @param outputs
    * @param sigWithTransferFields
@@ -412,7 +466,7 @@ public class OBMXMI2Alloy {
     // BehaviorWithParameter)
     // 4.1.5 Multiple Execution Step2 = MultiplObjectFlow=[BehaviorWithParameter]
     if (sigNameOfSharedFieldType.size() > 0) {
-      Set<String> nonTransferFieldNames = stepPropertiesBySig_all.get(ne.getName()).stream()
+      Set<String> nonTransferFieldNames = stepPropertiesBySig.get(ne.getName()).stream()
           .filter(f -> !f.startsWith("transfer")).collect(Collectors.toSet());
       // no inputs
       for (String fieldName : nonTransferFieldNames) {
@@ -940,7 +994,7 @@ public class OBMXMI2Alloy {
   private Sig.Field handTransferFieldAndFnPrep(PrimSig sig, String source, String target) {
     String fieldName = "transfer" + firstCharUpper(source) + firstCharUpper(target);
     // adding transferFields in stepProperties
-    stepPropertiesBySig_all.get(sig.label).add(fieldName);
+    stepPropertiesBySig.get(sig.label).add(fieldName);
     addSigToTransferFieldsMap(sig, fieldName);
     Sig.Field transferField = AlloyUtils.addTransferField(fieldName, sig);
     return transferField;
@@ -966,34 +1020,21 @@ public class OBMXMI2Alloy {
    *
    * go through each class, class to its properties, a property to its type recursively to complete propertiesByClass (Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>)
    * 
+   * For example, this processClassToSig method is called from outside of this method : with umlElement = FoodService, then called recursively(internally) umlElement as Prepare -> Order -> Serve -> Eat
+   * -> Pay.
+   * 
    * @param umlElement NamedElement either org.eclipse.uml2.uml.Class or org.eclipse.uml2.uml.PrimitiveType to be analyzed to complete propertiesByClass
    * 
    * @param propertiesByClass Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> where the key NamedElement to be mapped to Sig (class or PrimitiveType like Integer and Real) and value is
    * Map<org.eclipse.uml2.uml.Type, List<Property>. The map's key type is property/field's type and List<Property> is property/fields having the same type.
    * 
-   * For example,
-   * 
-   * sig SimpleSequence extends Occurrence { disj p1,p2: set AtomicBehavior }
-   * 
-   * propertiesByClass's key = SimpleSequence and value = (key = AtomicBehavior, value =[p1,p2])
+   * For example, sig SimpleSequence extends Occurrence { disj p1,p2: set AtomicBehavior } propertiesByClass's key = SimpleSequence and value = (key = AtomicBehavior, value =[p1,p2])
    * 
    */
   private void processClassToSig(NamedElement umlElement,
       Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> propertiesByClass) {
 
     if (umlElement instanceof org.eclipse.uml2.uml.Class) {
-
-      // umlElements are for IFFoodService
-      // processClassToSig from outside of this method : (FoodService) -> then called
-      // recursively(internally) Prepare -> Order -> Serve -> Eat -> Pay
-      // processClassToSig from outside of this method (IFFoorService) -> then called
-      // recursively(internally) IFPrepare -> FoodItem -> IFServe -> FoodItem -> IFEat -> FoodItem->
-      // IFPay-> FoodItem
-
-      // Set<org.eclipse.uml2.uml.Property> atts =
-      // sysMLUtil.getOwnedAttributes((org.eclipse.uml2.uml.Class) umlElement);
-      // sysMLUtil.getAllAttributes((org.eclipse.uml2.uml.Class) umlElement);
-
       Set<Property> atts = sysMLUtil.getOwnedAttributes((org.eclipse.uml2.uml.Class) umlElement);
 
       if (atts.size() == 0) {
@@ -1038,41 +1079,6 @@ public class OBMXMI2Alloy {
     else if (umlElement instanceof org.eclipse.uml2.uml.PrimitiveType) {
       propertiesByClass.put(umlElement, null);
     }
-  }
-
-
-  /**
-   * Find property names for connector ends. One connector has two connector end. return string with index = 0
-   * 
-   * @param cn
-   * @param ce
-   * @return
-   */
-
-  private String[] getEndPropertyNames(Connector cn, ConnectorEnd ce) {
-    String[] names = new String[2];
-    edu.umd.omgutil.uml.Connector omgE = (edu.umd.omgutil.uml.Connector) sysmladapter.mapObject(cn);
-    edu.umd.omgutil.uml.Type owner = omgE.getFeaturingType();
-    names[0] = getConnecterEndPropertyName(ce, owner);
-
-    for (ConnectorEnd ce1 : cn.getEnds())
-      if (ce1 != ce) {
-        names[1] = getConnecterEndPropertyName(ce1, owner);
-        break;
-      }
-    return names;
-  }
-
-
-
-  private String getConnecterEndPropertyName(ConnectorEnd ce, edu.umd.omgutil.uml.Type owner) {
-    edu.umd.omgutil.uml.ConnectorEnd end =
-        (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
-    List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
-        .map(f -> f.getName()).collect(Collectors.toList());
-    String name = endsFeatureNames.get(0);
-    return name;
-
   }
 
   /**
@@ -1219,6 +1225,12 @@ public class OBMXMI2Alloy {
 
   }
 
+  /**
+   * Find sourceOutputProperty and targetInputProperty of the given connector with <<ItemFlow>> or <<ObjectFlow>> Stereotype
+   * 
+   * @param cn - a connector having the properties
+   * @return List<Set<String>> 1st in the list is sourceOutputProperty names and 2nd in the list is the targetInputProperty names
+   */
   private List<Set<String>> handleTransferAndTransferBeforeInputsAndOutputs(
       org.eclipse.uml2.uml.Connector cn) {
 
@@ -1241,9 +1253,8 @@ public class OBMXMI2Alloy {
     }
 
     if (stTagItemFlowValues != null) { // ItemFlow
-      sos = stTagItemFlowValues.get(stTagNames[0]); // sourceOutputProperty
-      tis = stTagItemFlowValues.get(stTagNames[1]); // targetInputProperty - name is
-                                                    // "receivedProduct"
+      sos = stTagItemFlowValues.get(stTagNames[0]); // sourceOutputProperty - name is suppliedProduct
+      tis = stTagItemFlowValues.get(stTagNames[1]); // targetInputProperty - name is "receivedProduct"
     }
     Class sosOwner = null;
     Class tisOwner = null;
@@ -1252,33 +1263,22 @@ public class OBMXMI2Alloy {
     if (sos != null && tis != null) {
       for (Property p : sos) {
         sosOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
-        String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
-        System.out.println(owner + " | x." + p.getName() + "= x.output");
-        // B2 | x.vout= x.output
-        // toAlloy.addOutputs(owner, /* "Supplier" */ p.getName() /* "suppliedProduct" */);
-        sourceOutput.add(p.getName()); // = x.outputs
+        sourceOutput.add(p.getName()); // p.getName() is vout. so create {B2(owner) | x.vout= x.output}
         transferingTypeSig.add(p.getType().getName());
-        // break; // assumption is having only one
       }
       for (Property p : tis) {
         tisOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
-        String owner = ((org.eclipse.uml2.uml.Class) p.getOwner()).getName();
-        System.out.println(owner + " | x." + p.getName() + "= x.input: " + p.getName());
-        // B | x.voutzzzzz= x.input
-        // toAlloy.addInputs(owner, /* "Customer" */p.getName() /* "receivedProduct" */);
         transferingTypeSig.add(p.getType().getName());
         targetInput.add(p.getName()); // = x.inputs
-        // break; // assumption is having only one
       }
+      // 4.1.4 Transfers and Parameters
       // preventing fact {all x:B| x.vin = x.output}} to be generated from <<ItemFlow>> between
-      // B.vin and b1.vin. //b1 isa field of B
+      // B.vin and b1(B1).vin - b1 is a field of B
       // but having fact {all x: B1| x.vin = x.inputs} is ok
       EList<Property> atts = sosOwner.getAttributes();
-      for (Property att : atts)
-        if (att.getType() == tisOwner) { // owner is B
+      for (Property att : atts) // b1
+        if (att.getType() == tisOwner) { // b1.getType() == B1 and tisOwner == B1
           sourceOutput = null;
-          // sourceOutput.remove(att.getName());
-          // sourceOutputAndTargetInputProperties[0] = null
           break;
         }
       // preventing fact {all x: B |x.vout = x.inputs} - to be generated from <<ItemFlow>> between
@@ -1286,26 +1286,23 @@ public class OBMXMI2Alloy {
       // but having fact {all x: B2|x.vout = x.outputs} is ok
       atts = tisOwner.getAttributes(); // tisOwner is B
       for (Property att : atts) // b2
-        if (att.getType() == sosOwner) { // b2.getType() == B2 and sosOwner = B2
+        if (att.getType() == sosOwner) { // b2.getType() == B2 and sosOwner == B2
           targetInput = null;
-          // sourceOutputAndTargetInputProperties[1] = null; // overwrite
           break;
         }
-
     }
     sourceOutputAndTargetInputProperties.add(sourceOutput);
     sourceOutputAndTargetInputProperties.add(targetInput);
     return sourceOutputAndTargetInputProperties;
   }
 
-
-
   /**
-   * 
-   * @param element
-   * @param streotypeName
-   * @param tagNames
-   * @return null is not Stereotype with streotypeName applied to the element
+   * Find a stereotype of element of the given streotypeName and return map of its tagName(string) and values(Properties)
+   *
+   * @param element - element whose stereotype properties to be found
+   * @param streotypeName - stereotype name in string
+   * @param tagNames -stereotype property names
+   * @return Map (key = tag/property name string, value = properties) or null if the element does not have stereotype applied.
    */
   private Map<String, List<Property>> getStreotypePropertyValues(Element element,
       String streotypeName, String[] tagNames) {
@@ -1313,18 +1310,23 @@ public class OBMXMI2Alloy {
     Map<String, List<Property>> propertysByTagNames = new HashMap<>();
     Stereotype st = null;
     if ((st = element.getAppliedStereotype(streotypeName)) != null) {
-
       for (String propertyName : tagNames) {
         List<Property> results = new ArrayList<>();
-        List<Object> properties = (List<Object>) (element.getValue(st, propertyName));
-        for (Object property : properties) {
-          if (property instanceof Property) {
-            results.add((Property) property);
-          } else {
-            System.out.println(propertyName + " is not Property but " + property);
+        Object pObject = (element.getValue(st, propertyName));
+        if (pObject instanceof List) {
+          @SuppressWarnings("unchecked")
+          List<Object> properties = (List<Object>) pObject;
+          for (Object property : properties) {
+            if (property instanceof Property) {
+              results.add((Property) property);
+            } else {
+              System.out.println(
+                  propertyName + " is not an instance of Property but "
+                      + property.getClass().getSimpleName() + ". so ignored.");
+            }
           }
+          propertysByTagNames.put(propertyName, results);
         }
-        propertysByTagNames.put(propertyName, results);
       }
       return propertysByTagNames;
     }
@@ -1358,7 +1360,7 @@ public class OBMXMI2Alloy {
     return o.substring(0, 1).toUpperCase() + o.substring(1).toLowerCase();
   }
 
-  public static void addToHashMap(Map<String, Set<String>> map, String key, Set<String> values) {
+  private static void addToHashMap(Map<String, Set<String>> map, String key, Set<String> values) {
     if (values == null || values.size() == 0)
       return;
     Set<String> vs;
@@ -1371,7 +1373,7 @@ public class OBMXMI2Alloy {
     vs.addAll(values);
   }
 
-  public static void addToHashMap(Map<Field, Set<Field>> map, Field key, Field value) {
+  private static void addToHashMap(Map<Field, Set<Field>> map, Field key, Field value) {
     Set<Field> vs;
     if (map.containsKey(key))
       vs = map.get(key);
@@ -1390,7 +1392,7 @@ public class OBMXMI2Alloy {
    * @param value value of the key to be checked
    * @return true if both the given key and the given value is in the map, otherwise return false
    */
-  public static boolean contains(Map<Field, Set<Field>> map, Field key, Field value) {
+  private static boolean contains(Map<Field, Set<Field>> map, Field key, Field value) {
     if (!map.containsKey(key))
       return false;
     else {
@@ -1400,7 +1402,7 @@ public class OBMXMI2Alloy {
     return true;
   }
 
-  public void addToSigToFactsMap(String sigName, Set<Expr> facts) {
+  private void addToSigToFactsMap(String sigName, Set<Expr> facts) {
     if (facts == null)
       return;
     Set<Expr> allFacts = sigToFactsMap.get(sigName);
@@ -1411,7 +1413,7 @@ public class OBMXMI2Alloy {
   }
 
 
-  public static Set<PrimSig> toSigs(Set<NamedElement> nes, ToAlloy toAlloy) {
+  private static Set<PrimSig> toSigs(Set<NamedElement> nes, ToAlloy toAlloy) {
     Set<PrimSig> sigs = new HashSet<>();
     for (NamedElement ne : nes) {
       sigs.add(toAlloy.getSig(ne.getName()));
