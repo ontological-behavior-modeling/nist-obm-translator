@@ -267,6 +267,17 @@ public class ToAlloy {
     return true;
   }
 
+  /**
+   * Adding facts for Transfer connector.
+   * 
+   * @param ownerSig
+   * @param transfer
+   * @param source
+   * @param target
+   * @param targetInputsSourceOutputsFields
+   * @param toBeInherited
+   * @return
+   */
   protected Set<Expr> addTransferFacts(PrimSig ownerSig, Expr transfer, String source,
       String target, List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
 
@@ -320,6 +331,7 @@ public class ToAlloy {
 
 
   /**
+   * Adding facts for TransferBefore connector
    * 
    * @param ownerSig
    * @param transfer ie., transferbeforeAB
@@ -357,29 +369,55 @@ public class ToAlloy {
         AlloyFactory.expr_noInputsOrOutputsField(ownerSig, field, inputsOrOutputs));
   }
 
-
+  /**
+   * Add fact like "{all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin} and {all x| no inputs.x}" based on the given addNoOutputsX and addEqual.
+   * 
+   * @param sig - A signature might have facts
+   * @param fields - fields or the signatures to describe the fact
+   * @param addNoInputsX - boolean if true, include a fact like {all x| no outputs.x}
+   * @param addEquall - boolean if true, includes facts like "..in x.outputs" and "x.outputs in...", if false, not to includes
+   */
   protected void addInInputsAndNoInputXFacts(PrimSig sig, Set<Field> fields,
       boolean addNoInputsX, boolean addEqual) {
 
     List<Field> sortedFields = AlloyUtils.sortFields(fields);
     if (addEqual)
+      // {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}
       alloy.addToFacts(AlloyFactory.exprs_in(sig, sortedFields, Alloy.oinputs));
     if (addNoInputsX)
+      // {all x| no inputs.x}
       alloy.addToFacts(AlloyFactory.expr_noInputsX(sig));
   }
 
+  /**
+   * Add facts like "{all x: B1 | x.vin in x.outputs} and {all x: B1 | x.outputs in x.vin}" and "{all x| no outputs.x}" for the given signature based on the given addNoOutputsX and addEqual
+   * 
+   * @param sig - A signature might have facts
+   * @param fields -fields or the signatures to describe the fact
+   * @param addNoOutputsX - boolean if true, include a fact like {all x| no outputs.x}
+   * @param addEqual - boolean if true, includes facts like "..in x.outputs" and "x.outputs in...", if false, not to includes
+   */
   protected void addInOutputsAndNoOutputsXFacts(PrimSig sig, Set<Field> fields,
       boolean addNoOutputsX, boolean addEqual) {
 
     List<Field> sortedFields = AlloyUtils.sortFields(fields);
     if (addEqual)
+      // {all x: B1 | x.vout in x.outputs} and {all x: B1 | x.outputs in x.vout}
       alloy.addToFacts(AlloyFactory.exprs_in(sig, sortedFields, Alloy.ooutputs));
     if (addNoOutputsX)
+      // {all x| no outputs.x}
       alloy.addToFacts(AlloyFactory.expr_noOutputsX(sig));
   }
 
 
-
+  /**
+   * Add a fact like "fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem + x.prepare.prepareDestination}"
+   * 
+   * @param ownerSig - A signature of the fact
+   * @param field - A field of the given owner signature used to create expression after "x." to define inputs or outputs
+   * @param fieldOfFields - fields of the field used to create expression after "in"
+   * @param inputsOrOutputs - A function either inputs or outputs
+   */
   protected void addInOutClosureFact(PrimSig ownerSig, Field field, Set<Field> fieldOfFields,
       Func inputsOrOutputs) {
     List<Field> sortedfieldOfFields = AlloyUtils.sortFields(fieldOfFields);
@@ -387,24 +425,32 @@ public class ToAlloy {
         AlloyFactory.expr_inOutClosure(ownerSig, field, sortedfieldOfFields, inputsOrOutputs));
   }
 
-  protected void addNoTransferFact(Set<Sig> sigWithTransferFields, Set<PrimSig> leafSigs) {
+  /**
+   * Add a fact like "fact {all x: BuffetService | no y: Transfer | y in x.steps}" when a signature is in the noTransferInXStepsFactSigs, is leaf sig and has own or inherited fields.
+   * 
+   * @param noTransferInXStepsFactSigs - A set of signature should not have this fact.
+   * @param leafSigs - A set of leaf signatures.
+   */
+  protected void addNoTransferInXStepsFact(Set<Sig> noTransferInXStepsFactSigs,
+      Set<PrimSig> leafSigs) {
     Object[] sigs =
-        sigByName.values().stream().filter(sig -> !sigWithTransferFields.contains(sig)).toArray();
+        sigByName.values().stream().filter(sig -> !noTransferInXStepsFactSigs.contains(sig))
+            .toArray();
     for (Object sig : sigs) {
-      // adding fact {all x: BuffetService | no y: Transfer | y in x.steps}
       if (leafSigs.contains(sig) && AlloyUtils.hasOwnOrInheritedFields((PrimSig) sig))
         alloy.addToFacts(AlloyFactory.expr_noTransferXSteps((PrimSig) sig));
     }
   }
 
   /**
+   * Add a step closure fact (i.e., fact {all x: Integer | no steps.x}) if the given transferingTypeSig (i.e., Integer) is a leaf Signature.
    * 
-   * @param transferingTypeSig (ie., Integer)
+   * @param transferingTypeSig - signature names to be checked
+   * @param leafSigs - a set of leaf Signatures
    */
   protected void addStepClosureFact(Set<String> transferingTypeSig, Set<PrimSig> leafSigs) {
     for (String sigName : transferingTypeSig) {
       Sig sig = sigByName.get(sigName);
-      System.out.println(sigName);
       if (leafSigs.contains(sig))
         // fact {all x: Integer | no steps.x}
         alloy.addToFacts(AlloyFactory.expr_noStepsX(sig));
@@ -447,22 +493,36 @@ public class ToAlloy {
   }
 
 
-  // protected void addRedefinedSubsettingAsFacts(PrimSig sig, Set<Property> properties) {
-  // for (Property p : properties) {
-  // alloy.addToOverallFact(AlloyFactory.redefinedSubsettingAsFactForSig(sig,
-  // AlloyUtils.getFieldFromParentSig(p.getName(), sig),
-  // sigByName.get(p.getType().getName())));
-  // }
-  // }
 
-  // fact {all x: OFFoodService | x.eat in OFEat }
-  protected void addRedefinedSubsettingAsFacts(PrimSig sig,
+  /**
+   * Add a fact like "fact {all x: OFFoodService | x.eat in OFEat }"
+   * 
+   * @param ownerSig - A signature for the face to be defined
+   * @param propertyNameAndType - A map where key is property name string and value is the property type (Class) name
+   */
+  protected void addRedefinedSubsettingAsFacts(PrimSig ownerSig,
       Map<String, String> propertyNameAndType) {
 
     for (String pName : propertyNameAndType.keySet()) {
       alloy.addToFacts(
-          AlloyFactory.expr_redefinedSubsetting(sig, AlloyUtils.getFieldFromParentSig(pName, sig),
+          AlloyFactory.expr_redefinedSubsetting(ownerSig,
+              AlloyUtils.getFieldFromParentSig(pName, ownerSig),
               sigByName.get(propertyNameAndType.get(pName))));
+    }
+  }
+
+  /**
+   * Add a equal fact of fields belong to a signature like "fact {all x: B1 | x.vin = x.vout}"
+   * 
+   * @param ownerSig - A signature for the fact to be defined
+   * @param fieldName1 - A field name of the Signature to be defined equal.
+   * @param fieldName2 - Another field name of the Signature to be defined equal.
+   */
+  protected void addEqualFact(PrimSig ownerSig, String fieldName1, String fieldName2) {
+    Field f1 = AlloyUtils.getFieldFromSigOrItsParents(fieldName1, ownerSig);
+    Field f2 = AlloyUtils.getFieldFromSigOrItsParents(fieldName2, ownerSig);
+    if (f1 != null && f2 != null) {
+      alloy.addToFacts(AlloyFactory.expr_equal(ownerSig, f1, f2));
     }
   }
 
@@ -476,20 +536,27 @@ public class ToAlloy {
       HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames,
       Set<String> sigNameOfSharedFieldType, Set<PrimSig> leafSigs) {
 
-    Set<String> inputFlowFieldTypes = getFlowTypeSig(sigInputProperties); // Sigs [Integer]
-    Set<String> outputFlowFieldTypes = getFlowTypeSig(sigOutputProperties); // Sigs [Integer]
-    Set<String> inputOrOutputFlowFieldTypes = new HashSet<String>();
-    inputOrOutputFlowFieldTypes.addAll(inputFlowFieldTypes);
-    inputOrOutputFlowFieldTypes.addAll(outputFlowFieldTypes);
+    Set<String> inputFlowFieldTypes =
+        sigInputProperties.size() == 0 ? null : getFlowTypeSig(sigInputProperties); // Sigs [Integer]
+    Set<String> outputFlowFieldTypes =
+        sigOutputProperties.size() == 0 ? null : getFlowTypeSig(sigOutputProperties); // Sigs [Integer]
+
+    // Set<String> inputOrOutputFlowFieldTypes = new HashSet<String>();
+    // inputOrOutputFlowFieldTypes.addAll(inputFlowFieldTypes);
+    // inputOrOutputFlowFieldTypes.addAll(outputFlowFieldTypes);
 
     for (String sigName : sigNames) {
       Sig.PrimSig sig = sigByName.get(sigName);
+      boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
 
       // only for leafSigs
       if (!leafSigs.contains(sig))
         continue;
-      if (!inputOrOutputFlowFieldTypes.contains(sigName))
+      if ((inputFlowFieldTypes == null || !(inputFlowFieldTypes.contains(sigName))) &&
+          (outputFlowFieldTypes == null || !(outputFlowFieldTypes.contains(sigName))))
         alloy.addToFacts(AlloyFactory.expr_noItemsX(sig));
+      // if (!inputOrOutputFlowFieldTypes.contains(sigName))
+      // alloy.addToFacts(AlloyFactory.expr_noItemsX(sig));
 
       // boolean addItem = false; // to avoid adding "no items.x" with both inputs and outputs
       // filter
@@ -497,8 +564,7 @@ public class ToAlloy {
       if (sigInputProperties.keySet().contains(sigName)) {
         Set<String> propertyNames = sigInputProperties.get(sigName);
         boolean addNoInputsX = true;
-        // used to be = but now in x.inputs because to support in inheritance
-        boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
+
         // if (propertyNames.size() > 0)
         // addNoInputsX = false; // so when propertyNames.length != 1 (vin, vout), not to add "no
         // inputs.x" more then one time
@@ -520,16 +586,11 @@ public class ToAlloy {
           // sig = IFCustomServe, propertyName = IFServe.servedFoodItem
           inputsFields.add(AlloyUtils.getFieldFromSigOrItsParents(propertyName, sig));
         }
-
         addInInputsAndNoInputXFacts(sig, inputsFields, addNoInputsX, addEqual);
-
       } else {
-        if (inputFlowFieldTypes.contains(sigName))// Integer is flowing
-          alloy.addToFacts(AlloyFactory.expr_noXInputs(sig));// fact
-                                                             // {all
-        // x: Integer
-        // | no
-        // (x.inputs)}
+        if (inputFlowFieldTypes != null && inputFlowFieldTypes.contains(sigName))// Integer is flowing
+          // fact {all x: Integer | no (x.inputs)}
+          alloy.addToFacts(AlloyFactory.expr_noXInputs(sig));
         else {
           // if removed "no x.inputs" from child remove also from container that should not happens
           // or from AutomicBehavior or SimpleSequence....
@@ -541,7 +602,6 @@ public class ToAlloy {
       if (sigOutputProperties.keySet().contains(sigName)) {
         Set<String> propertyNames = sigOutputProperties.get(sigName); // [vout]
 
-        boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
         Set<Field> outputsFields = new HashSet<>();
         for (String propertyName : propertyNames) {
           // sig = IFCustomServe, propertyName = IFServe.servedFoodItem
@@ -550,15 +610,13 @@ public class ToAlloy {
         boolean addNoOutputsX = true;
         addInOutputsAndNoOutputsXFacts(sig, outputsFields, addNoOutputsX, addEqual);
       } else {
-        if (outputFlowFieldTypes.contains(sigName)) {// Integer = type of what is flowing
-          alloy.addToFacts(AlloyFactory.expr_noXOutputs(sig));
+        if (outputFlowFieldTypes != null && outputFlowFieldTypes.contains(sigName)) {// Integer = type of what is flowing
           // fact {all x: Integer | no (x.outputs)}
+          alloy.addToFacts(AlloyFactory.expr_noXOutputs(sig));
         } else {
+          // both "no outputs.x & no x.outputs"
           alloy.addToFacts(
               AlloyFactory.exprs_noOutputsXAndXOutputs(sig));
-          // both "no
-          // outputs.x" & "no
-          // x.outputs"
         }
       }
     }
@@ -566,11 +624,22 @@ public class ToAlloy {
   }
 
   /**
+   * Find what is flowing in the inputs or outputs of connectors.
    * 
-   * @param inputsOrOutputs
-   * @return Set of PrimSig names
+   * For 4.1.4 Transfers and Parameters - ParameterBehavior.als, the inputs map is {B2=[vin], B=[vin], C=[vin], B1= [vin] B2=[vout], A=[vout]} and this method returns [Real].
+   * 
+   * For 4.1.4 Transfers and Parameters - TransferProduct.als, the inputs map is {Customer = [reveivedProduct]} and this method returns [Product]. Its output maps is {Supplier =[suppliedProduct]} and
+   * this method returns [Product]
+   * 
+   * For 4.2.2 Food Service Object Flow - OFParallelFoodService.als, the inputs map is {OFServe=[servedFoodItem], OFCustomPrepare=[preparedFoodItem, prepareDestination], OFEat=[eatenItem],
+   * OFPay=[paidFoodItem, paidAmount], OFCustomServe=[servedFoodItem, serviceDestination]} and this method returns [FoodItem, Real, Location]. Its outputs map is {OFCustomOrder=[orderedFoodItem,
+   * orderAmount, orderDestination], OFOrder=[orderedFoodItem], OFCustomPrepare=[preparedFoodItem, prepareDestination], OFPay=[paidFoodItem], OFCustomServe=[servedFoodItem]} and this method returns
+   * [FoodItem, Real, Location]
+   * 
+   * @param inputsOrOutputs - a map where key is a signature name string and value is a set of its input or output field name strings.
+   * @return A set of signature name strings of flowing item type name strings.
    */
-  protected Set<String> getFlowTypeSig(HashMap<String, Set<String>> inputsOrOutputs) {
+  protected Set<String> getFlowTypeSig(Map<String, Set<String>> inputsOrOutputs) {
 
     Set<String> flowTypeSig = new HashSet<>();
     for (String sigName : inputsOrOutputs.keySet()) {
@@ -582,9 +651,11 @@ public class ToAlloy {
         List<List<PrimSig>> folds = type.fold(); // fold contains sig and field's type
         for (List<PrimSig> lp : folds) {
           for (PrimSig s : lp) {
-            if (s != sig) {
+            // when sigName = OFCustomerPrepare, fieldName = prepareFoodItem
+            // for s = OFPrepare, the below method return true because OFPrepare is ancestor of OFCustomerPrepare.
+            // so its name/label will not be not included in flowTypeSig.
+            if (!AlloyUtils.selfOrAncestor(sig, s))
               flowTypeSig.add(s.label);
-            }
           }
         }
       }
@@ -592,16 +663,6 @@ public class ToAlloy {
     return flowTypeSig;
   }
 
-
-
-  // fact {all x: B1 | x.vin = x.vout}
-  protected void addEqualFact(PrimSig ownerSig, String fieldName1, String fieldName2) {
-    Field f1 = AlloyUtils.getFieldFromSigOrItsParents(fieldName1, ownerSig);
-    Field f2 = AlloyUtils.getFieldFromSigOrItsParents(fieldName2, ownerSig);
-    if (f1 != null && f2 != null) {
-      alloy.addToFacts(AlloyFactory.expr_equal(ownerSig, f1, f2));
-    }
-  }
 
 
   protected void addFacts(String sigName, Set<Expr> exprs) {
