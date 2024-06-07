@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
@@ -112,6 +113,15 @@ public class AlloyUtils {
     return sig;
   }
 
+  public static boolean selfOrAncestor(PrimSig sig, Sig lookingFor) {
+    if (sig == lookingFor)
+      return true;
+    else if (sig.parent != null) {
+      return selfOrAncestor(sig.parent, lookingFor);
+    }
+    return false;
+  }
+
   /**
    * Valid parent.
    *
@@ -152,7 +162,6 @@ public class AlloyUtils {
     }
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
                                  // null
-      // System.out.println(sig.parent);
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
       if (field != null)
         return field;
@@ -166,7 +175,6 @@ public class AlloyUtils {
   public static Sig.Field getFieldFromParentSig(String fieldNameLookingFor, PrimSig sig) {
     while (sig.parent != null) { // SingleFoodService -> FoodService -> this/Occurrence -> univ ->
                                  // null
-      // System.out.println(sig.parent);
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
       if (field != null)
         return field;
@@ -320,4 +328,24 @@ public class AlloyUtils {
       return s.join(original); // x.BuffetService
     }
   }
+
+  /**
+   * Return boolean if the map contains both the given key and the given value
+   * 
+   * @param map key = Field, values = Set of Fields
+   * @param key key to be checked
+   * @param value value of the key to be checked
+   * @return true if both the given key and the given value is in the map, otherwise return false
+   */
+  public static boolean containsBothKeyAndValue(Map<Field, Set<Field>> map, Field key,
+      Field value) {
+    if (!map.containsKey(key))
+      return false;
+    else {
+      if (!map.get(key).contains(value))
+        return false;
+    }
+    return true;
+  }
+
 }
