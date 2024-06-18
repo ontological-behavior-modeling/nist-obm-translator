@@ -529,25 +529,34 @@ public class ToAlloy {
   /**
    * this produces like toAlloy.noInputs("Supplier"); toAlloy.noOutputs("Customer");
    * 
-   * @param sigInProperties {BehaviorParameterIn=[vin], BehaviorParameterInOut=[vin]}
+   * @param sigNameWithTransferConnectorWithSameInputOutputFieldType {BehaviorParameterIn=[vin], BehaviorParameterInOut=[vin]}
    * @param outputs {BehaviorParameterOut=[vout], BehaviorParameterInOut=[vout]}
+   */
+  /**
+   * 
+   * @param sigInputProperties
+   * @param sigOutputProperties
+   * @param sigNames
+   * @param sigNameWithTransferConnectorWithSameInputOutputFieldType
+   * @param leafSigs
    */
   protected void handleNoInputsOutputs(HashMap<String, Set<String>> sigInputProperties,
       HashMap<String, Set<String>> sigOutputProperties, Set<String> sigNames,
-      Set<String> sigNameOfSharedFieldType, Set<PrimSig> leafSigs) {
+      Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType, Set<PrimSig> leafSigs) {
 
+    // find what signatures are flowing in
     Set<String> inputFlowFieldTypes =
         sigInputProperties.size() == 0 ? null : getFlowTypeSig(sigInputProperties); // Sigs [Integer]
+    // find what signatures are flowing out
     Set<String> outputFlowFieldTypes =
         sigOutputProperties.size() == 0 ? null : getFlowTypeSig(sigOutputProperties); // Sigs [Integer]
 
-    // Set<String> inputOrOutputFlowFieldTypes = new HashSet<String>();
-    // inputOrOutputFlowFieldTypes.addAll(inputFlowFieldTypes);
-    // inputOrOutputFlowFieldTypes.addAll(outputFlowFieldTypes);
 
     for (String sigName : sigNames) {
       Sig.PrimSig sig = sigByName.get(sigName);
-      boolean addEqual = sigNameOfSharedFieldType.contains(sigName) ? false : true;
+      // if connector end type are the same, addEqual is true
+      boolean addEqual =
+          sigNameWithTransferConnectorWithSameInputOutputFieldType.contains(sigName) ? false : true;
 
       // only for leafSigs
       if (!leafSigs.contains(sig))
@@ -624,7 +633,7 @@ public class ToAlloy {
   }
 
   /**
-   * Find what is flowing in the inputs or outputs of connectors.
+   * Find what is flowing in the inputs or outputs of connectors from field's type().fold() method.
    * 
    * For 4.1.4 Transfers and Parameters - ParameterBehavior.als, the inputs map is {B2=[vin], B=[vin], C=[vin], B1= [vin] B2=[vout], A=[vout]} and this method returns [Real].
    * 

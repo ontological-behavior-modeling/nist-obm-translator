@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,19 +16,10 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.uml2.uml.Association;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
-import org.eclipse.uml2.uml.ConnectableElement;
-import org.eclipse.uml2.uml.Connector;
-import org.eclipse.uml2.uml.ConnectorEnd;
-import org.eclipse.uml2.uml.Constraint;
-import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
-import org.eclipse.uml2.uml.Stereotype;
-import org.eclipse.uml2.uml.ValueSpecification;
-import org.eclipse.uml2.uml.internal.impl.OpaqueExpressionImpl;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
@@ -38,7 +28,6 @@ import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.UMLModelErrorException;
 import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
-import edu.umd.omgutil.uml.OpaqueExpression;
 
 
 /**
@@ -87,7 +76,7 @@ public class OBMXMI2Alloy {
   /**
    * A set of string representing the type of transfer fields (ie., Integer)
    */
-  Set<String> transferingTypeSig;
+  // Set<String> transferingTypeSig;
 
   /**
    * A map where key is sig name string and value is a set of field name strings. This includes inherited fields/properties and used in closure facts.
@@ -97,17 +86,17 @@ public class OBMXMI2Alloy {
   /**
    * A set of connectors redefined by children so that the connectors are ignored by the parent.
    */
-  Set<Connector> redefinedConnectors;
+  // Set<Connector> redefinedConnectors;
 
   /**
    * A dictionary contains signature name as key and a set of transfer field names as value.
    */
-  Map<String, Set<String>> sigToTransferFieldMap;
+  // Map<String, Set<String>> sigToTransferFieldMap;
 
   /**
    * A dictionary contains signature name as key and a set of fact expression as value.
    */
-  Map<String, Set<Expr>> sigToFactsMap;
+  // Map<String, Set<Expr>> sigToFactsMap;
 
   /**
    * A dictionary contains signature as key and a set of properties as value.
@@ -124,18 +113,13 @@ public class OBMXMI2Alloy {
   private static String STEREOTYPE_PATICIPANT = "SysML::ParticipantProperty";
   private static String STEREOTYPE_PAREMETER = "Model::OBM::Parameter";// property
   private static String STEREOTYPE_VALUETYPE = "SysML::Blocks::ValueType";
-  private static String STEREOTYPE_ITEMFLOW = "Model::OBM::ItemFlow";
-  private static String STEREOTYPE_OBJECTFLOW = "Model::OBM::ObjectFlow";
-  private static String STEREOTYPE_BINDDINGCONNECTOR = "SysML::BindingConnector";
+
 
   /**
    * An absolute path name string for the required library folder containing Transfer.als and utilities(folder) necessary for creating own OBMUtil alloy object.
    */
   private String alloyLibPath;
 
-  private enum CONNECTOR_TYPE {
-    HAPPENS_BEFORE, HAPPENS_DURING, TRANSFER;
-  }
 
   /**
    * A constructor to set the given alloyLibPath as an instance variable.
@@ -147,14 +131,14 @@ public class OBMXMI2Alloy {
   }
 
   /**
-   * initialize the translator. Called by createAlloyFile method.
+   * Initialize the translator. Called by createAlloyFile method.
    */
   private void reset() {
     toAlloy = new ToAlloy(alloyLibPath);
-    redefinedConnectors = new HashSet<Connector>();
+    // redefinedConnectors = new HashSet<Connector>();
     stepPropertiesBySig = new HashMap<>();
-    sigToTransferFieldMap = new HashMap<>();
-    sigToFactsMap = new HashMap<>();
+    // sigToTransferFieldMap = new HashMap<>();
+    // sigToFactsMap = new HashMap<>();
     this.errorMessages = new ArrayList<>();
     this.messages = new ArrayList<>();
   }
@@ -201,7 +185,7 @@ public class OBMXMI2Alloy {
   /**
    * Get errorMessages collected while the translation.
    * 
-   * @return errorMessage
+   * @return errorMessage - list of error message strings
    */
   public List<String> getErrorMessages() {
     return this.errorMessages;
@@ -219,7 +203,7 @@ public class OBMXMI2Alloy {
 
     parameterFields = new HashSet<>();
     valueTypeFields = new HashSet<>();
-    transferingTypeSig = new HashSet<>();
+    // transferingTypeSig = new HashSet<>();
     ResourceSet rs;
     try {
       rs = EMFUtil.createResourceSet();
@@ -320,38 +304,25 @@ public class OBMXMI2Alloy {
 
 
     // connectors
-    // key = Signame, values = propertyNames
-    HashMap<String, Set<String>> inputs = new HashMap<>(); // collect field type Sig having a
-                                                           // transfer connector
-    // with transferTarget "Customer"
-    HashMap<String, Set<String>> outputs = new HashMap<>(); // collect field type Sig having a
-                                                            // transfer connector
 
+    ConnectorHandler connectorHandler =
+        new ConnectorHandler(sysmladapter, this.sysMLUtil, /* redefinedConnectors, */ leafSigs, this.toAlloy,
+            /* this.sigToFactsMap, */ this.parameterFields, /* this.sigToTransferFieldMap, */
+            this.stepPropertiesBySig);
+    connectorHandler.process(classInHierarchy, allClassesConnectedToMainSigByFields);
 
-    // used to collect sig with fields with Transfer or TransferBefore type. The set is used to
-    // create like fact fact {all x: SimpleSequence | no y: Transfer | y in x.steps} if the sig is
-    // not in the set
-    Set<Sig> sigWithTransferFields = new HashSet<>();
-    allClassesConnectedToMainSigByFields = propertiesByClass.keySet();
-    // used later for not adding equal inputs/outputs fact like {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}
-    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>(); // ie., BehaviorWithParameter
+    Set<Sig> sigWithTransferFields = connectorHandler.getSigWithTransferFields();
+    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType =
+        connectorHandler.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
+    HashMap<String, Set<String>> connectorTargetInputPropertyNamesByClassName =
+        connectorHandler.getConnectorTargetInputPropertyNamesByClassName();
+    HashMap<String, Set<String>> connectorSourceOutputPrpertyNamesByClassName =
+        connectorHandler.getConnectorSourceOutputPrpertyNamesByClassName();
 
-    // from child to parent so that redefinedconnector is not created by parents
-    // during handlClassForProcessConnector this.sigToTransferFieldMap is created
-    for (int i = classInHierarchy.size() - 1; i >= 0; i--) {
-      Class ne = classInHierarchy.get(i);
-      sigNameWithTransferConnectorWithSameInputOutputFieldType
-          .addAll(handleClassForProecessConnector(ne, inputs, outputs, sigWithTransferFields));
-      // removing ne
-      allClassesConnectedToMainSigByFields.remove(ne);
-    }
-    // after handling connectors for Signatures(hierarchy of main Signature), handle others.
-    for (NamedElement ne : allClassesConnectedToMainSigByFields) {
-      if (ne instanceof Class) {// no connector in primitiveType (Real, Integer)
-        sigNameWithTransferConnectorWithSameInputOutputFieldType
-            .addAll(handleClassForProecessConnector(ne, inputs, outputs, sigWithTransferFields));
-      }
-    }
+    Set<String> transferingTypeSig = connectorHandler.getTransferingTypeSig();
+    Map<String, Set<String>> sigToTransferFieldMap = connectorHandler.getSigToTransferFieldMap();
+    Map<String, Set<Expr>> sigToFactsMap = connectorHandler.getSigToFactsMap();
+
 
     // using sigToFactsMap and sigToTransferFieldMap to add transferFields to mainSig.
     // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
@@ -400,14 +371,14 @@ public class OBMXMI2Alloy {
 
     // if the name of signatures is in sigNameOfShardFieldType, then equal input/output facts (ie., {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}}
     // are not be added
-    toAlloy.handleNoInputsOutputs(inputs, outputs, allClassNames,
-        sigNameWithTransferConnectorWithSameInputOutputFieldType,
-        leafSigs);
+    toAlloy.handleNoInputsOutputs(connectorTargetInputPropertyNamesByClassName,
+        connectorSourceOutputPrpertyNamesByClassName, allClassNames,
+        sigNameWithTransferConnectorWithSameInputOutputFieldType, leafSigs);
 
     // adding no steps.x
     // fact {all x: Integer | no steps.x}, fact {all x: Real | no steps.x} or {all x: Product | no
     // steps.x}
-    toAlloy.addStepClosureFact(this.transferingTypeSig, leafSigs);
+    toAlloy.addStepClosureFact(transferingTypeSig, leafSigs);
     return true;
 
   }
@@ -439,71 +410,51 @@ public class OBMXMI2Alloy {
   /**
    * 
    * 
-   * @param ne - NamedElement mapped to Signature.
-   * @param inputs
-   * @param outputs
-   * @param sigWithTransferFields
-   * @return a Set of
+   * @param ne - a namedElement transfer to a signature.
+   * @param outConnectorInputPropertiesBySig - a map data to be collected where values are connectors' targetInputProperty tag values (property names) and key the property owner (namedElement) name
+   * @param outconnectorOutputPropertiesBySig - a map data to be collected where values are connectors' sourceOutputProperty tag values (property names) and key of the property owner (namedElement) name
+   * @param outSigWithTransferFields - a set of signatures having transfer fields collected
+   * @return a set of signature string names having transfer field(s) of the same input and output types
    * 
    */
-  private Set<String> handleClassForProecessConnector(NamedElement ne,
-      HashMap<String, Set<String>> inputs, HashMap<String, Set<String>> outputs,
-      Set<Sig> sigWithTransferFields) {
-
-    PrimSig ownerSig = toAlloy.getSig(ne.getName());
-
-    Map<Field, Set<Field>> fieldWithInputs = new HashMap<>(); // key = prepare, value=
-                                                              // [preparedFoodItem,prepareDestination]
-    Map<Field, Set<Field>> fieldWithOutputs = new HashMap<>(); // key = order,
-                                                               // value=[orderAmount,
-                                                               // orderDestination,
-                                                               // orderedFoodItem]
-
-
-    // transfer fields created is adding to stepPropertiesBySig passing in processConnector
-    // Signature names which has at least one transfer connector having the same field type of sourceOutputProperty and targetInputProperty's BehaviorWithParameter
-    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType =
-        processConnector((Class) ne, inputs, outputs,
-            sigWithTransferFields, fieldWithInputs, fieldWithOutputs);
-
-
-    // any of connector ends owned field types are the same (p1, p2:
-    // BehaviorWithParameter)
-    // 4.1.5 Multiple Execution Step2 = MultiplObjectFlow=[BehaviorWithParameter]
-    if (sigNameWithTransferConnectorWithSameInputOutputFieldType.size() > 0) {
-      Set<String> nonTransferFieldNames = stepPropertiesBySig.get(ne.getName()).stream()
-          .filter(f -> !f.startsWith("transfer")).collect(Collectors.toSet());
-      // no inputs
-      for (String fieldName : nonTransferFieldNames) {
-        if (!AlloyUtils.fieldsLabels(fieldWithInputs.keySet()).contains(fieldName)) {
-          // fact {all x: MultipleObjectFlow |no x.p1.inputs}
-          toAlloy.addNoInputsOrOutputsFieldFact(ownerSig, fieldName, Alloy.oinputs);
-        }
-        if (!AlloyUtils.fieldsLabels(fieldWithOutputs.keySet()).contains(fieldName)) {
-          toAlloy.addNoInputsOrOutputsFieldFact(ownerSig, fieldName, Alloy.ooutputs);
-        }
-      }
-
-    }
-    // 4/10
-    // fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem +
-    // x.prepare.prepareDestination}
-    for (Field field : fieldWithInputs.keySet()) {
-      // The following fact is NOT included because x.p1.vout is <<Parmeter>> field
-      // fact {all x: MultipleObjectFlowAlt | x.p1.outputs in x.p1.vout}
-      Set<Field> fields = removeParameterFields(fieldWithInputs.get(field));
-      if (fields.size() > 0)
-        toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.oinputs);
-    }
-    for (Field field : fieldWithOutputs.keySet()) {
-      Set<Field> fields = removeParameterFields(fieldWithOutputs.get(field));
-      if (fields.size() > 0)
-        toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.ooutputs);
-    }
-
-    return sigNameWithTransferConnectorWithSameInputOutputFieldType;
-
-  }
+  /*
+   * private void handleClassForProecessConnector( ProcessConnectorMethod pcm) {
+   * 
+   * // HashMap<String, Set<String>> outConnectorInputPropertiesBySig, // HashMap<String, Set<String>> outconnectorOutputPropertiesBySig, // Set<Sig> outSigWithTransferFields) {
+   * 
+   * // PrimSig ownerSig = toAlloy.getSig(ne.getName());
+   * 
+   * // Map<Field, Set<Field>> fieldWithInputs = new HashMap<>(); // key = prepare, value= // [preparedFoodItem,prepareDestination] // Map<Field, Set<Field>> fieldWithOutputs = new HashMap<>(); // key =
+   * order, // value=[orderAmount, // orderDestination, // orderedFoodItem]
+   * 
+   * 
+   * // transfer fields created is adding to stepPropertiesBySig passing in processConnector // Signature names which has at least one transfer connector having the same field type of
+   * sourceOutputProperty and targetInputProperty's BehaviorWithParameter // Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType = // processConnector((Class) ne,
+   * outConnectorInputPropertiesBySig, // outconnectorOutputPropertiesBySig, // outSigWithTransferFields, fieldWithInputs, fieldWithOutputs);
+   * 
+   * pcm.processConnector(sysmladapter, sysMLUtil);
+   * 
+   * PrimSig ownerSig = pcm.getSigOfNamedElement();
+   * 
+   * Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType = pcm.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
+   * 
+   * Map<Field, Set<Field>> fieldWithInputs = pcm.getFieldWithInputs(); Map<Field, Set<Field>> fieldWithOutputs = pcm.getFieldWithOutputs();
+   * 
+   * // any of connector ends owned field types are the same (p1, p2: // BehaviorWithParameter) // 4.1.5 Multiple Execution Step2 = MultiplObjectFlow=[BehaviorWithParameter] if
+   * (sigNameWithTransferConnectorWithSameInputOutputFieldType.size() > 0) { Set<String> nonTransferFieldNames = stepPropertiesBySig.get(ownerSig.label).stream() .filter(f ->
+   * !f.startsWith("transfer")).collect(Collectors.toSet()); // no inputs for (String fieldName : nonTransferFieldNames) { if (!AlloyUtils.fieldsLabels(fieldWithInputs.keySet()).contains(fieldName)) {
+   * // fact {all x: MultipleObjectFlow |no x.p1.inputs} toAlloy.addNoInputsOrOutputsFieldFact(ownerSig, fieldName, Alloy.oinputs); } if
+   * (!AlloyUtils.fieldsLabels(fieldWithOutputs.keySet()).contains(fieldName)) { toAlloy.addNoInputsOrOutputsFieldFact(ownerSig, fieldName, Alloy.ooutputs); } }
+   * 
+   * } // 4/10 // fact {all x: OFSingleFoodService | x.prepare.inputs in x.prepare.preparedFoodItem + // x.prepare.prepareDestination} for (Field field : fieldWithInputs.keySet()) { // The following
+   * fact is NOT included because x.p1.vout is <<Parmeter>> field // fact {all x: MultipleObjectFlowAlt | x.p1.outputs in x.p1.vout} Set<Field> fields =
+   * removeParameterFields(fieldWithInputs.get(field)); if (fields.size() > 0) toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.oinputs); } for (Field field : fieldWithOutputs.keySet()) {
+   * Set<Field> fields = removeParameterFields(fieldWithOutputs.get(field)); if (fields.size() > 0) toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.ooutputs); }
+   * 
+   * 
+   * 
+   * }
+   */
 
   /**
    * Remove fields with Parameter stereotype from the given fields.
@@ -511,9 +462,9 @@ public class OBMXMI2Alloy {
    * @param original - the set of fields before removing Parameter stereotype removed.
    * @return set of fields after removing Parameter streotype fields
    */
-  private Set<Field> removeParameterFields(Set<Field> original) {
-    return original.stream().filter(f -> !parameterFields.contains(f)).collect(Collectors.toSet());
-  }
+  // private Set<Field> removeParameterFields(Set<Field> original) {
+  // return original.stream().filter(f -> !parameterFields.contains(f)).collect(Collectors.toSet());
+  // }
 
   /**
    * Add fields in Sig (non redefined attributes only), Add cardinality facts (ie., abc = 1) and return set of strings to be used later.
@@ -630,8 +581,8 @@ public class OBMXMI2Alloy {
    * Add facts by analyzing connectors for a Signature(NamedElement/Class).
    * 
    * @param ne - A NamedElement(Class) mapped to a signature.
-   * @param inputs
-   * @param outputs
+   * @param connectorInputPropertiesBySig
+   * @param connectorOutputPropertiesBySig
    * @param sigWithTransferFields
    * @param fieldsWithInputs
    * @param fieldsWithOutputs
@@ -644,336 +595,168 @@ public class OBMXMI2Alloy {
    * @return Set<String> The name of Signature that has at least one transfer or transferbefore connector having the same field type of sourceInputProperty and targetOutputProperty (i.e., 4.1.5.
    *         MultipleObjectFlow's BehaviorWithParameter).
    */
-  private Set<String> processConnector(Class ne, HashMap<String, Set<String>> inputs,
-      HashMap<String, Set<String>> outputs, Set<Sig> sigWithTransferFields,
-      Map<Field, Set<Field>> fieldsWithInputs, Map<Field, Set<Field>> fieldsWithOutputs) {
+  // private Set<String> processConnector(Class ne,
+  // HashMap<String, Set<String>> connectorInputPropertiesBySig,
+  // HashMap<String, Set<String>> connectorOutputPropertiesBySig, Set<Sig> sigWithTransferFields,
+  // Map<Field, Set<Field>> fieldsWithInputs, Map<Field, Set<Field>> fieldsWithOutputs) {
+  //
+  // Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>();
+  // PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
+  //
+  // //
+  // // start handling one of connectors
+  // //
+  // // find sig's constraint
+  // Set<Constraint> constraints = sysMLUtil.getAllRules(ne);
+  // Set<EList<Element>> oneOfSets = SysMLAdapterUtils.getOneOfRules(sysmladapter, constraints); // EList<ConnectorEnd> [ [start, eat] or [order, end]]
+  //
+  // Set<org.eclipse.uml2.uml.Connector> connectors = sysMLUtil.getOwnedConnectors(ne);
+  //
+  // // finding connectors with oneof
+  // Set<Connector> oneOfConnectors = new HashSet<>();
+  // for (Connector cn : connectors) {
+  // for (ConnectorEnd ce : cn.getEnds()) {
+  // for (EList<Element> oneOfSet : oneOfSets) {
+  // Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
+  // if (!found.isEmpty()) {
+  // oneOfConnectors.add(cn);
+  // }
+  // }
+  // }
+  // }
+  //
+  // ConnectableElement s, t;
+  // Map<ConnectableElement, Integer> sourceEndRolesFrequency = new HashMap<>(); // [eat, 2], [start, 1]
+  // Map<ConnectableElement, Integer> targetEndRolesFrequency = new HashMap<>(); // [order, 2],[end, 1]
+  // for (Connector oneOfConnector : oneOfConnectors) {
+  // EList<ConnectorEnd> cends = oneOfConnector.getEnds();
+  // s = cends.get(0).getRole();
+  // t = cends.get(1).getRole();
+  // Integer sFreq = sourceEndRolesFrequency.get(s);
+  // sourceEndRolesFrequency.put(s, sFreq == null ? 1 : sFreq + 1);
+  // Integer tFreq = targetEndRolesFrequency.get(t);
+  // targetEndRolesFrequency.put(t, tFreq == null ? 1 : tFreq + 1);
+  // }
+  // // [start]
+  // Set<ConnectableElement> oneSourceProperties = sourceEndRolesFrequency.entrySet().stream()
+  // .filter(e -> e.getValue() == 1).map(e -> e.getKey()).collect(Collectors.toSet());
+  // // [end]
+  // Set<ConnectableElement> oneTargetProperties = targetEndRolesFrequency.entrySet().stream()
+  // .filter(e -> e.getValue() == 1).map(e -> e.getKey()).collect(Collectors.toSet());
+  //
+  //
+  // for (EList<Element> oneOfSet : oneOfSets) {
+  // handleOneOfConnectors(oneOfSet, sigOfNamedElement, oneOfConnectors, oneSourceProperties,
+  // oneTargetProperties);
+  // }
+  // //
+  // // end of handling one of connectors
+  // //
+  //
+  // // process remaining of connectors
+  // for (org.eclipse.uml2.uml.Connector cn : connectors) {
+  // if (oneOfConnectors.contains(cn))
+  // continue; // oneof connectors are already handled so skip here
+  // if (ne.getInheritedMembers().contains(cn))
+  // continue;// ignore inherited
+  //
+  // // while translating IFSingleFoolService and processing connectors for IFFoodService,
+  // // connectors creating "transferPrepareServe" and "transferServeEat" should be ignored because
+  // // it they are redefined in IFSingleFoodService
+  // if (this.redefinedConnectors.contains(cn))
+  // continue; // ignore
+  //
+  //
+  // CONNECTOR_TYPE connector_type = null;
+  // edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(cn);
+  // if (omgE instanceof edu.umd.omgutil.uml.Connector) {
+  // edu.umd.omgutil.uml.Connector omgConnector = (edu.umd.omgutil.uml.Connector) omgE;
+  //
+  // edu.umd.omgutil.uml.Type owner = omgConnector.getFeaturingType();
+  // String source = null;
+  // String target = null;
+  //
+  // String sourceTypeName = null; // used in Transfer
+  // String targetTypeName = null;// used in Transfer
+  // boolean isBindingConnector = false;
+  //
+  // for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
+  //
+  // if (ce.getDefiningEnd() == null) {
+  // if (cn.getAppliedStereotype(STEREOTYPE_BINDDINGCONNECTOR) != null) {
+  // if (isBindingConnector == false) {
+  // source = ce.getRole().getLabel();
+  // isBindingConnector = true;
+  // } else {
+  // target = ce.getRole().getLabel();
+  // isBindingConnector = false;
+  // }
+  // if (source != null && target != null)
+  // toAlloy.addEqualFact(sigOfNamedElement, source, target);
+  // }
+  // } else {
+  //
+  // String definingEndName = ce.getDefiningEnd().getName();
+  // edu.umd.omgutil.uml.ConnectorEnd end =
+  // (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
+  // List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
+  // .map(f -> f.getName()).collect(Collectors.toList());
+  //
+  // if (definingEndName.equals("happensAfter")) {
+  // connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
+  // source = endsFeatureNames.get(0);
+  // // sourceCN = ce;
+  // } else if (definingEndName.equals("happensBefore")) {
+  // connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
+  // target = endsFeatureNames.get(0);
+  // // targetCN = ce;
+  // } else if (definingEndName.equals("happensDuring-1")) {
+  // connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
+  // source = endsFeatureNames.get(0);
+  // } else if (definingEndName.equals("happensDuring")) {
+  // connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
+  // target = endsFeatureNames.get(0);
+  // } else if (definingEndName.equals("transferSource")) {
+  // connector_type = CONNECTOR_TYPE.TRANSFER;
+  // source = endsFeatureNames.get(0);
+  // sourceTypeName = ce.getRole().getType().getName();
+  //
+  // } else if (definingEndName.equals("transferTarget")) {
+  // connector_type = CONNECTOR_TYPE.TRANSFER;
+  // target = endsFeatureNames.get(0);
+  // targetTypeName = ce.getRole().getType().getName();
+  // }
+  //
+  // if (source == null || target == null)
+  // continue;
+  //
+  // Field sourceField = AlloyUtils.getFieldFromSigOrItsParents(source, sigOfNamedElement);
+  // Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfNamedElement);
+  //
+  // if (connector_type == CONNECTOR_TYPE.HAPPENS_BEFORE) {
+  // toAlloy.createBijectionFilteredHappensBefore(sigOfNamedElement, sourceField,
+  // targetField);
+  // } else if (connector_type == CONNECTOR_TYPE.HAPPENS_DURING)
+  // toAlloy.createBijectionFilteredHappensDuring(sigOfNamedElement, sourceField,
+  // targetField);
+  //
+  // else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
+  // handleTransferConnector(cn, sigOfNamedElement, connectorInputPropertiesBySig,
+  // connectorOutputPropertiesBySig, sigWithTransferFields, sourceTypeName,
+  // targetTypeName,
+  //
+  // sigNameWithTransferConnectorWithSameInputOutputFieldType, sourceField,
+  // targetField, source, target, fieldsWithInputs,
+  // fieldsWithOutputs);
+  // }
+  // }
+  // } // end of connectorEnd
+  // } // end of Connector
+  // } // org.eclipse.uml2.uml.Connector
+  // return sigNameWithTransferConnectorWithSameInputOutputFieldType;
+  // }
+  //
 
-    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>();
-    PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
-
-    //
-    // start handling one of connectors
-    //
-    // find sig's constraint
-    Set<Constraint> constraints = sysMLUtil.getAllRules(ne);
-    Set<EList<Element>> oneOfSets = getOneOfRules(constraints); // EList<ConnectorEnd> [ [start, eat] or [order, end]]
-
-    Set<org.eclipse.uml2.uml.Connector> connectors = sysMLUtil.getOwnedConnectors(ne);
-
-    // finding connectors with oneof
-    Set<Connector> oneOfConnectors = new HashSet<>();
-    for (Connector cn : connectors) {
-      for (ConnectorEnd ce : cn.getEnds()) {
-        for (EList<Element> oneOfSet : oneOfSets) {
-          Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
-          if (!found.isEmpty()) {
-            oneOfConnectors.add(cn);
-          }
-        }
-      }
-    }
-
-    ConnectableElement s, t;
-    Map<ConnectableElement, Integer> sourceEndRolesFrequency = new HashMap<>(); // [eat, 2], [start, 1]
-    Map<ConnectableElement, Integer> targetEndRolesFrequency = new HashMap<>(); // [order, 2],[end, 1]
-    for (Connector oneOfConnector : oneOfConnectors) {
-      EList<ConnectorEnd> cends = oneOfConnector.getEnds();
-      s = cends.get(0).getRole();
-      t = cends.get(1).getRole();
-      Integer sFreq = sourceEndRolesFrequency.get(s);
-      sourceEndRolesFrequency.put(s, sFreq == null ? 1 : sFreq + 1);
-      Integer tFreq = targetEndRolesFrequency.get(t);
-      targetEndRolesFrequency.put(t, tFreq == null ? 1 : tFreq + 1);
-    }
-    // [start]
-    Set<ConnectableElement> oneSourceProperties = sourceEndRolesFrequency.entrySet().stream()
-        .filter(e -> e.getValue() == 1).map(e -> e.getKey()).collect(Collectors.toSet());
-    // [end]
-    Set<ConnectableElement> oneTargetProperties = targetEndRolesFrequency.entrySet().stream()
-        .filter(e -> e.getValue() == 1).map(e -> e.getKey()).collect(Collectors.toSet());
-
-
-    for (EList<Element> oneOfSet : oneOfSets) {
-      handleOneOfConnectors(oneOfSet, sigOfNamedElement, oneOfConnectors, oneSourceProperties,
-          oneTargetProperties);
-    }
-    //
-    // end of handling one of connectors
-    //
-
-    // process remaining of connectors
-    for (org.eclipse.uml2.uml.Connector cn : connectors) {
-      if (oneOfConnectors.contains(cn))
-        continue; // oneof connectors are already handled so skip here
-      if (ne.getInheritedMembers().contains(cn))
-        continue;// ignore inherited
-
-      // while translating IFSingleFoolService and processing connectors for IFFoodService,
-      // connectors creating "transferPrepareServe" and "transferServeEat" should be ignored because
-      // it they are redefined in IFSingleFoodService
-      if (this.redefinedConnectors.contains(cn))
-        continue; // ignore
-
-
-      CONNECTOR_TYPE connector_type = null;
-      edu.umd.omgutil.uml.Element omgE = sysmladapter.mapObject(cn);
-      if (omgE instanceof edu.umd.omgutil.uml.Connector) {
-        edu.umd.omgutil.uml.Connector omgConnector = (edu.umd.omgutil.uml.Connector) omgE;
-
-        edu.umd.omgutil.uml.Type owner = omgConnector.getFeaturingType();
-        String source = null;
-        String target = null;
-
-        String sourceTypeName = null; // used in Transfer
-        String targetTypeName = null;// used in Transfer
-        boolean isBindingConnector = false;
-
-        for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
-
-          if (ce.getDefiningEnd() == null) {
-            if (cn.getAppliedStereotype(STEREOTYPE_BINDDINGCONNECTOR) != null) {
-              if (isBindingConnector == false) {
-                source = ce.getRole().getLabel();
-                isBindingConnector = true;
-              } else {
-                target = ce.getRole().getLabel();
-                isBindingConnector = false;
-              }
-              if (source != null && target != null)
-                toAlloy.addEqualFact(sigOfNamedElement, source, target);
-            }
-          } else {
-
-            String definingEndName = ce.getDefiningEnd().getName();
-            edu.umd.omgutil.uml.ConnectorEnd end =
-                (edu.umd.omgutil.uml.ConnectorEnd) sysmladapter.mapObject(ce);
-            List<String> endsFeatureNames = end.getCorrectedFeaturePath(owner).stream()
-                .map(f -> f.getName()).collect(Collectors.toList());
-
-            if (definingEndName.equals("happensAfter")) {
-              connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
-              source = endsFeatureNames.get(0);
-              // sourceCN = ce;
-            } else if (definingEndName.equals("happensBefore")) {
-              connector_type = CONNECTOR_TYPE.HAPPENS_BEFORE;
-              target = endsFeatureNames.get(0);
-              // targetCN = ce;
-            } else if (definingEndName.equals("happensDuring-1")) {
-              connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
-              source = endsFeatureNames.get(0);
-            } else if (definingEndName.equals("happensDuring")) {
-              connector_type = CONNECTOR_TYPE.HAPPENS_DURING;
-              target = endsFeatureNames.get(0);
-            } else if (definingEndName.equals("transferSource")) {
-              connector_type = CONNECTOR_TYPE.TRANSFER;
-              source = endsFeatureNames.get(0);
-              sourceTypeName = ce.getRole().getType().getName();
-
-            } else if (definingEndName.equals("transferTarget")) {
-              connector_type = CONNECTOR_TYPE.TRANSFER;
-              target = endsFeatureNames.get(0);
-              targetTypeName = ce.getRole().getType().getName();
-            }
-
-            if (source == null || target == null)
-              continue;
-
-            Field sourceField = AlloyUtils.getFieldFromSigOrItsParents(source, sigOfNamedElement);
-            Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfNamedElement);
-
-            if (connector_type == CONNECTOR_TYPE.HAPPENS_BEFORE) {
-              toAlloy.createBijectionFilteredHappensBefore(sigOfNamedElement, sourceField,
-                  targetField);
-            } else if (connector_type == CONNECTOR_TYPE.HAPPENS_DURING)
-              toAlloy.createBijectionFilteredHappensDuring(sigOfNamedElement, sourceField,
-                  targetField);
-
-            else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
-
-              for (Connector redefinedConnector : cn.getRedefinedConnectors()) {
-                for (ConnectorEnd cce : ((Connector) redefinedConnector).getEnds()) {
-
-                  if (cce.getDefiningEnd().getName().equals("transferSource")
-                      || cce.getDefiningEnd().getName().equals("transferTarget")) {
-                    // while processing child sig connectors, find parent connector that child is
-                    // redefining.
-                    redefinedConnectors.add(redefinedConnector);
-                    break;
-                  }
-                }
-              }
-              Association type = cn.getType();
-              List<Set<String>> sourceOutputAndTargetInputProperties =
-                  handleTransferAndTransferBeforeInputsAndOutputs(cn);
-              sigWithTransferFields.add(sigOfNamedElement);
-
-              Utils.addToHashMap(inputs, targetTypeName,
-                  sourceOutputAndTargetInputProperties.get(1)); // "targetInputProperty"
-              Utils.addToHashMap(outputs, sourceTypeName,
-                  sourceOutputAndTargetInputProperties.get(0));// "sourceOutputProperty",
-
-              boolean addEquals = false;
-              if (targetTypeName.equals(sourceTypeName)) { // ie., targetTypeName = sourceTypeName
-                                                           // is "BehaviorWithParemeter" for 4.1.5
-                                                           // Multiple Execution Steps2 - Multiple
-                                                           // Object Flow
-                sigNameWithTransferConnectorWithSameInputOutputFieldType.add(targetTypeName);
-                addEquals = true;
-              }
-
-              boolean toBeInherited = false;
-
-
-              // only leafSig
-              List<Set<Field>> targetInputsSourceOutputsFields = null;
-              if (leafSigs.contains(sigOfNamedElement)) {
-                targetInputsSourceOutputsFields =
-                    processConnectorInputsOutputs(sigOfNamedElement, sourceField, targetField,
-                        sourceTypeName,
-                        targetTypeName, sourceOutputAndTargetInputProperties, fieldsWithInputs,
-                        fieldsWithOutputs, addEquals);
-
-              } else { // non leaf
-                targetInputsSourceOutputsFields = processConnectorInputsOutputs(sigOfNamedElement,
-                    sourceField, targetField, sourceTypeName, targetTypeName,
-                    sourceOutputAndTargetInputProperties, null, null, addEquals);
-                // findInputAndOutputsFields(sigOfNamedElement, source, target, sourceTypeName,
-                // targetTypeName, sourceOutputAndTargetInputProperties);
-                toBeInherited = true;
-              }
-              if (type.getName().equals("Transfer")) {
-                Sig.Field transferField =
-                    handTransferFieldAndFnPrep(sigOfNamedElement, source, target);
-                addToSigToFactsMap(sigOfNamedElement.label,
-                    toAlloy.addTransferFacts(sigOfNamedElement, transferField, source, target,
-                        targetInputsSourceOutputsFields, toBeInherited));
-              } else if (type.getName().equals("TransferBefore")) {
-                Sig.Field transferField =
-                    handTransferFieldAndFnPrep(sigOfNamedElement, source, target);
-                addToSigToFactsMap(sigOfNamedElement.label,
-                    toAlloy.addTransferBeforeFacts(sigOfNamedElement, transferField, source, target,
-                        targetInputsSourceOutputsFields, toBeInherited));
-              }
-            } // end of connector_type == CONNECTOR_TYPE.TRANSFER
-          }
-        } // end of connectorEnd
-      } // end of Connector
-    } // org.eclipse.uml2.uml.Connector
-    return sigNameWithTransferConnectorWithSameInputOutputFieldType;
-  }
-
-
-
-  /**
-   * adding facts inputs and outputs for bijection like below for leaf sig 1) if addequal is true - fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs} 2) - fact {all x: IFSingleFoodService
-   * | bijectionFiltered[outputs, x.order, x.order.orderedFoodItem]}
-   * 
-   * @param sig
-   * @param source in the connector
-   * @param target in the connector
-   * @param sourceTypeName type of connector source(output)
-   * @param targetTypeName type of connector target(input)
-   * @param sourceOutputAndTargetInputProperties
-   * @param fieldsWithInputs null or non-leaf sig
-   * @param fieldsWithOutputs null or non-leaf sig
-   * @return List<Set<Field>> [0] = targetInputFields [1] = sourceOutputFields
-   */
-  private List<Set<Field>> processConnectorInputsOutputs(PrimSig sig, Field sourceField,
-      Field targetField,
-      String sourceTypeName, String targetTypeName,
-      List<Set<String>> sourceOutputAndTargetInputProperties,
-      Map<Field, Set<Field>> fieldsWithInputs, Map<Field, Set<Field>> fieldsWithOutputs,
-      boolean addEquals) {
-
-    // if addEquals are true add the fact like below:
-    // targetTypeName = sourceTypeName (ie., BehaviorWithParameter)
-    // source => outputs
-    // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-
-    // p1, order(sigOfNamedElement= IFSIngleFoodService)
-
-    Set<Field> addOutputToFields = new HashSet<>();
-    Set<Field> addInputToFields = new HashSet<>();
-    if (sourceField != null) {
-      PrimSig typeSig = toAlloy.getSig(sourceTypeName);// sourceTypeName =IFCustomerOrder
-
-      for (String sourceOutput : sourceOutputAndTargetInputProperties.get(0)) {
-        // orderedFoodItem
-        Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(
-            // [orderFoodItem, prepareFoodItem],
-            sourceOutput, typeSig);// i
-        // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
-        if (!parameterFields.contains(outputTo))
-          addOutputToFields.add(outputTo);
-
-        // only for leaf-sig
-        if (fieldsWithOutputs != null
-            && !AlloyUtils.containsBothKeyAndValue(fieldsWithOutputs, sourceField, outputTo)) {
-          fieldsWithOutputs.computeIfAbsent(sourceField, v -> new HashSet<Field>()).add(outputTo);
-          // addToHashMap(fieldsWithOutputs, sourceField, outputTo);
-          toAlloy.createBijectionFilteredOutputs(sig, sourceField, sourceField.join(outputTo));
-          if (addEquals)
-            toAlloy.createInField(sig, sourceField, sourceField.join(outputTo),
-                outputTo, Alloy.ooutputs);
-
-        }
-      }
-    }
-
-    // target => inputs
-    // fact {all x: MultipleObjectFlow | all p: x.p2 | p.i = p.inputs}
-
-
-    if (targetField != null) {
-      PrimSig typeSig = toAlloy.getSig(targetTypeName);// IFCustomPrepare
-      for (String targetInputProperties : sourceOutputAndTargetInputProperties.get(1)) {
-        Field inputTo = AlloyUtils.getFieldFromSigOrItsParents(targetInputProperties, // i
-            typeSig);
-        if (!parameterFields.contains(inputTo))
-          addInputToFields.add(inputTo);
-        // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
-        // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
-        // x.prepare.preparedFoodItem]}
-        /* addToSigToFactsMap(sigOfNamedElement.label, */
-        // only for leaf sig
-        if (fieldsWithInputs != null
-            && !AlloyUtils.containsBothKeyAndValue(fieldsWithInputs, targetField, inputTo)) {
-          // addToHashMap(fieldsWithInputs, targetField, inputTo);
-          fieldsWithInputs.computeIfAbsent(targetField, v -> new HashSet<Field>()).add(inputTo);
-          toAlloy.createBijectionFilteredInputs(sig, targetField, targetField.join(inputTo));
-          if (addEquals) {
-            toAlloy.createInField(sig, targetField, targetField.join(inputTo),
-                inputTo, Alloy.oinputs);// );
-          }
-        }
-      }
-    }
-    return List.of(addOutputToFields, addInputToFields);
-  }
-
-  private Sig.Field handTransferFieldAndFnPrep(PrimSig sig, String source, String target) {
-    String fieldName = "transfer" + Utils.firstCharUpper(source) + Utils.firstCharUpper(target);
-    // adding transferFields in stepProperties
-    stepPropertiesBySig.get(sig.label).add(fieldName);
-    addSigToTransferFieldsMap(sig, fieldName);
-    Sig.Field transferField = AlloyUtils.addTransferField(fieldName, sig);
-    return transferField;
-  }
-
-  /**
-   * 
-   * @param sig
-   * @param fieldName
-   */
-  private void addSigToTransferFieldsMap(PrimSig sig, String fieldName) {
-    Set<String> tFields;
-    if ((tFields = sigToTransferFieldMap.get(sig.label)) == null) {
-      tFields = new HashSet<>();
-      tFields.add(fieldName);
-      sigToTransferFieldMap.put(sig.label, tFields);
-    } else
-      tFields.add(fieldName);
-  }
 
 
   /*
@@ -1039,313 +822,6 @@ public class OBMXMI2Alloy {
     else if (umlElement instanceof org.eclipse.uml2.uml.PrimitiveType) {
       propertiesByClass.put(umlElement, null);
     }
-  }
-
-  /**
-   * Add bijection happensBefore or function and inverseFunction happensBefore facts.
-   * 
-   * 
-   * For example, oneOfSet is [order, end], with 3 one of connectors [c1 [eat,order],c2 [eat, end], c3[start, order]], c1 and c2 are the connector to be get information from. Then sources = [eat, eat]
-   * and targets = [order, end]. Since end is in the given oneTargetProperties and target-side has oneOf constraint, two facts: functionFiltered[happensBefore, eat, end+order} and
-   * inverseFunctionFiltered[happensBefore, eat, end] are added (order <-- eat --> end).
-   * 
-   * 
-   * @param oneOfSet List of ConnectableElement both having oneOf constraint. Both should be source-side or target-side.
-   * @param ownerSig the owner sig of one of connectors
-   * @param oneOfConnectors the one of connectors if the sig .
-   * @param oneSourceProperties list of connectableElements of the sig's one of connectors which has only one outgoing.
-   * @param oneTargetProperties list of connectableElements of the sig's one of connectors which has only one incoming.
-   */
-  private void handleOneOfConnectors(List<Element> oneOfSet, PrimSig ownerSig,
-      Set<Connector> oneOfConnectors,
-      Set<ConnectableElement> oneSourceProperties,
-      Set<ConnectableElement> oneTargetProperties) {
-
-    List<ConnectableElement> sources = new ArrayList<>();
-    List<ConnectableElement> targets = new ArrayList<>();
-
-    boolean isSourceSideOneOf = false;
-    for (org.eclipse.uml2.uml.Connector cn : oneOfConnectors) {
-      for (ConnectorEnd ce : cn.getEnds()) {
-        Optional<Element> found = oneOfSet.stream().filter(e -> e == ce).findFirst();
-        if (!found.isEmpty()) {
-          List<ConnectableElement> ces = MDUtils.getEndRolesForCEFirst(cn, ce);
-          if (ces == null) { // this should not happens
-            this.messages.add("A connector " + cn.getQualifiedName()
-                + " does not have two connector ends, so ignored.");
-            return;
-          }
-          String definingEndName = ce.getDefiningEnd().getName();
-          if (definingEndName.equals("happensAfter")) {
-            isSourceSideOneOf = true; // source-sides is oneOf
-            sources.add(ces.get(0));
-            targets.add(ces.get(1));
-
-
-          } else if (definingEndName.equals("happensBefore")) {
-            isSourceSideOneOf = false; // target-side is oneOf
-            sources.add(ces.get(1));// [eat, eat]
-            targets.add(ces.get(0)); // [order,end]
-          }
-        }
-      }
-    }
-
-    Expr beforeExpr = null;
-    Expr afterExpr = null;
-    if (isSourceSideOneOf) { // sourceSide needs to be combined
-      afterExpr = AlloyUtils.getFieldFromSigOrItsParents(targets.get(0).getName(), ownerSig);
-      List<String> sourceNames = // sorting source names alphabetically = how to be write out
-          sources.stream().map(e -> e.getName()).sorted().collect(Collectors.toList());
-      for (String sourceName : sourceNames) {
-        beforeExpr = beforeExpr == null
-            ? AlloyUtils.getFieldFromSigOrItsParents(sourceName,
-                ownerSig)
-            : beforeExpr.plus(AlloyUtils
-                .getFieldFromSigOrItsParents(sourceName, ownerSig));
-      }
-
-    } else { // targetSide needs to be combined
-      List<String> targetNames = // sorting target names alphabetically = to be write out
-          targets.stream().map(e -> e.getName()).sorted().collect(Collectors.toList());
-      for (String targetName : targetNames) {
-        afterExpr = afterExpr == null
-            ? AlloyUtils.getFieldFromSigOrItsParents(targetName,
-                ownerSig)
-            : afterExpr.plus(AlloyUtils
-                .getFieldFromSigOrItsParents(targetName, ownerSig));
-      }
-      beforeExpr = AlloyUtils
-          .getFieldFromSigOrItsParents(sources.get(0).getName(), ownerSig);
-    }
-
-    if (isSourceSideOneOf) {
-      boolean allSourceOneOf = true;
-      if (oneSourceProperties.size() == sources.size()) {
-        for (ConnectableElement ce : oneSourceProperties) {
-          if (!sources.contains(ce)) {
-            allSourceOneOf = false;
-            break;
-          }
-        }
-      } else
-        allSourceOneOf = false;
-
-      // if both are one sourceProperties
-      if (allSourceOneOf) { // merge a + b -> c
-        toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr,
-            afterExpr);
-      } else {
-        for (ConnectableElement ce : oneSourceProperties) {
-          // need fn a -> b or a ->c
-          Expr beforeExpr_modified = AlloyUtils.getFieldFromSigOrItsParents(ce.getName(),
-              ownerSig); // start
-          toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
-              beforeExpr_modified,
-              afterExpr);// order
-        }
-        // inverse fn a + b -> c
-        // fact {all x: OFControlLoopFoodService | inverseFunctionFiltered[happensBefore, x.a + x.b, x.c]}
-        toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr, // a + b
-            afterExpr);// order
-      }
-    } else { // targetSide has OneOf
-
-      boolean allTargetOneOf = true;
-      if (oneTargetProperties.size() == targets.size()) {
-        for (ConnectableElement ce : oneTargetProperties) {
-          if (!targets.contains(ce)) {
-            allTargetOneOf = false;
-            break;
-          }
-        }
-      } else
-        allTargetOneOf = false;
-
-      // if both are one targetProperties
-      if (allTargetOneOf) { // decision a -> b + c
-        toAlloy.createBijectionFilteredHappensBefore(ownerSig, beforeExpr,
-            afterExpr);
-      } else {
-        // fn a -> b + c
-        // fact {all x: OFControlLoopFoodService | functionFiltered[happensBefore, x.a, x.b + x.c]}
-        toAlloy.createFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig, beforeExpr,
-            afterExpr);
-
-        // inversefn a -> b or a -> c
-        for (ConnectableElement ce : oneTargetProperties) {
-          Expr afterExpr_modified = AlloyUtils.getFieldFromSigOrItsParents(ce.getName(),
-              ownerSig);// end
-          toAlloy.createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(ownerSig,
-              beforeExpr,
-              afterExpr_modified);
-        }
-      }
-    }
-
-  }
-
-  /**
-   * Find sourceOutputProperty and targetInputProperty of the given connector with <<ItemFlow>> or <<ObjectFlow>> Stereotype
-   * 
-   * @param cn - a connector having the properties
-   * @return List<Set<String>> 1st in the list is sourceOutputProperty names and 2nd in the list is the targetInputProperty names
-   */
-  private List<Set<String>> handleTransferAndTransferBeforeInputsAndOutputs(
-      org.eclipse.uml2.uml.Connector cn) {
-
-
-    List<Set<String>> sourceOutputAndTargetInputProperties = new ArrayList<>();
-    String[] stTagNames = {"sourceOutputProperty", "targetInputProperty"};// , "itemType"}; this
-                                                                          // property value is class
-                                                                          // not property
-    Map<String, List<Property>> stTagItemFlowValues =
-        getStreotypePropertyValues(cn, STEREOTYPE_ITEMFLOW, stTagNames);
-    Map<String, List<Property>> stTagObjectFlowValues =
-        getStreotypePropertyValues(cn, STEREOTYPE_OBJECTFLOW, stTagNames);
-
-    List<Property> sos = null;
-    List<Property> tis = null;
-
-    if (stTagObjectFlowValues != null) { // ObjectFlow
-      sos = stTagObjectFlowValues.get(stTagNames[0]); // sourceOutputProperty = x.outputs
-      tis = stTagObjectFlowValues.get(stTagNames[1]); // targetInputProperty = x.inputs
-    }
-
-    if (stTagItemFlowValues != null) { // ItemFlow
-      sos = stTagItemFlowValues.get(stTagNames[0]); // sourceOutputProperty - name is suppliedProduct
-      tis = stTagItemFlowValues.get(stTagNames[1]); // targetInputProperty - name is "receivedProduct"
-    }
-    Class sosOwner = null;
-    Class tisOwner = null;
-    Set<String> sourceOutput = new HashSet<>();
-    Set<String> targetInput = new HashSet<>();
-    if (sos != null && tis != null) {
-      for (Property p : sos) {
-        sosOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
-        sourceOutput.add(p.getName()); // p.getName() is vout. so create {B2(owner) | x.vout= x.output}
-        transferingTypeSig.add(p.getType().getName());
-      }
-      for (Property p : tis) {
-        tisOwner = ((org.eclipse.uml2.uml.Class) p.getOwner());
-        transferingTypeSig.add(p.getType().getName());
-        targetInput.add(p.getName()); // = x.inputs
-      }
-      // 4.1.4 Transfers and Parameters
-      // preventing fact {all x:B| x.vin = x.output}} to be generated from <<ItemFlow>> between
-      // B.vin and b1(B1).vin - b1 is a field of B
-      // but having fact {all x: B1| x.vin = x.inputs} is ok
-      EList<Property> atts = sosOwner.getAttributes();
-      for (Property att : atts) // b1
-        if (att.getType() == tisOwner) { // b1.getType() == B1 and tisOwner == B1
-          sourceOutput = null;
-          break;
-        }
-      // preventing fact {all x: B |x.vout = x.inputs} - to be generated from <<ItemFlow>> between
-      // B.vout and b2(B2).vout - b2 is a field of B
-      // but having fact {all x: B2|x.vout = x.outputs} is ok
-      atts = tisOwner.getAttributes(); // tisOwner is B
-      for (Property att : atts) // b2
-        if (att.getType() == sosOwner) { // b2.getType() == B2 and sosOwner == B2
-          targetInput = null;
-          break;
-        }
-    }
-    sourceOutputAndTargetInputProperties.add(sourceOutput);
-    sourceOutputAndTargetInputProperties.add(targetInput);
-    return sourceOutputAndTargetInputProperties;
-  }
-
-  /**
-   * Find a stereotype of element of the given streotypeName and return map of its tagName(string) and values(Properties)
-   *
-   * @param element - element whose stereotype properties to be found
-   * @param streotypeName - stereotype name in string
-   * @param tagNames -stereotype property names
-   * @return Map (key = tag/property name string, value = properties) or null if the element does not have stereotype applied.
-   */
-  private Map<String, List<Property>> getStreotypePropertyValues(Element element,
-      String streotypeName, String[] tagNames) {
-
-    Map<String, List<Property>> propertysByTagNames = new HashMap<>();
-    Stereotype st = null;
-    if ((st = element.getAppliedStereotype(streotypeName)) != null) {
-      for (String propertyName : tagNames) {
-        List<Property> results = new ArrayList<>();
-        Object pObject = (element.getValue(st, propertyName));
-        if (pObject instanceof List) {
-          @SuppressWarnings("unchecked")
-          List<Object> properties = (List<Object>) pObject;
-          for (Object property : properties) {
-            if (property instanceof Property) {
-              results.add((Property) property);
-            } else {
-              this.messages.add(
-                  propertyName + " is not an instance of Property but "
-                      + property.getClass().getSimpleName() + ". so ignored.");
-            }
-          }
-          propertysByTagNames.put(propertyName, results);
-        }
-      }
-      return propertysByTagNames;
-    }
-    return null;
-  }
-
-  /**
-   * Get two rules (ConnectorEnds) of each oneof constraint and return as set.
-   * 
-   * @param cs a set of Constraints
-   * @return set of oneof constraint's two rules (ConnectorEnd)
-   */
-  private Set<EList<Element>> getOneOfRules(Set<Constraint> cs) {
-    Set<EList<Element>> oneOfSet = new HashSet<>();
-    for (Constraint c : cs) {
-      ValueSpecification vs = c.getSpecification();
-      if (vs instanceof OpaqueExpressionImpl) {
-        edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
-        if (omgE.getBodies().contains("OneOf")) {
-          EList<Element> es = c.getConstrainedElements(); // list of connectorEnds
-          oneOfSet.add(es);
-        }
-      }
-    }
-    return oneOfSet;
-  }
-
-
-
-  // private static void addToHashMap(Map<Field, Set<Field>> map, Field key, Field value) {
-  // map.computeIfAbsent(key, k -> new HashSet<Field>()).add(value);
-  //
-  // // if (map.containsKey(key))
-  // // map.get(key).add(value);
-  // // else {
-  // // Set<Field> vs = new HashSet<Field>();
-  // // vs.add(value);
-  // // map.put(key, vs);
-  // // }
-  // }
-
-
-
-  /**
-   * Add to sigToFactsMap instance variable if facts is not null
-   * 
-   * @param sigName - the signature name that is a key of sigToFactsMap
-   * @param facts - Set of Expr facts to be added to sigToFactsMap
-   */
-  private void addToSigToFactsMap(String sigName, Set<Expr> facts) {
-    if (facts == null)
-      return;
-    sigToFactsMap.computeIfAbsent(sigName, v -> new HashSet<Expr>()).addAll(facts);
-
-    // Set<Expr> allFacts = sigToFactsMap.get(sigName);
-    // if (allFacts == null)
-    // sigToFactsMap.put(sigName, facts);
-    // else
-    // allFacts.addAll(facts);
   }
 
   /**

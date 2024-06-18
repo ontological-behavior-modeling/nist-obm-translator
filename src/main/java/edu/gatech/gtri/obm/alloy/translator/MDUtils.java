@@ -37,6 +37,12 @@ public class MDUtils {
     return null;
   }
 
+  /**
+   * Convert A set of Property to a map having the property name as a key and the property's type name as a value.
+   * 
+   * @param ps - a set of property
+   * @return A map
+   */
   public static Map<String, String> toNameAndType(Set<Property> ps) {
     Map<String, String> map = new HashMap<>();
     for (Property p : ps) {
@@ -45,12 +51,16 @@ public class MDUtils {
     return map;
   }
 
-
+  /**
+   * Find a set of NamedElement that is leaf in hierarchy from the given NamedElements
+   * 
+   * @param allNEs - all NamedElements
+   * @return a set of NamedElement that is leaf in hierarchy
+   */
   public static Set<NamedElement> findLeafClass(Set<NamedElement> allNEs) {
     Set<NamedElement> leafClasses = new HashSet<>();
     Set<Classifier> parentClasses = new HashSet<>();
     for (NamedElement ne : allNEs) {
-      System.out.println(ne.getName());
       leafClasses.add(ne);
       if (ne instanceof Class) {
         List<Classifier> parents = ((Class) ne).getGenerals();
@@ -64,11 +74,11 @@ public class MDUtils {
 
 
   /**
-   * Get class in hierarchy order in list but not include "BehaviorOccurence" or "Occurrence". Smaller the index, more ancestor. For example, for 4.2.1 FoodService Control Flow - BuffetService.als, [0]
-   * = Food Service, [1] = SingleFoodService, and [2] = BuffetService where mainClass passed if for BuffertService
+   * Get class in hierarchy (list) but not include "BehaviorOccurence" or "Occurrence". The top of hierarchy has an index of 0. The given class is the leaf/bottom of hierarchy class and has the largest
+   * index. For example, for 4.2.1 FoodService Control Flow - BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService when the given class is BuffetService.
    * 
-   * @param aClass
-   * @return
+   * @param aClass - Class that is the bottom/leaf of the hierarchy
+   * @return A list of class in hierarchy
    */
   public static List<Class> createListIncludeSelfAndParents(Class aClass) {
     List<Class> list = new ArrayList<Class>();

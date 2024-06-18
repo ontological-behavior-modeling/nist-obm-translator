@@ -18,9 +18,9 @@ public class Utils {
 
 
   /**
-   * Add values to a map if values is not null or size() != 0.
+   * Add values to the given map if the given values is not null or size() != 0 for the given key.
    * 
-   * @param map - Map with key as String and value as Set<String>
+   * @param map - a map (key = string, value = set of strings)
    * @param key - A string key of the map
    * @param values - Set<String> value of the map
    */

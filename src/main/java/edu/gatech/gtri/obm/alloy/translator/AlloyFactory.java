@@ -263,7 +263,10 @@ public class AlloyFactory {
   }
 
   // fact {all x: B1 | x.vin = x.inputs}
+  // because to support inheritance
   // change to {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}
+  // other example) fact {all x: OFCustomPrepare | x.prepareDestination + x.preparedFoodItem in x.inputs}
+  // and fact {all x: OFCustomPrepare | x.inputs in x.prepareDestination + x.preparedFoodItem}
   protected static Set<Expr> exprs_in(PrimSig ownerSig, List<Sig.Field> sortedFields, Func func) {
     ExprVar varX = makeVarX(ownerSig);
     Decl decl = makeDecl(varX, ownerSig);
@@ -328,11 +331,12 @@ public class AlloyFactory {
     return expr_noXFunc(sig, Alloy.osteps);
   }
 
-  // all x | no inputs.x or // {all x| no outputs.x}
+  // {all x| no outputs.x}
   protected static Expr expr_noOutputsX(Sig sig) {
     return expr_noFuncX(sig, Alloy.ooutputs);
   }
 
+  // {all x| no inputs.x}
   protected static Expr expr_noInputsX(Sig sig) {
     return expr_noFuncX(sig, Alloy.oinputs);
   }
