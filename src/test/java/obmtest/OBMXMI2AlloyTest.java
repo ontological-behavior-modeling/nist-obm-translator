@@ -29,6 +29,19 @@ class OBMXMI2AlloyTest {
   @CsvSource({
 
       // alloy file in name, qualifiedName of behavior model(class), boolean true if expected to pass, false if expected to fail
+      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
+      "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
+      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
+
+
+      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
+      "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
+      "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
+
+      // expected to fail
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
+
       "4.1.1 Time Orderings - AllControl.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::AllControl, true",
       "4.1.1 Time Orderings - Decision.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Decision, true",
       "4.1.1 Time Orderings - Fork.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork, true",
@@ -37,10 +50,6 @@ class OBMXMI2AlloyTest {
       "4.1.1 Time Orderings - SimpleSequence.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence, true",
       "4.1.2 Loops - Loop.als, Model::4.1 Basic Examples::4.1.2 Loop::Loop ,true",
       "4.1.3 Behaviors with Steps - Composed.als, Model::4.1 Basic Examples::4.1.3 Behaviors with Steps::Composed, true",
-      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
-      "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
-      "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
-      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
 
       "4.1.6 Unsatisfiable - UnsatisfiableAsymmetry.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableAsymmetry, true",
       "4.1.6 Unsatisfiable - UnsatisfiableComposition1.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableComposition1, true",
@@ -55,13 +64,6 @@ class OBMXMI2AlloyTest {
       "4.2.1 Food Service Control Flow - SingleFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::SingleFoodService, true",
       "4.2.1 Food Service Control Flow - UnsatisfiableFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",
 
-      "4.2.2 Food Service Object Flow - OFFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFFoodService, true",
-      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
-      "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
-      "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
-
-      // expected to fail
-      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
   })
 
 

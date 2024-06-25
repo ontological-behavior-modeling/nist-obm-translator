@@ -12,8 +12,10 @@ import org.eclipse.uml2.uml.Classifier;
 import org.eclipse.uml2.uml.ConnectableElement;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
+import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
+import org.eclipse.uml2.uml.Stereotype;
 
 
 public class MDUtils {
@@ -111,4 +113,42 @@ public class MDUtils {
     } else
       return null;
   }
+
+  /**
+   * Find a stereotype of element of the given streotypeName and return map of its tagName(string) and values(Properties)
+   *
+   * @param element - element whose stereotype properties to be found
+   * @param streotypeName - stereotype name in string
+   * @param tagNames -stereotype property names
+   * @return Map (key = tag/property name string, value = properties) or null if the element does not have stereotype applied.
+   */
+  protected static Map<String, List<Property>> getStreotypePropertyValues(Element element,
+      String streotypeName, String[] tagNames, List<String> messages) {
+
+    Map<String, List<Property>> propertysByTagNames = new HashMap<>();
+    Stereotype st = null;
+    if ((st = element.getAppliedStereotype(streotypeName)) != null) {
+      for (String propertyName : tagNames) {
+        List<Property> results = new ArrayList<>();
+        Object pObject = (element.getValue(st, propertyName));
+        if (pObject instanceof List) {
+          @SuppressWarnings("unchecked")
+          List<Object> properties = (List<Object>) pObject;
+          for (Object property : properties) {
+            if (property instanceof Property) {
+              results.add((Property) property);
+            } else {
+              messages.add(
+                  propertyName + " is not an instance of Property but "
+                      + property.getClass().getSimpleName() + ". so ignored.");
+            }
+          }
+          propertysByTagNames.put(propertyName, results);
+        }
+      }
+      return propertysByTagNames;
+    }
+    return null;
+  }
+
 }

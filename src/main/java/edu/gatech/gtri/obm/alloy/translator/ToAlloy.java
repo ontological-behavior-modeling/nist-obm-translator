@@ -23,7 +23,6 @@ public class ToAlloy {
    */
   private Map<String, PrimSig> sigByName;
 
-
   /**
    * 
    * @param working_dir where required alloy library (Transfer) is locating
@@ -341,15 +340,16 @@ public class ToAlloy {
   protected Set<Expr> addTransferBeforeFacts(PrimSig ownerSig, Expr transfer, String sourceName,
       String targetName, List<Set<Field>> targetInputsSourceOutputsFields, boolean toBeInherited) {
 
-    Set<Expr> factsWithoutAll = new HashSet<>();
-    factsWithoutAll.addAll(addTransferFacts(ownerSig, transfer, sourceName, targetName,
-        targetInputsSourceOutputsFields, toBeInherited));
+    // factsWithoutAll = isAfterSource[x.transferOrderServe] of
+    // fact {all x: OFFoodService | isAfterSource[x.transferOrderServe]}
+    Set<Expr> factsWithoutAll = addTransferFacts(ownerSig, transfer, sourceName, targetName,
+        targetInputsSourceOutputsFields, toBeInherited);
 
     Set<Expr> facts = AlloyFactory.exprs_isAfterSourceIsBeforeTarget(ownerSig, transfer);
 
     if (!toBeInherited) {
 
-      // (!toBeInherited) filter added have
+      // facts above have
       // fact {all x: OFFoodService | isAfterSource[x.transferOrderServe]}
       // fact {all x: OFFoodService | isBeforeTarget[x.transferOrderServe]}
       // but NOT in inherited OFSingleFoodServie like
@@ -358,6 +358,7 @@ public class ToAlloy {
 
       factsWithoutAll.addAll(facts);
     }
+    // toSigAllFacts make expr like "isAfterSource[x.transferOrderServe]" to "fact {all x: OFFoodService | isAfterSource[x.transferOrderServe]}"
     alloy.addToFacts(AlloyUtils.toSigAllFacts(ownerSig, facts));
     return factsWithoutAll;
   }
@@ -671,8 +672,6 @@ public class ToAlloy {
     }
     return flowTypeSig;
   }
-
-
 
   protected void addFacts(String sigName, Set<Expr> exprs) {
     alloy.addToFacts(AlloyUtils.toSigAllFacts(sigByName.get(sigName), exprs));
