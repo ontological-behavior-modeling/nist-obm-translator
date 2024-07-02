@@ -330,24 +330,15 @@ public class AlloyUtils {
   }
 
   /**
-   * Return boolean if the map contains both the given key and the given value
+   * Return boolean if the map not contain both the given key and the given value
    * 
    * @param map key = Field, values = Set of Fields
-   * @param key key to be checked
-   * @param value value of the key to be checked
-   * @return true if both the given key and the given value is in the map, otherwise return false
+   * @param key key(Field) to be checked
+   * @param value value(Field) to be checked
+   * @return true if both the given key and the given value is not in the map, otherwise return false
    */
-  public static boolean containsBothKeyAndValue(Map<Field, Set<Field>> map, Field key,
+  public static boolean notContainBothKeyAndValue(Map<Field, Set<Field>> map, Field key,
       Field value) {
-    if (!map.containsKey(key))
-      return false;
-    else {
-      if (!map.get(key).contains(value))
-        return false;
-    }
-    return true;
+    return map.containsKey(key) ? (map.get(key).contains(value) ? false : true) : true;
   }
-
-
-
 }

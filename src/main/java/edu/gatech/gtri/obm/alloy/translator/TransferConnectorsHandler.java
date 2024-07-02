@@ -263,38 +263,29 @@ public class TransferConnectorsHandler {
       List<Set<String>> sourceOutputAndTargetInputProperties,
       boolean addEquals, boolean isLeaf) {
 
-    // if addEquals are true add the fact like below:
-    // targetTypeName = sourceTypeName (ie., BehaviorWithParameter)
-    // source => outputs
+    // if addEquals is true add the fact like below:
     // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-
-    // p1, order(sigOfNamedElement= IFSIngleFoodService)
 
     Set<Field> addOutputToFields = new HashSet<>();
     Set<Field> addInputToFields = new HashSet<>();
     if (sourceField != null) {
       PrimSig typeSig = toAlloy.getSig(sourceTypeName);// sourceTypeName =IFCustomerOrder
-
       for (String sourceOutput : sourceOutputAndTargetInputProperties.get(0)) {
         // orderedFoodItem
-        Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(
-            // [orderFoodItem, prepareFoodItem],
-            sourceOutput, typeSig);// i
+        Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(sourceOutput, typeSig);// i
         // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
         if (!parameterFields.contains(outputTo))
           addOutputToFields.add(outputTo);
 
         // only for leaf-sig
         if (isLeaf
-            && !AlloyUtils.containsBothKeyAndValue(this.fieldWithOutputs, sourceField, outputTo)) {
+            && AlloyUtils.notContainBothKeyAndValue(this.fieldWithOutputs, sourceField, outputTo)) {
           this.fieldWithOutputs.computeIfAbsent(sourceField, v -> new HashSet<Field>())
               .add(outputTo);
-          // addToHashMap(fieldsWithOutputs, sourceField, outputTo);
           toAlloy.createBijectionFilteredOutputs(sigOfClass, sourceField,
               sourceField.join(outputTo));
           if (addEquals)
-            toAlloy.createInField(sigOfClass, sourceField, sourceField.join(outputTo),
-                outputTo, Alloy.ooutputs);
+            toAlloy.createInField(sigOfClass, sourceField, outputTo, Alloy.ooutputs);
 
         }
       }
@@ -312,17 +303,14 @@ public class TransferConnectorsHandler {
         // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
         // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
         // x.prepare.preparedFoodItem]}
-        /* addToSigToFactsMap(sigOfNamedElement.label, */
         // only for leaf sig
         if (isLeaf
-            && !AlloyUtils.containsBothKeyAndValue(this.fieldWithInputs, targetField, inputTo)) {
-          // addToHashMap(fieldsWithInputs, targetField, inputTo);
+            && AlloyUtils.notContainBothKeyAndValue(this.fieldWithInputs, targetField, inputTo)) {
           this.fieldWithInputs.computeIfAbsent(targetField, v -> new HashSet<Field>()).add(inputTo);
           toAlloy.createBijectionFilteredInputs(sigOfClass, targetField,
               targetField.join(inputTo));
           if (addEquals) {
-            toAlloy.createInField(sigOfClass, targetField, targetField.join(inputTo),
-                inputTo, Alloy.oinputs);// );
+            toAlloy.createInField(sigOfClass, targetField, inputTo, Alloy.oinputs);
           }
         }
       }

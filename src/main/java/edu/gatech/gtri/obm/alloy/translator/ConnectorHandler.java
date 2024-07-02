@@ -24,26 +24,11 @@ public class ConnectorHandler {
 
   /** Stereotype qualified names */
   private static String STEREOTYPE_BINDDINGCONNECTOR = "SysML::BindingConnector";
-  // private static String STEREOTYPE_ITEMFLOW = "Model::OBM::ItemFlow";
-  // private static String STEREOTYPE_OBJECTFLOW = "Model::OBM::ObjectFlow";
 
-  // connectors
-  // key = Signame, values = propertyNames
-  // HashMap<String, Set<String>> connectorTargetInputPropertyNamesByClassName; // collect field type Sig having a
-  // transfer connector
-  // with transferTarget "Customer"
-  // HashMap<String, Set<String>> connectorSourceOutputPrpertyNamesByClassName; // collect field type Sig having a
-  // transfer connector
-  // Set<Sig> sigWithTransferField;
-
-  Map<Field, Set<Field>> fieldWithInputs; // key = prepare, value=
-  // [preparedFoodItem,prepareDestination]
-  Map<Field, Set<Field>> fieldWithOutputs; // key = order,
-  // value=[orderAmount,
-  // orderDestination,
-  // orderedFoodItem]
-
-  // Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType;
+  Map<Field, Set<Field>> fieldWithInputs;
+  // key = prepare, value= [preparedFoodItem,prepareDestination]
+  Map<Field, Set<Field>> fieldWithOutputs;
+  // key = order, value=[orderAmount, orderDestination, orderedFoodItem]
 
   /**
    * A dictionary contains signature name as key and a set of fact expression as value.
@@ -55,9 +40,13 @@ public class ConnectorHandler {
    * handling each connector at a time.
    */
   Set<Connector> redefinedConnectors;
-  ToAlloy toAlloy;
-  List<String> messages;
+
   Set<Field> parameterFields;
+
+
+  ToAlloy toAlloy;
+
+  List<String> messages;
 
   /**
    * A set of string representing the type of transfer fields (ie., Integer)

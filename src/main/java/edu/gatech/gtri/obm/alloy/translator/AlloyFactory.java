@@ -455,34 +455,31 @@ public class AlloyFactory {
    * fact {all x: MultipleObjectFlow | all p: x.p1 | p.outpus in p.i}
    * </pre>
    * 
-   * @param sig having an expression
-   * @param from
-   * @param fromField
-   * @param to
-   * @param toField
-   * @param func (ie., outputs)
+   * @param sig - an owner signature having the expression (i.e., MultipleObjectFlow)
+   * @param sigField - a field of sig(i.e., p1)
+   * @param fieldOfsigFieldType - a field (i.e., i) of sig's type (BehaviorWithParameter)
+   * @param func (i.e., inputs, outputs)
    * @return
    */
 
-  protected static Expr exprs_inField(Sig sig, Expr from, Sig.Field fromField, Expr to,
-      Sig.Field toField, Func func) {
+  protected static Expr exprs_inField(Sig sig, Sig.Field sigField,
+      Sig.Field fieldOfsigFieldType, Func func) {
 
     // all x: MultipleObjectFlow
     ExprVar varX = makeVarX(sig);
     Decl declX = makeDecl(varX, sig);
 
     // all p: x.p1
-    ExprVar varP = ExprVar.make(null, "p", from.type()); // p
-    Expr exprField = varX.join(sig.domain(fromField)); // x.p1
+    ExprVar varP = ExprVar.make(null, "p", sigField.type());// from.type()); // p
+    Expr exprField = varX.join(sig.domain(sigField)); // x.p1
     Decl declY = new Decl(null, null, null, List.of(varP), exprField);
 
     // {p.i in p.outputs}
-    Expr equalExpr = varP.join(toField).in(varP.join(func.call()));
+    Expr equalExpr = varP.join(fieldOfsigFieldType).in(varP.join(func.call()));
     // {p.outputs in p.i}
-    Expr equqlExpr2 = varP.join(func.call()).in(varP.join(toField));
+    Expr equqlExpr2 = varP.join(func.call()).in(varP.join(fieldOfsigFieldType));
 
     return (equalExpr.forAll(declY).forAll(declX)).and(equqlExpr2.forAll(declY).forAll(declX));
-
   }
 
 

@@ -103,7 +103,7 @@ public class ToAlloy {
 
 
   /**
-   * Adds the disj alloy fields.
+   * Adds the disjoint alloy fields.
    *
    * @param fieldNamesListWithSameType the field names list with same type
    * @param typeSigName the type sig name
@@ -130,70 +130,94 @@ public class ToAlloy {
   }
 
 
-  /**
-   * 
-   * @param ownerSig
-   * @param from
-   * @param fromField
-   * @param to
-   * @param toField
-   * @param addEqual true if field shared the same type (BehaviorParameter)
-   * @param inputsOrOutputs Func Alloy.oinputs or Alloy.ooutputs
-   * @return Set of Expr without sig prefix (ie.,{all x: B | bijectionFiltered[targets, x.transferB2B, x]} without "all x:B")
-   */
-  // protected void createBijectionFilteredInputsOrOutputs(Sig ownerSig, Sig.Field fromField,
-  // Expr to, Sig.Field toField, boolean addEqual, Func inputsOrOutputs) {
-  //
-  // if (addEqual) // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-  // alloy.addToOverallFact(AlloyFactory.exprs_inField(ownerSig, fromField, fromField, to, toField,
-  // inputsOrOutputs));;
-  //
-  // // Set<Expr> factsWithoutSig =
-  // // AlloyFactory.exprs_bijectionFiltered(ownerSig, fromField, to, inputsOrOutputs);
-  // // alloy.addToOverallFacts(AlloyUtils.toSigAllFacts(ownerSig, factsWithoutSig));
-  //
-  //
-  // // alloy.addToOverallFacts(
-  // // AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, fromField, to, inputsOrOutputs));
-  // createBijectionFiltered(ownerSig, fromField, to, inputsOrOutputs);
-  // // return factsWithoutSig;
-  // }
 
-  // fact {all x: MultipleObjectFlow | all p: x.p1 | p.i = p.outputs}
-  protected void createInField(Sig ownerSig, Sig.Field fromField,
-      Expr to, Sig.Field toField, Func inputsOrOutputs) {
-    alloy.addToFacts(AlloyFactory.exprs_inField(ownerSig, fromField, fromField, to, toField,
-        inputsOrOutputs));;
+  /**
+   * Create two expressions to describe what is flowing and add to the alloy's facts.
+   * 
+   * <pre>
+   * For example,
+   * {all x: MultipleObjectFlow | all p: x.p1 | p.i in p.outputs} 
+   * {all x: MultipleObjectFlow | all p: x.p1 | p.outputs in p.in}
+   * </pre>
+   * 
+   * @param ownerSig - signature for the fact (i.e., MultipleObjectFlow(class))
+   * @param sigField - a field(property) of ownerSig(i.e., p1)
+   * @param fieldOfsigFieldType - a field(property) of sigField type(class) (ie., i of p1's type signature(class)) = sourceOutputProperty or targetInputProperty
+   * @param inputsOrOutputs - a function inputs or outputs
+   */
+  protected void createInField(Sig ownerSig, Sig.Field sigField,
+      Sig.Field fieldOfsigFieldType, Func inputsOrOutputs) {
+    alloy.addToFacts(AlloyFactory.exprs_inField(ownerSig, sigField, fieldOfsigFieldType,
+        inputsOrOutputs));
   }
 
   /**
-   * Creates the bijection filtered happens before and add to overall fact.
-   *
-   * @param ownerSig the owner sig
-   * @param from the from
-   * @param to the to
-   * @param func (ie., Alloy.happensBefore, Alloy.happensDuring)
+   * Create the bijection filtered happens before and add to the alloy's facts. The from and to expression can be just a filed (i.e., p1) or multiple fields connected by plus (p1 + p2 + p3).
+   * 
+   * <pre>
+   * For example, 
+   * fact {all x: AllControl | bijectionFiltered[happensBefore, from, to]}
+   * fact {all x: AllControl | bijectionFiltered[happensBefore, x.p1, x.p2 + x.p3]}
+   * </pre>
+   * 
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
    */
-  // private void createBijectionFiltered(Sig ownerSig, Expr from, Expr to, Func func) {
-  // alloy.addToOverallFacts(
-  // AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, from, to, func));
-  // }
-
   protected void createBijectionFilteredHappensBefore(Sig ownerSig, Expr from, Expr to) {
     alloy.addToFacts(
         AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, from, to, Alloy.happensBefore));
   }
 
+  /**
+   * Create the bijection filtered happens during and add to the alloy's facts. The from and to expression can be just a filed (i.e., p1, b.vin) or multiple fields connected by plus (p1 + p2 + p3).
+   * 
+   * <pre>
+   * For example, 
+   * fact {all x: UnsatisfiableComposition1 | bijectionFiltered[happensDuring, from, to]}
+   * fact {all x: UnsatisfiableComposition1 | bijectionFiltered[happensDuring, x.p3, x.p2]}
+   * </pre>
+   * 
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
+   */
   protected void createBijectionFilteredHappensDuring(Sig ownerSig, Expr from, Expr to) {
     alloy.addToFacts(
         AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, from, to, Alloy.happensDuring));
   }
 
+  /**
+   * Create the bijection filtered inputs during and add the alloy's facts. The from and to expression can be just a filed (i.e., p1, b.vin) or multiple fields connected by plus (p1 + p2 + p3).
+   * 
+   * <pre>
+   * For example, 
+   * fact {all x: ParameterBehavior | bijectionFiltered[inputs, from, to]}
+   * fact {all x: ParameterBehavior | bijectionFiltered[inputs, x.b, x.b.vin]}
+   * </pre>
+   * 
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
+   */
   protected void createBijectionFilteredInputs(Sig ownerSig, Expr from, Expr to) {
     alloy.addToFacts(
         AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, from, to, Alloy.oinputs));
   }
 
+  /**
+   * Create the bijection filtered inputs during and add to the alloy's facts. The from and to expression can be just a filed (i.e., p1, b.vin) or multiple fields connected by plus (p1 + p2 + p3).
+   * 
+   * <pre>
+   * For example, 
+   * fact {all x: B | bijectionFiltered[outputs, from, to]}
+   * fact {all x: B | bijectionFiltered[outputs, x.b1, x.b1.vout]}
+   * </pre>
+   * 
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
+   */
   protected void createBijectionFilteredOutputs(Sig ownerSig, Expr from, Expr to) {
     alloy.addToFacts(
         AlloyFactory.exprs_bijectionFilteredFactsForSig(ownerSig, from, to, Alloy.ooutputs));
@@ -201,11 +225,11 @@ public class ToAlloy {
 
 
   /**
-   * Creates the function filtered happens before and add to overall fact.
+   * Creates the function filtered happens before and add to the alloy's facts.
    *
-   * @param ownerSig the owner sig
-   * @param from the from
-   * @param to the to
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
    */
   protected void createFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig, Expr from,
       Expr to) {
@@ -214,11 +238,11 @@ public class ToAlloy {
   }
 
   /**
-   * Creates the inverse function filtered happens before and add to overall fact.
+   * Creates the inverse function filtered happens before and add to the alloy's facts.
    *
-   * @param ownerSig the owner sig
-   * @param from the from
-   * @param to the to
+   * @param ownerSig - the owner signature
+   * @param from - the from expression
+   * @param to - the to expression
    */
   protected void createInverseFunctionFilteredHappensBeforeAndAddToOverallFact(Sig ownerSig,
       Expr from, Expr to) {
