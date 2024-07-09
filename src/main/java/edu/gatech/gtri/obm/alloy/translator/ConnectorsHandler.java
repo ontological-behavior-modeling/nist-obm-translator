@@ -100,11 +100,12 @@ public class ConnectorsHandler {
       Class classOfSig = _classInHierarchy.get(i);
       processConnectorsForAClass(classOfSig);
       // removing ne
-      _allClassesConnectedToMainSigByFields.remove(classOfSig);
+      // _allClassesConnectedToMainSigByFields.remove(classOfSig);
     }
     // after handling connectors for Signatures(hierarchy of main Signature), handle others classes.
     for (NamedElement ne : _allClassesConnectedToMainSigByFields) {
-      if (ne instanceof Class) {// no connector processing in PrimitiveType (Real, Integer)
+
+      if (!_classInHierarchy.contains(ne) && ne instanceof Class) {// no connector processing in PrimitiveType (Real, Integer)
         processConnectorsForAClass((Class) ne);
       }
     }

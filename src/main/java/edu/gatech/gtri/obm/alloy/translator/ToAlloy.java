@@ -106,20 +106,20 @@ public class ToAlloy {
    * Adds the disjoint alloy fields.
    *
    * @param fieldNamesListWithSameType the field names list with same type
-   * @param typeSigName the type sig name
+   * @param fieldSigTypeName the type sig name
    * @param ownerSig the owner sig
    * @return the sig. field[]
    */
   protected Sig.Field[] addDisjAlloyFields(List<String> fieldNamesListWithSameType,
-      String typeSigName, PrimSig ownerSig) {
+      String fieldSigTypeName, PrimSig ownerSig) {
 
     String[] fieldNames = new String[fieldNamesListWithSameType.size()];
     fieldNamesListWithSameType.toArray(fieldNames);
 
     Sig.Field[] ps = null;
-    Sig sigType = sigByName.get(typeSigName);
-    if (sigType != null) {
-      ps = AlloyUtils.addTrickyFields(fieldNames, ownerSig, sigType);
+    Sig fieldSigType = sigByName.get(fieldSigTypeName);
+    if (fieldSigType != null) {
+      ps = AlloyUtils.addTrickyFields(fieldNames, ownerSig, fieldSigType);
       if (ps.length != fieldNames.length) {
         return null; // this should not happens
       }

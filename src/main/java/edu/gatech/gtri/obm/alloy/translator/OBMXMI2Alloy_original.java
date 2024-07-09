@@ -26,13 +26,13 @@ import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 /**
  * <p>
- * An immutable utility class to translate SysML Behavior Model in a xmi file into an Alloy file.
+ * Translate SysML Behavior Model in a xmi file into an Alloy file.
  * 
  * 
  * Example:
  * 
  * <pre>
- * OBMXMI2Alloy translator = new OBMXMI2Alloy.Builder("C:\\temp\\OBMModel.xmi").build();
+ * OBMXMI2Alloy translator = new OBMXMI2Alloy("C:\\temp\\OBMModel.xmi");
  * translator.createAlloyFile(new File("C:\\OBMModel.xmi"),
  *     "Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence",
  *     new File("C:\\output.als"));
@@ -41,21 +41,7 @@ import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
  */
-public final class OBMXMI2Alloy {
-
-  public static class Builder {
-    private String alloyLibPath;
-
-    public Builder alloyLibrary(String _alloyLibPath) {
-      this.alloyLibPath = _alloyLibPath;
-      return this;
-    }
-
-    public OBMXMI2Alloy build() {
-      return new OBMXMI2Alloy(this);
-    }
-  }
-
+public class OBMXMI2Alloy_original {
   /**
    * errorMessages collected during the translation. Resetting by each createAlloyFile method call.
    */
@@ -79,8 +65,8 @@ public final class OBMXMI2Alloy {
    * 
    * @param alloyLibPath the abstract pathname.
    */
-  private OBMXMI2Alloy(OBMXMI2Alloy.Builder builder) {
-    this.alloyLibPath = builder.alloyLibPath;
+  public OBMXMI2Alloy_original(String _alloyLibPath) {
+    this.alloyLibPath = _alloyLibPath;
   }
 
   /**

@@ -330,7 +330,7 @@ public class UserInterface {
           }
           Popup p = new Popup("Generating File");
           int i = 1;
-          OBMXMI2Alloy obm = new OBMXMI2Alloy(path);
+          OBMXMI2Alloy obm = new OBMXMI2Alloy.Builder().alloyLibrary(path).build();
           List<String> mainClass = list.getSelectedValuesList();
           int fileNum = mainClass.size();
           String fileList = "File(s) Created";

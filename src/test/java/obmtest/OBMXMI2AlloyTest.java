@@ -100,8 +100,7 @@ class OBMXMI2AlloyTest {
         manualFileName + "_Generated" + ".als");
 
 
-
-    OBMXMI2Alloy test = new OBMXMI2Alloy(output_and_testfiles_dir);
+    OBMXMI2Alloy test = new OBMXMI2Alloy.Builder().alloyLibrary(output_and_testfiles_dir).build();
     if (!test.createAlloyFile(xmiFile, sysMLClassQualifiedName, apiFile)) {
       System.out.println(test.getErrorMessages());
       fail("failed to create generated file: " + apiFile.getName() + " " + test.getErrorMessages());
