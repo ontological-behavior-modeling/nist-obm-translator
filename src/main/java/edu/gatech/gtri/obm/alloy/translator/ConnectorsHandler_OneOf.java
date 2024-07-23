@@ -20,14 +20,31 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
-public class OneOfConnectorsHandler {
+/**
+ * A class to handle "Oneof" connector
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ */
+public class ConnectorsHandler_OneOf {
 
+  /** omgutil's SysMLAdapter **/
   SysMLAdapter sysmladapter;
+  /** omgutil's SysMLUtil **/
   SysMLUtil sysmlUtil;
+  /** a class to connect this class to Alloy for creation of facts **/
   ToAlloy toAlloy;
+  /** a set of messages collected during handlOneOfConnectors method **/
   List<String> messages;
 
-  protected OneOfConnectorsHandler(SysMLUtil _sysmlUtil, SysMLAdapter _sysmladapter,
+  /**
+   * A constructor
+   * 
+   * @param _sysmlUtil
+   * @param _sysmladapter
+   * @param _toAlloy
+   * @param _messages
+   */
+  protected ConnectorsHandler_OneOf(SysMLUtil _sysmlUtil, SysMLAdapter _sysmladapter,
       ToAlloy _toAlloy, List<String> _messages) {
     sysmlUtil = _sysmlUtil;
     sysmladapter = _sysmladapter;
@@ -35,13 +52,21 @@ public class OneOfConnectorsHandler {
     messages = _messages;
   }
 
+  /**
+   * Find "OneOf" connectors from the given connectors and facts: bijectionFiltered, functionFiltered, or inverseFunctionFiltered.
+   * 
+   * @param _sigOfClass(PrimSig) - the owner signature of "OneOf" connector to be processed
+   * @param _classOfSig(Class) - the class created the owner signature
+   * @param connectors (A set of Connectors) - the all connectors filtered by the given signature
+   * @return (A set of Connectors) - the "OneOf" connectors for the given _sigOfClass signature
+   */
   protected Set<Connector> handleOneOfConnectors(PrimSig _sigOfClass, Class _classOfSig,
       Set<org.eclipse.uml2.uml.Connector> connectors) {
 
     // start handling one of connectors
     // find sig's constraint
     Set<Constraint> constraints = sysmlUtil.getAllRules(_classOfSig);
-    Set<EList<Element>> oneOfSets = SysMLAdapterUtils.getOneOfRules(sysmladapter, constraints); // EList<ConnectorEnd> [ [start, eat] or [order, end]]
+    Set<EList<Element>> oneOfSets = AlloyUtils.getOneOfRules(sysmladapter, constraints); // EList<ConnectorEnd> [ [start, eat] or [order, end]]
 
 
     // finding connectors with oneof
@@ -112,7 +137,7 @@ public class OneOfConnectorsHandler {
       for (ConnectorEnd ce : cn.getEnds()) {
         Optional<Element> found = _oneOfSet.stream().filter(e -> e == ce).findFirst();
         if (!found.isEmpty()) {
-          List<ConnectableElement> ces = MDUtils.getEndRolesForCEFirst(cn, ce);
+          List<ConnectableElement> ces = UML2Utils.getEndRolesForCEFirst(cn, ce);
           if (ces == null) { // this should not happens
             this.messages.add("A connector " + cn.getQualifiedName()
                 + " does not have two connector ends, so ignored.");
@@ -138,6 +163,14 @@ public class OneOfConnectorsHandler {
       handleTargetSideOneOf(targets, sources.get(0).getName(), sigOfClass, _oneTargetProperties);
   }
 
+  /**
+   * A method to handle a connector when source-side connector is "OneOf"
+   * 
+   * @param sources
+   * @param targetName
+   * @param _sigOfClass
+   * @param _oneSourceProperties
+   */
   private void handleSourceSideOneOf(List<ConnectableElement> sources,
       String targetName, PrimSig _sigOfClass,
       Set<ConnectableElement> _oneSourceProperties) {
@@ -190,6 +223,14 @@ public class OneOfConnectorsHandler {
     }
   }
 
+  /**
+   * A method to handle a connector when target-side connector is "OneOf"
+   * 
+   * @param targets
+   * @param sourceName
+   * @param _sigOfClass
+   * @param _oneTargetProperties
+   */
   private void handleTargetSideOneOf(List<ConnectableElement> targets,
       String sourceName, PrimSig _sigOfClass,
       Set<ConnectableElement> _oneTargetProperties) {// , Expr beforeExpr, Expr afterExpr) {

@@ -330,10 +330,19 @@ public class UserInterface {
           }
           Popup p = new Popup("Generating File");
           int i = 1;
-          OBMXMI2Alloy obm = new OBMXMI2Alloy.Builder().alloyLibrary(path).build();
+          OBMXMI2Alloy obm = new OBMXMI2Alloy(path);
           List<String> mainClass = list.getSelectedValuesList();
           int fileNum = mainClass.size();
           String fileList = "File(s) Created";
+          try {
+            obm.loadXmiFile(xmiFile);
+          } catch (FileNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+          } catch (UMLModelErrorException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+          }
           for (String c : mainClass) {
             p.getDialog().setTitle("Generating File " + i + "/" + fileNum);
             p.getDialog().setVisible(true);
@@ -344,7 +353,7 @@ public class UserInterface {
                 JOptionPane.showMessageDialog(frmObmAlloyTranslator,
                     "No File Name Selected. Alloy file generation cancelled");
               } else {
-                if (!obm.createAlloyFile(xmiFile, c, alsFile))
+                if (!obm.createAlloyFile(c, alsFile))
                   JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
               }
             } else {
@@ -355,7 +364,7 @@ public class UserInterface {
               Date date = new Date();
               String dt = dateFormat.format(date);
               alsFile = new File(location + name + "_" + dt + ".als");
-              if (!obm.createAlloyFile(xmiFile, c, alsFile))
+              if (!obm.createAlloyFile(c, alsFile))
                 JOptionPane.showMessageDialog(frmObmAlloyTranslator, obm.getErrorMessages());
 
             }

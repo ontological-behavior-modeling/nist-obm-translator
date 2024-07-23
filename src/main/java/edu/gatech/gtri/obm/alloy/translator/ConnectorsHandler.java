@@ -1,8 +1,6 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,10 +14,15 @@ import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.umd.omgutil.UMLModelErrorException;
 import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
+/**
+ * Connectors handler
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
 public class ConnectorsHandler {
 
 
@@ -62,11 +65,12 @@ public class ConnectorsHandler {
 
   ConnectorHandler connectorHandler;
 
-  public ConnectorsHandler(File _xmiFile, SysMLUtil _sysmlUtil, Set<PrimSig> _leafSigs,
+  protected ConnectorsHandler(SysMLAdapter sysMLAdapter, SysMLUtil _sysmlUtil,
+      Set<PrimSig> _leafSigs,
       ToAlloy _toAlloy,
       Set<Field> _parameterFields,
-      Map<String, Set<String>> _stepPropertiesBySig)
-      throws UMLModelErrorException, FileNotFoundException {
+      Map<String, Set<String>> _stepPropertiesBySig) {
+
 
     this.sysmlUtil = _sysmlUtil;
 
@@ -79,11 +83,10 @@ public class ConnectorsHandler {
     this.sigToTransferFieldMap = new HashMap<>(); // instance variable updated in pcm.process method and used later by OBMXMI2Alloy
     this.sigToFactsMap = new HashMap<>();// instance variable updated in pcm.process method and used later by OBMXMI2Alloy
 
-    // prep for omgutil's SysMLAdapter to be used in ConnectorHandler
-    SysMLAdapter sysmlAdapter = new SysMLAdapter(_xmiFile, null);
+
     connectorHandler =
         new ConnectorHandler(this.redefinedConnectors, this.toAlloy, this.sigToFactsMap,
-            this.parameterFields, this.sigToTransferFieldMap, sysmlAdapter, this.sysmlUtil);
+            this.parameterFields, this.sigToTransferFieldMap, sysMLAdapter, this.sysmlUtil);
   }
 
   /**

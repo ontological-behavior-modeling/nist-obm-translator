@@ -21,94 +21,118 @@ import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.UMLModelErrorException;
+import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 
 /**
  * <p>
- * An immutable utility class to translate SysML Behavior Model in a xmi file into an Alloy file.
- * 
+ * A class to translate SysML Behavior Model in a xmi file into an alloy file.
  * 
  * Example:
  * 
  * <pre>
- * OBMXMI2Alloy translator = new OBMXMI2Alloy.Builder("C:\\temp\\OBMModel.xmi").build();
- * translator.createAlloyFile(new File("C:\\OBMModel.xmi"),
- *     "Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence",
- *     new File("C:\\output.als"));
+ * OBMXMI2Alloy translator = new OBMXMI2Alloy("C:\\alloylibs")
+ * if (translator.loadXmiFile(new File("C:\\OBMModel.xmi"))){
+ *  boolean success = translator.createAlloyFile("Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence",new File("C:\\output.als")));
+ *      if (!success)
+ *          System.out.println(translfator.getErrorMessages());
+ *  }
+ *  else
+ *      System.out.println(translator.getErrorMessages());
+ *  System.out.println(translator.getMessages());
  * </pre>
  * 
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
  */
 public final class OBMXMI2Alloy {
-
-  public static class Builder {
-    private String alloyLibPath;
-
-    public Builder alloyLibrary(String _alloyLibPath) {
-      this.alloyLibPath = _alloyLibPath;
-      return this;
-    }
-
-    public OBMXMI2Alloy build() {
-      return new OBMXMI2Alloy(this);
-    }
-  }
-
   /**
-   * errorMessages collected during the translation. Resetting by each createAlloyFile method call.
+   * A class to collect all signatures, fields, and facts to be translated to an alloy file
    */
-  List<String> errorMessages;
-  /**
-   * messages collected during the translation. Resetting by each createAlloyFile method call.
-   */
-  List<String> messages;
+  private Alloy alloy;
   /**
    * A class connect this and Alloy class
    */
-  ToAlloy toAlloy;
-
+  private ToAlloy toAlloy;
   /**
-   * An absolute path name string for the required library folder containing Transfer.als and utilities(folder) necessary for creating own OBMUtil alloy object.
+   * omgutil SysMLUtil - Util method from omgutil
    */
-  private String alloyLibPath;
+  private SysMLUtil sysMLUtil;
+  /**
+   * omgutil SysMLAdapter - Adapter for SysML from omgutil
+   */
+  private SysMLAdapter sysMLAdapter;
+  /**
+   * omgUtil Resource - Resource from omgutil - used to get Class object from the xmilFile using EMFUtil
+   */
+  private Resource resource;
+  /**
+   * errorMessages collected during the translation.
+   */
+  List<String> errorMessages;
+  /**
+   * messages collected during the translation.
+   */
+  List<String> messages;
+
 
   /**
    * A constructor to set the given alloyLibPath as an instance variable.
    * 
-   * @param alloyLibPath the abstract pathname.
+   * @param alloyLibPath - An absolute path name string for the required library folder containing Transfer.als and utilities(folder) necessary for translation.
    */
-  private OBMXMI2Alloy(OBMXMI2Alloy.Builder builder) {
-    this.alloyLibPath = builder.alloyLibPath;
+  public OBMXMI2Alloy(String _alloyLibPath) {
+    this.alloy = new Alloy(_alloyLibPath);
   }
 
   /**
-   * Initialize the translator. Called by createAlloyFile method.
-   */
-  private void reset() {
-    toAlloy = new ToAlloy(alloyLibPath);
-    this.errorMessages = new ArrayList<>();
-    this.messages = new ArrayList<>();
-  }
-
-  /**
-   * Initialize the translator and create an alloy output file of the qualifideName class/behavior model in the xml file. If this method return false, you may use getErrorMessages() to know why failed.
+   * loading xmiFile to preparing for translation
    * 
-   * @param xmiFile - the xmi file contain a class to be translated to an alloy file.
-   * @param qualifiedName of a UML:Class for translation (ie., Model::FoodService::OFSingleFoodService)
-   * @param outputFile - the output alloy file
-   * @return true if the given outputFile is created from the given xmlFile and the qualifiedName; false if fails.
+   * @param xmiFile - xmiFile containing classes you like to translate to an alloy file.
+   * @return true if successful, otherwise return false
+   * @throws FileNotFoundException - the given xmiFile does not exist
+   * @throws UMLModelErrorException - the problem constructing utility objects from xmiFile
    */
-  public boolean createAlloyFile(File xmiFile, String qualifiedName, File outputFile) {
-    reset();
-    if (!xmiFile.exists() || !xmiFile.canRead()) {
-      this.errorMessages.add(
-          "A file " + xmiFile.getAbsolutePath() + " does not exist or no permission to read.");
+  public boolean loadXmiFile(File xmiFile) throws FileNotFoundException, UMLModelErrorException {
+
+    try {
+      ResourceSet rs = EMFUtil.createResourceSet();
+      this.resource = EMFUtil.loadResourceWithDependencies(rs,
+          URI.createFileURI(xmiFile.getAbsolutePath()), null);
+      // omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation
+      this.sysMLUtil = new SysMLUtil(rs);
+      // omgutil's SysMLAdapter to be used in ConnectorHandler
+      this.sysMLAdapter = new SysMLAdapter(xmiFile, null);
+    } catch (FileNotFoundException e) {
+      this.errorMessages
+          .add("Failed to initialize the translator. Make sure xmiFile exists in "
+              + xmiFile.getAbsolutePath() + " and readable. " + e.getMessage());
+      return false;
+    } catch (UMLModelErrorException e) {
+      this.errorMessages
+          .add("Failed to initialize the translator. Make sure xmiFile exists in "
+              + xmiFile.getAbsolutePath() + " and readable. " + e.getMessage());
       return false;
     }
+    return true;
+  }
+
+  /**
+   * Create an alloy output file of the qualifideName class/behavior model in the xml file. If this method return false, you may use getErrorMessages() to know why cause failure.
+   * 
+   * @param qualifiedName of a UML:Class for translation (ie., Model::FoodService::OFSingleFoodService)
+   * @param outputFile - the output alloy file
+   * @return boolean true if the given outputFile is created from the given xmlFile and the qualifiedName; false if fails.
+   */
+  public boolean createAlloyFile(String qualifiedName, File outputFile) {
+
+    toAlloy = new ToAlloy(alloy);
+    this.errorMessages = new ArrayList<>();
+    this.messages = new ArrayList<>();
+
     Set<Field> parameterFields = null;
-    if ((parameterFields = loadOBMAndCreateAlloy(xmiFile, qualifiedName)) != null) {
+    if ((parameterFields = CreateAlloy(qualifiedName)) != null) {
       try {
         boolean success = toAlloy.createAlloyFile(outputFile, parameterFields);
         if (success)
@@ -121,118 +145,85 @@ public final class OBMXMI2Alloy {
         this.errorMessages.add("Failed to translate the alloy file: " + e.getMessage());
       }
     }
-
-    return false;
-  }
-
-  /**
-   * Get errorMessages collected while the translation.
-   * 
-   * @return errorMessage - list of error message strings
-   */
-  public List<String> getErrorMessages() {
-    return this.errorMessages;
+    return false; // failed to translate
   }
 
 
   /**
-   * Load the given xmi file and find the given class and create alloy objects in memory.
+   * find the given class and create alloy objects in memory.
    * 
-   * @xmiFile xmiFile - A xmi file contains a class to be converted to an alloy file
    * @param - classQualifiedName - the qualified name string of a class contained in the xml file (i.e., Model::4.1 Basic Examples::4.1.2 Loop::Loop)
-   * @return boolean true if successfully created as alloy objects otherwise false. A user can use getErrorMessages() to retrieve the error messages.
+   * @return Set<Field> parameterfields used by calling method to write out disj signature fields to an alloy file.
    */
-  private Set<Field> loadOBMAndCreateAlloy(File xmiFile, String classQualifiedName) {
-
-    // parameterFields = new HashSet<>();
-    // valueTypeFields = new HashSet<>();
-    ResourceSet rs;
-    try {
-      rs = EMFUtil.createResourceSet();
-    } catch (FileNotFoundException e1) {
-      this.errorMessages.add("Failed to initialize OmgUtil.");
+  private Set<Field> CreateAlloy(String classQualifiedName) {
+    // using omgUtil get NamedElement to translate
+    NamedElement mainNamedElement = EMFUtil.getNamedElement(resource, classQualifiedName);
+    // the NamedElement must be Class to able to translate
+    if (mainNamedElement == null) {
+      this.errorMessages.add(classQualifiedName + " not found.");
+      return null;
+    } else if (!(mainNamedElement instanceof Class)) {
+      this.errorMessages.add(classQualifiedName + " is not Class. Not able to translate to Alloy.");
       return null;
     }
-    Resource resource = EMFUtil.loadResourceWithDependencies(rs,
-        URI.createFileURI(xmiFile.getAbsolutePath()), null);
+    // cast to Class
+    Class mainClass = (Class) mainNamedElement;
 
-    try {
-      while (!resource.isLoaded()) {
-        this.messages.add("XMI Resource not loaded yet wait 1 milli sec...");
-        Thread.sleep(1000);
-      }
-    } catch (Exception e) {
-    }
-    /**
-     * omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation
-     */
-    SysMLUtil sysMLUtil;
-    try {
-      sysMLUtil = new SysMLUtil(rs);
-    } catch (UMLModelErrorException e) {
-      this.errorMessages.add("Failed to initialize OmgUtil's SysMLUtil. " + e.getMessage());
+    // ClasssesHandler - from main class creates Signatures and Fields for the Alloy object
+    ClassesHandler classesHandler =
+        new ClassesHandler(mainClass, this.toAlloy, sysMLUtil);
+    if (!classesHandler.process()) {
+      this.errorMessages.addAll(classesHandler.getErrorMessages());
       return null;
     }
-    // classes
-    ClassesHandler classHandler =
-        new ClassesHandler(resource, classQualifiedName, xmiFile.getAbsolutePath(), this.toAlloy,
-            sysMLUtil);
-    if (!classHandler.process()) {
-      this.errorMessages.addAll(classHandler.getErrorMessages());
-      return null;
-    }
-    Set<Field> parameterFields = classHandler.getParameterFields();
-    Set<PrimSig> leafSigs = classHandler.getLeafSigs();
-    Map<String, Set<String>> stepPropertiesBySig = classHandler.getStepPropertiesBySig();
-    String mainSigLabel = classHandler.getMainSigLabel();
-    List<Class> classInHierarchy = classHandler.getClassInHierarchy();
-    Set<NamedElement> allClasses = classHandler.getAllClasses();
+    // get necessary information collected by ClassesHandler.process method
+    Set<Field> parameterFields = classesHandler.getParameterFields(); // fields map from property with STEREOTYPE_PAREMETER
+    Set<NamedElement> allClasses = classesHandler.getAllClasses(); // all NamedElements that map to signature connecting from main class.
+    List<Class> classInHierarchy = classesHandler.getClassInHierarchy(); // hierarchy of main class. The main class has the largest index value.
+    Set<PrimSig> leafSigs = classesHandler.getLeafSigs(); // leaf signatures
+    Map<String, Set<String>> stepPropertiesBySig = classesHandler.getStepPropertiesBySig();
+    String mainSigLabel = classesHandler.getMainSigLabel(); // possible to obtained from classQualifiedName
 
-
-    // connectors
-    ConnectorsHandler connectorsHandler = null;
-    try {
-      connectorsHandler = new ConnectorsHandler(xmiFile, sysMLUtil, leafSigs,
-          this.toAlloy, parameterFields, stepPropertiesBySig);
-      connectorsHandler.process(classInHierarchy, allClasses);
-    } catch (UMLModelErrorException e) { // throw by OMGUtil's sysmlAdapter initialization
-      this.errorMessages.add("Failed to load " + xmiFile + " into OmgUtil. " + e.getMessage());
-      return null;
-    } catch (FileNotFoundException e) {// throw by OMGUtil's sysmlAdapter initialization, but this should not happens because its existence checked earlier
-      this.errorMessages.add("Failed to load " + xmiFile + " into OmgUtil. " + e.getMessage());
-      return null;
-    }
-
-    Set<Sig> sigWithTransferFields = connectorsHandler.getSigWithTransferFields();
-    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType =
-        connectorsHandler.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
-    HashMap<String, Set<String>> connectorTargetInputPropertyNamesByClassName =
-        connectorsHandler.getConnectorTargetInputPropertyNamesByClassName();
-    HashMap<String, Set<String>> connectorSourceOutputPrpertyNamesByClassName =
-        connectorsHandler.getConnectorSourceOutputPrpertyNamesByClassName();
-
-    Set<String> transferingTypeSig = connectorsHandler.getTransferingTypeSig();
-    Map<String, Set<String>> sigToTransferFieldMap = connectorsHandler.getSigToTransferFieldMap();
-    Map<String, Set<Expr>> sigToFactsMap = connectorsHandler.getSigToFactsMap();
+    // ConnectorsHandler - analyzing connectors for classes to create facts for the Alloy object
+    ConnectorsHandler connectorsHandler = new ConnectorsHandler(sysMLAdapter, sysMLUtil, leafSigs,
+        this.toAlloy, parameterFields, stepPropertiesBySig);
+    connectorsHandler.process(classInHierarchy, allClasses);
+    // add messages collected during the connectorshandler process to this.messages
     this.messages.addAll(connectorsHandler.getMessages());
 
-    // using sigToFactsMap and sigToTransferFieldMap to add transferFields to mainSig.
+    // get necessary information colleced by ConnectorsHandler.process method
+    // a set of signature names having a transfer connector with same input and output type.
+    Set<String> sigNameWithTransferConnectorWithSameInputOutputFieldType =
+        connectorsHandler.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
+    // a map - connector target input property names by class name
+    HashMap<String, Set<String>> connectorTargetInputPropertyNamesByClassName =
+        connectorsHandler.getConnectorTargetInputPropertyNamesByClassName();
+    // a map - connector source output property names by class name
+    HashMap<String, Set<String>> connectorSourceOutputPrpertyNamesByClassName =
+        connectorsHandler.getConnectorSourceOutputPrpertyNamesByClassName();
+    // a set of signature names of transfer type
+    Set<String> transferingTypeSig = connectorsHandler.getTransferingTypeSig();
+    // a map - a transfer field names per signature name
+    Map<String, Set<String>> sigToTransferFieldMap = connectorsHandler.getSigToTransferFieldMap();
+
+    // a map - facts per signature name
+    Map<String, Set<Expr>> sigToFactsMap = connectorsHandler.getSigToFactsMap();
+
+    // a set of signatures having transfer fields, signature names are the same as sigToTransferFieldMap.keySet()
+    Set<Sig> sigWithTransferFieldsAndNoStepSigs = connectorsHandler.getSigWithTransferFields();
+
+
     // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
     // Note: Only supporting transferFields inherited to mainSig.
     // If maingSig has a parent who inherited tranferFields, currently the translator is not
-    // supported to handle the inherited transfer fields for non mainSig.
+    // supported to handle the inherited transfer fields for non-mainSig.
     Set<String> mainSigInheritingTransferFields = new HashSet<>();
-    // i.e.,
-    // o/isBeforeTarget[x . (IFFoodService <: transferOrderServe)]
-    // o/bijectionFiltered[o/outputs, x . (FoodService <: order), x . (FoodService <: order) .
-    // (IFOrder <: orderedFoodItem)]
     Set<Expr> mainSigInheritingTransferRelatedFacts = new HashSet<>();
-    // classInHiearchy = [0: FoodService, 1: IFoodService, 2: IFSingleFoodServive]
+    // classInHiearchy = [0]=grand parent [1]=parent [2]=child(mainClass)
     for (int i = 0; i < classInHierarchy.size() - 1; i++) {
       Set<String> possibleMainSigInheritingTransferFields =
           sigToTransferFieldMap.get(classInHierarchy.get(i).getName());
       if (possibleMainSigInheritingTransferFields != null) {
-        // transferOrderServe - OFSingleFoodService
         mainSigInheritingTransferFields.addAll(possibleMainSigInheritingTransferFields);
       }
       Set<Expr> possibleMainSigInheritingTransferRelatedFacts =
@@ -242,15 +233,16 @@ public final class OBMXMI2Alloy {
     }
     // add mainSig's inherited transfer fields to step Properties for the mainSig
     stepPropertiesBySig.get(mainSigLabel).addAll(mainSigInheritingTransferFields);
-
+    // add facts(inheriting transfer related) for main signature to Alloy using toAlloy
     toAlloy.addFacts(mainSigLabel, mainSigInheritingTransferRelatedFacts);
 
-
+    // add {no steps}, {x.steps in ...}, {... x.steps} facts to the Alloy object
     Set<Sig> noStepsSigs = toAlloy.addStepsFacts(stepPropertiesBySig, leafSigs);
-    // if "no x.steps" and sig with fields with type Transfer should not have below:
-    // fact {all x: BehaviorWithParameterOut | no y: Transfer | y in x.steps}
-    sigWithTransferFields.addAll(noStepsSigs);
-    toAlloy.addNoTransferInXStepsFact(sigWithTransferFields, leafSigs);
+    // if {no x.steps} and signatures with transfer field
+
+    // combing noStepsSigs and sigWithTransferFields and pass to toAlloy.addNoTransferInXStepsFact method to add facts like "fact {all x: BuffetService | no y: Transfer | y in x.steps}"
+    sigWithTransferFieldsAndNoStepSigs.addAll(noStepsSigs);
+    toAlloy.addNoTransferInXStepsFact(sigWithTransferFieldsAndNoStepSigs, leafSigs);
 
     Set<String> allClassNames = allClasses.stream().map(c -> c.getName())
         .collect(Collectors.toSet());
@@ -268,6 +260,26 @@ public final class OBMXMI2Alloy {
 
     return parameterFields;
   }
+
+
+  /**
+   * Get messages collected while the translation a class.
+   * 
+   * @return message - list of message strings
+   */
+  public List<String> getMessages() {
+    return this.messages;
+  }
+
+  /**
+   * Get errorMessages collected while the translation a class.
+   * 
+   * @return errorMessage - list of error message strings
+   */
+  public List<String> getErrorMessages() {
+    return this.errorMessages;
+  }
+
 }
 
 

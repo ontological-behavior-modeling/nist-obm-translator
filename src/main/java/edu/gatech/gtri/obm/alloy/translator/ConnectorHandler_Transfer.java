@@ -17,7 +17,14 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
-public class TransferConnectorsHandler {
+
+/**
+ * A handler for a transfer connector.
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
+public class ConnectorHandler_Transfer {
 
   private static String STEREOTYPE_ITEMFLOW = "Model::OBM::ItemFlow";
   private static String STEREOTYPE_OBJECTFLOW = "Model::OBM::ObjectFlow";
@@ -67,37 +74,61 @@ public class TransferConnectorsHandler {
   List<String> messages;
 
 
-  public TransferConnectorsHandler(ToAlloy _toAlloy, Map<String, Set<Expr>> _sigToFactsMap,
+  /**
+   * Constructor
+   * 
+   * @param _toAlloy
+   * @param _sigToFactsMap
+   * @param _sigToTransferFieldMap
+   * @param _redefinedConnectors
+   * @param _parameterFields
+   * @param _messages
+   */
+  protected ConnectorHandler_Transfer(ToAlloy _toAlloy, Map<String, Set<Expr>> _sigToFactsMap,
       Map<String, Set<String>> _sigToTransferFieldMap, Set<Connector> _redefinedConnectors,
-      /* Map<Field, Set<Field>> _fieldWithInputs, Map<Field, Set<Field>> _fieldWithOutputs, */
       Set<Field> _parameterFields, List<String> _messages) {
     toAlloy = _toAlloy;
     sigToFactsMap = _sigToFactsMap;
     sigToTransferFieldMap = _sigToTransferFieldMap;
     redefinedConnectors = _redefinedConnectors;
-    // fieldWithInputs = _fieldWithInputs;
-    // fieldWithOutputs = _fieldWithOutputs;
     parameterFields = _parameterFields;
     messages = _messages;
 
+    // initialize
     connectorTargetInputPropertyNamesByClassName = new HashMap<>();
     connectorSourceOutputPrpertyNamesByClassName = new HashMap<>();
     sigWithTransferField = new HashSet<>();
     sigNameWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>();
     transferingTypeSig = new HashSet<String>();
-
   }
 
+  /**
+   * Reset required instance variables for new signature.
+   */
   protected void reset() {
     transferFieldNames = new HashSet<>();
     fieldWithInputs = new HashMap<>();
     fieldWithOutputs = new HashMap<>();
   }
 
-  protected void handleTransferConnector(PrimSig sigOfClass, boolean isSigLeaf, Connector cn,
+  /**
+   * Add transfer transfer or transferbefore facts to alloy.
+   * 
+   * @param cn (Connector) - a connector to process
+   * @param sigOfClass(PrimSig) - the owner of the connector
+   * @param isSigLeaf(boolean) - boolean true if the signature is leaf, otherwise false
+   * @param sourceTypeName(String) - the source connector end's type name
+   * @param targetTypeName(String) - the target connector end's type name
+   * @param sourceField(Field) - the source field if belong to sigOfClass, possible to be null
+   * @param targetField(Field) - the target field if belong to sigOfClass, possible to be null
+   * @param source(String) - the sourceOutputProperty name
+   * @param target(String) - the targetInputProperty name
+   */
+  protected void handleTransferConnector(Connector cn, PrimSig sigOfClass, boolean isSigLeaf,
       String sourceTypeName, String targetTypeName,
       Field sourceField,
       Field targetField, String source, String target) {
+
 
     this.sigWithTransferField.add(sigOfClass);
 
@@ -164,8 +195,16 @@ public class TransferConnectorsHandler {
     }
   }
 
+  /**
+   * Create a transfer field named with suffix with source and target and return.
+   * 
+   * @param sigOfClass(PrimSig) - the connector owner to have the transfer field
+   * @param source(String) - the source name
+   * @param target(String) - the target name
+   * @return a created field (Field)
+   */
   private Sig.Field handTransferFieldAndFnPrep(PrimSig sigOfClass, String source, String target) {
-    String fieldName = "transfer" + Utils.firstCharUpper(source) + Utils.firstCharUpper(target);
+    String fieldName = "transfer" + firstCharUpper(source) + firstCharUpper(target);
     this.transferFieldNames.add(fieldName);
     sigToTransferFieldMap.computeIfAbsent(sigOfClass.label, v -> new HashSet<>()).add(fieldName);
     Sig.Field transferField = AlloyUtils.addTransferField(fieldName, sigOfClass);
@@ -187,9 +226,9 @@ public class TransferConnectorsHandler {
                                                                           // property value is class
                                                                           // not property
     Map<String, List<Property>> stTagItemFlowValues =
-        MDUtils.getStreotypePropertyValues(cn, STEREOTYPE_ITEMFLOW, stTagNames, this.messages);
+        UML2Utils.getStreotypePropertyValues(cn, STEREOTYPE_ITEMFLOW, stTagNames, this.messages);
     Map<String, List<Property>> stTagObjectFlowValues =
-        MDUtils.getStreotypePropertyValues(cn, STEREOTYPE_OBJECTFLOW, stTagNames, this.messages);
+        UML2Utils.getStreotypePropertyValues(cn, STEREOTYPE_OBJECTFLOW, stTagNames, this.messages);
 
     List<Property> sos = null;
     List<Property> tis = null;
@@ -318,6 +357,7 @@ public class TransferConnectorsHandler {
     return List.of(addOutputToFields, addInputToFields);
   }
 
+  // Get method for instance variables
   protected Set<String> getSigNameWithTransferConnectorWithSameInputOutputFieldType() {
     return this.sigNameWithTransferConnectorWithSameInputOutputFieldType;
   }
@@ -351,6 +391,17 @@ public class TransferConnectorsHandler {
 
   protected Map<Field, Set<Field>> getFieldWithOutputs() {
     return fieldWithOutputs;
+  }
+
+  // Utility methods
+  /**
+   * Convert a given string with 1st letter upper case and others to be lower case.
+   * 
+   * @param s - the input string
+   * @return the converted string
+   */
+  private static String firstCharUpper(String s) {
+    return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
   }
 
 }

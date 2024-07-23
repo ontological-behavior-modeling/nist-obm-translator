@@ -13,46 +13,13 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
-public class AlloyFactory {
-
-
-
-  /**
-   * Creates the bijectionFiltered and/or isBeforeTarget, isAfterSource expressions and return
-   *
-   * @param ownerSig the owner sig
-   * @param from the from the 2nd argument for bijectionFiltered expression
-   * @param to the 3rd argument of bijectionFiltered expression
-   * @param func the 1st argument (ie., sources, targets) for bijectionFiltered expression
-   */
-
-  // private static Set<Expr> exprs_bijectionFiltered(Sig ownerSig, Expr from, Expr to, Func func) {
-  //
-  // Set<Expr> factsAdded = new HashSet<>();
-  //
-  // ExprVar varX = makeVarX(ownerSig);
-  // Expr toExpr = null;
-  // Expr fromExpr = AlloyUtils.addExprVarToExpr(varX, from);
-  //
-  // if (to == null) {// not to field but to itself (sig x)
-  // // fact {all x: B | bijectionFiltered[targets, x.transferB2B, x]}
-  // toExpr = varX;
-  // if (func == Alloy.sources) { // {fact {all x: B | isBeforeTarget[x.transferBB1]}
-  // factsAdded.add(Alloy.isBeforeTarget.call(fromExpr));
-  // } else if (func == Alloy.targets) {// fact {all x: B | isAfterSource[x.transferB2B]}
-  // factsAdded.add(Alloy.isAfterSource.call(fromExpr));
-  // }
-  // } else {
-  // // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
-  // toExpr = AlloyUtils.addExprVarToExpr(varX, to);
-  // }
-  //
-  // Expr bijFilteredFn = Alloy.bijectionFiltered.call(func.call(), fromExpr, toExpr);
-  // factsAdded.add(bijFilteredFn);
-  //
-  // return factsAdded;
-  // }
-
+/**
+ * A utility class to create Alloy expression
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
+public class AlloyExprFactory {
 
   /**
    * Create BijectionFiltered, isBeforeTraget and/or isAfterSource expression and combined with all x: OwnerSig (ie., {all x: OwnerSig | bijectionFiltered[..., ..., ...]})
@@ -557,7 +524,7 @@ public class AlloyFactory {
         rFacts.add((expr).in(varX.join(ostepsExpr1)).forAll(decl)); // .... in x.steps
       else if (addXStepsIn) // if leaf sig, then addXStepsIn = true -> if sig has no own fields then
                             // add {no steps.x}
-        rFacts.add(AlloyFactory.expr_noStepsX(sig));
+        rFacts.add(AlloyExprFactory.expr_noStepsX(sig));
     }
     return rFacts;
   }
@@ -577,7 +544,7 @@ public class AlloyFactory {
     return new Decl(null, null, null, List.of(x), sig.oneOf());
   }
 
-  public static Decl makeDecl(Sig ownerSig) {
+  protected static Decl makeDecl(Sig ownerSig) {
     return new Decl(null, null, null, List.of(makeVarX(ownerSig)), ownerSig.oneOf());
   }
 

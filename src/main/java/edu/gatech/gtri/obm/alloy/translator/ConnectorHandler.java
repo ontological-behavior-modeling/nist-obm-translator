@@ -16,6 +16,12 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
+/**
+ * A class to handle a connector
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
 public class ConnectorHandler {
 
   private enum CONNECTOR_TYPE {
@@ -34,48 +40,65 @@ public class ConnectorHandler {
    * A dictionary contains signature name as key and a set of fact expression as value.
    */
   Map<String, Set<Expr>> sigToFactsMap;
-
   /**
    * A set of connectors redefined by children so that the connectors are ignored by the parent. This variable is initialized in ConnectorsHandler and updated and used by a ConnectorHandler while
    * handling each connector at a time.
    */
   Set<Connector> redefinedConnectors;
 
+  /**
+   * A set of Alloy fields created for Properties with <<Parameter>> stereotype
+   */
   Set<Field> parameterFields;
-
-
+  /**
+   * A class connect this connector class and Alloy class
+   */
   ToAlloy toAlloy;
 
-  List<String> messages;
-
   /**
-   * A set of string representing the type of transfer fields (ie., Integer)
+   * A list of messages to collect during this class
    */
-  // Set<String> transferingTypeSig;
+  List<String> messages;
 
 
   /**
    * A dictionary contains signature name as key and a set of transfer field names as value.
    */
   Map<String, Set<String>> sigToTransferFieldMap;
-
+  /**
+   * A dictionary contains signature name as key and a set of step property/field names as value
+   */
   Map<String, Set<String>> stepPropertiesBySig;
 
-  // protected PrimSig sigOfNamedElement;
-
+  /**
+   * A set of transfer field names
+   */
   protected Set<String> transferFieldNames;
 
+  /** omgutils sysmladapter **/
   SysMLAdapter sysmladapter;
+  /** omgutils sysmlutl **/
   SysMLUtil sysmlUtil;
 
-  TransferConnectorsHandler tch;
+  /** A transfer connecter handler if this connector is transfer connector **/
+  ConnectorHandler_Transfer tch;
 
+  /**
+   * A constructor
+   * 
+   * @param _redefinedConnectors
+   * @param _toAlloy
+   * @param _sigToFactsMap
+   * @param _parameterFields
+   * @param _sigToTransferFieldMap
+   * @param _sysmladapter
+   * @param _sysmlUtil
+   */
   protected ConnectorHandler(Set<Connector> _redefinedConnectors,
-      /* Set<PrimSig> _leafSigs, */ ToAlloy _toAlloy, Map<String, Set<Expr>> _sigToFactsMap,
+      ToAlloy _toAlloy, Map<String, Set<Expr>> _sigToFactsMap,
       Set<Field> _parameterFields, Map<String, Set<String>> _sigToTransferFieldMap,
       SysMLAdapter _sysmladapter,
       SysMLUtil _sysmlUtil) {
-    // Map<String, Set<String>> _stepPropertiesBySig) {
 
     this.sysmladapter = _sysmladapter;
     this.sysmlUtil = _sysmlUtil;
@@ -87,19 +110,13 @@ public class ConnectorHandler {
     parameterFields = _parameterFields;
     toAlloy = _toAlloy;
 
-
-
     sigToTransferFieldMap = _sigToTransferFieldMap;
     sigToFactsMap = _sigToFactsMap;
 
-    // connectorTargetInputPropertyNamesByClassName = new HashMap<>();
-    // connectorSourceOutputPrpertyNamesByClassName = new HashMap<>();
-    // sigWithTransferField = new HashSet<>();
-    // sigNameWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>();
-    // transferingTypeSig = new HashSet<String>();
+
     messages = new ArrayList<String>();
 
-    tch = new TransferConnectorsHandler(toAlloy, sigToFactsMap,
+    tch = new ConnectorHandler_Transfer(toAlloy, sigToFactsMap,
         sigToTransferFieldMap, redefinedConnectors,
         parameterFields, messages);
   }
@@ -130,8 +147,8 @@ public class ConnectorHandler {
     Set<org.eclipse.uml2.uml.Connector> connectors = sysmlUtil.getOwnedConnectors(_classOfSig);
 
     // handle one of connectors
-    OneOfConnectorsHandler och =
-        new OneOfConnectorsHandler(sysmlUtil, sysmladapter, toAlloy, this.messages);
+    ConnectorsHandler_OneOf och =
+        new ConnectorsHandler_OneOf(sysmlUtil, sysmladapter, toAlloy, this.messages);
     Set<Connector> oneOfConnectors = och.handleOneOfConnectors(sigOfClass, _classOfSig, connectors);
 
     // process remaining of connectors
@@ -210,6 +227,9 @@ public class ConnectorHandler {
             if (source == null || target == null)
               continue;
 
+            // targetField is null
+            // i.e., For 4.1.4 Transfers and Parameters - a connector <<ItemFlow>> for b(B).vout and b2(B2).vout
+            // source="b2" target="b", sigOfClass= "B" -- "b" is not a field of "B"
             Field sourceField = AlloyUtils.getFieldFromSigOrItsParents(source, sigOfClass);
             Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfClass);
 
@@ -221,7 +241,7 @@ public class ConnectorHandler {
                   targetField);
 
             else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
-              tch.handleTransferConnector(sigOfClass, isSigLeaf, cn,
+              tch.handleTransferConnector(cn, sigOfClass, isSigLeaf,
                   sourceTypeName,
                   targetTypeName,
                   sourceField,
@@ -234,6 +254,7 @@ public class ConnectorHandler {
 
   }
 
+  // Get methods to pass back to connectors handler
   protected HashMap<String, Set<String>> getConnectorTargetInputPropertyNamesByClassName() {
     return tch.getConnectorTargetInputPropertyNamesByClassName();
   }

@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Classifier;
 import org.eclipse.uml2.uml.NamedElement;
@@ -17,7 +16,6 @@ import org.eclipse.uml2.uml.Property;
 import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.umd.omgutil.EMFUtil;
 import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 /**
@@ -75,31 +73,22 @@ public class ClassesHandler {
   List<String> errorMessages;
 
 
-  public ClassesHandler(Resource resource, String classQualifiedName, String xmiAbsolutePath,
-      ToAlloy _toAlloy, SysMLUtil _sysMLUtil) {
-    NamedElement mainNamedElement = EMFUtil.getNamedElement(resource, classQualifiedName);
-    if (mainNamedElement == null)
-      this.errorMessages.add(classQualifiedName + " not found in " + xmiAbsolutePath);
-    else if (mainNamedElement instanceof Class)
-      mainClass = (Class) mainNamedElement;
-    else
-      this.errorMessages.add(classQualifiedName + " is not Class. Not able to translate to Alloy.");
-
+  protected ClassesHandler(Class _mainClass, ToAlloy _toAlloy, SysMLUtil _sysMLUtil) {
+    this.mainClass = _mainClass;
     this.toAlloy = _toAlloy;
     this.sysMLUtil = _sysMLUtil;
   }
 
 
-  public boolean process() {
-    if (mainClass == null)
-      return false; // errorMessage is set in the constructor
+
+  protected boolean process() {
 
     parameterFields = new HashSet<>(); // Set<Field>
     propertiesByClass = new HashMap<>();// Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>
 
     // The main class will be the last in this list
     List<org.eclipse.uml2.uml.Class> classInHierarchyForMain =
-        MDUtils.createListIncludeSelfAndParents(mainClass);
+        UML2Utils.createListIncludeSelfAndParents(mainClass);
     PrimSig parentSig = Alloy.occSig; // oldest's parent is always Occurrence
     for (Class aClass : classInHierarchyForMain) { // loop through oldest to youngest(main
                                                    // is the youngest)
@@ -116,7 +105,7 @@ public class ClassesHandler {
     }
 
     // The order of list is [0]=grand parent [1]=parent [2]=child(mainClass)
-    this.classInHierarchy = MDUtils.createListIncludeSelfAndParents(mainClass);
+    this.classInHierarchy = UML2Utils.createListIncludeSelfAndParents(mainClass);
 
     Map<PrimSig, Set<Property>> redefinedPropertiesBySig = new HashMap<>(); // updated in addFieldsToSig method
     stepPropertiesBySig = new HashMap<>();
@@ -142,10 +131,10 @@ public class ClassesHandler {
       // fact {all x: OFFoodService | x.eat in OFEat }
       // fact {all x: IFSingleFoodService | x.order in IFCustomerOrder}
       toAlloy.addRedefinedSubsettingAsFacts(sig,
-          MDUtils.toNameAndType(redefinedPropertiesBySig.get(sig)));
+          UML2Utils.toNameAndType(redefinedPropertiesBySig.get(sig)));
     }
 
-    Set<NamedElement> leafClasses = MDUtils.findLeafClass(propertiesByClass.keySet()); // class and PrimitiveType
+    Set<NamedElement> leafClasses = UML2Utils.findLeafClass(propertiesByClass.keySet()); // class and PrimitiveType
     leafSigs =
         leafClasses.stream().map(ne -> toAlloy.getSig(ne.getName())).collect(Collectors.toSet());
 
@@ -304,27 +293,27 @@ public class ClassesHandler {
   }
 
 
-  public Set<Field> getParameterFields() {
+  protected Set<Field> getParameterFields() {
     return this.parameterFields;
   }
 
-  public Set<PrimSig> getLeafSigs() {
+  protected Set<PrimSig> getLeafSigs() {
     return this.leafSigs;
   }
 
-  public Map<String, Set<String>> getStepPropertiesBySig() {
+  protected Map<String, Set<String>> getStepPropertiesBySig() {
     return this.stepPropertiesBySig;
   }
 
-  public String getMainSigLabel() {
+  protected String getMainSigLabel() {
     return this.mainClass.getName();
   }
 
-  public List<Class> getClassInHierarchy() {
+  protected List<Class> getClassInHierarchy() {
     return this.classInHierarchy;
   }
 
-  public Set<NamedElement> getAllClasses() {
+  protected Set<NamedElement> getAllClasses() {
     return this.propertiesByClass.keySet();
   }
 
@@ -333,7 +322,7 @@ public class ClassesHandler {
    * 
    * @return errorMessage - list of error message strings
    */
-  public List<String> getErrorMessages() {
+  protected List<String> getErrorMessages() {
     return this.errorMessages;
   }
 

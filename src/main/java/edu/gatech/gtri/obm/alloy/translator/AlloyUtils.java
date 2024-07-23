@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.uml2.uml.Constraint;
+import org.eclipse.uml2.uml.Element;
+import org.eclipse.uml2.uml.ValueSpecification;
+import org.eclipse.uml2.uml.internal.impl.OpaqueExpressionImpl;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.ast.Decl;
 import edu.mit.csail.sdg.ast.Expr;
@@ -21,10 +26,18 @@ import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.mit.csail.sdg.parser.CompModule;
 import edu.mit.csail.sdg.parser.CompUtil;
+import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
+import edu.umd.omgutil.uml.OpaqueExpression;
 
+/**
+ * A utility class for Alloy Fields,
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
 public class AlloyUtils {
 
-  // TODO? maybe just BehaviorOccurence is ok
+
   final static List<String> invalidParentNames;
   static {
     invalidParentNames = new ArrayList<>();
@@ -32,8 +45,6 @@ public class AlloyUtils {
     invalidParentNames.add("Occurrence");// it is valid
     invalidParentNames.add("Anything");
   }
-
-
 
   /**
    * Create a field and return
@@ -195,8 +206,6 @@ public class AlloyUtils {
                                  // null
       Field field = getFieldFromSigOrItsParents(fieldNameLookingFor, sig.parent);
       if (field != null)
-        // return sig.domain(field);
-        // return sig.parent.domain(field);
         return field;
       else {
         sig = sig.parent; // reset
@@ -298,7 +307,7 @@ public class AlloyUtils {
   }
 
   public static Set<Expr> toSigAllFacts(Sig ownerSig, Set<Expr> exprs) {
-    Decl decl = AlloyFactory.makeDecl(ownerSig);
+    Decl decl = AlloyExprFactory.makeDecl(ownerSig);
     Set<Expr> rAll = new HashSet<>();
     for (Expr expr : exprs) {
       rAll.add(expr.forAll(decl));
@@ -314,7 +323,7 @@ public class AlloyUtils {
    * @param original
    * @return
    */
-  public static Expr addExprVarToExpr(ExprVar s, Expr original) {
+  protected static Expr addExprVarToExpr(ExprVar s, Expr original) {
     if (original instanceof ExprBinary) {
       Expr left = addExprVarToExpr(s, ((ExprBinary) original).left);
       Expr right = addExprVarToExpr(s, ((ExprBinary) original).right);
@@ -337,8 +346,31 @@ public class AlloyUtils {
    * @param value value(Field) to be checked
    * @return true if both the given key and the given value is not in the map, otherwise return false
    */
-  public static boolean notContainBothKeyAndValue(Map<Field, Set<Field>> map, Field key,
+  protected static boolean notContainBothKeyAndValue(Map<Field, Set<Field>> map, Field key,
       Field value) {
     return map.containsKey(key) ? (map.get(key).contains(value) ? false : true) : true;
+  }
+
+
+  /**
+   * Get two rules (ConnectorEnds) of each one of constraint using omgutils.SysMLAdapter and return as set.
+   * 
+   * @param cs a set of Constraints
+   * @return set of oneof constraint's two rules (ConnectorEnd)
+   */
+  protected static Set<EList<Element>> getOneOfRules(SysMLAdapter sysmladapter,
+      Set<Constraint> cs) {
+    Set<EList<Element>> oneOfSet = new HashSet<>();
+    for (Constraint c : cs) {
+      ValueSpecification vs = c.getSpecification();
+      if (vs instanceof OpaqueExpressionImpl) {
+        edu.umd.omgutil.uml.OpaqueExpression omgE = (OpaqueExpression) sysmladapter.mapObject(vs);
+        if (omgE.getBodies().contains("OneOf")) {
+          EList<Element> es = c.getConstrainedElements(); // list of connectorEnds
+          oneOfSet.add(es);
+        }
+      }
+    }
+    return oneOfSet;
   }
 }

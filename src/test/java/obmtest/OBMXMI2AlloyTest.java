@@ -19,11 +19,20 @@ import edu.mit.csail.sdg.parser.CompModule;
 import edu.umd.omgutil.UMLModelErrorException;
 
 
-/*
+/**
  * JUnit Test for translation.
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ * @author Andrew H Shinjo, Graduate Student - Georgia Tech
  * 
  */
 class OBMXMI2AlloyTest {
+
+  static OBMXMI2Alloy translater;
+  static final String ombmodel_dir = "src/test/resources";
+  static final String output_and_testfiles_dir = "src/test/resources";
+  static final File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
+
 
   @ParameterizedTest
   @CsvSource({
@@ -84,29 +93,16 @@ class OBMXMI2AlloyTest {
 
     System.out.println("Manually created alloy file = " + manualFileName);
     System.out.println("Comparing QualifiedName for a class = " + sysMLClassQualifiedName);
-    System.out.println("error log is available in error.log");
-    // ========== Create Alloy model from OBM XMI file & write as a file ==========
-
-    String ombmodel_dir = "src/test/resources";
-    String output_and_testfiles_dir = "src/test/resources";
-    File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
-
-
-    // write any errors to be in error file
-    PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.log"));
-    System.setErr(o);
-
     File apiFile = new File(output_and_testfiles_dir,
         manualFileName + "_Generated" + ".als");
 
 
-    OBMXMI2Alloy test = new OBMXMI2Alloy.Builder().alloyLibrary(output_and_testfiles_dir).build();
-    if (!test.createAlloyFile(xmiFile, sysMLClassQualifiedName, apiFile)) {
-      System.out.println(test.getErrorMessages());
-      fail("failed to create generated file: " + apiFile.getName() + " " + test.getErrorMessages());
+    initializeOBMXMI2Alloy();
+    if (!translater.createAlloyFile(sysMLClassQualifiedName, apiFile)) {
+      System.out.println(translater.getErrorMessages());
+      fail("failed to create generated file: " + apiFile.getName() + " "
+          + translater.getErrorMessages());
     }
-
-
     // creating comparator
     ExpressionComparator ec = new ExpressionComparator();
 
@@ -158,6 +154,31 @@ class OBMXMI2AlloyTest {
       Sig alloyFileSig = test_SigByName.get(sigName);
       Sig apiSig = api_SigByName.get(sigName);
       assertTrue(ec.compareTwoExpressionsSigs(alloyFileSig, apiSig));
+    }
+  }
+
+  static void initializeOBMXMI2Alloy() {// throws FileNotFoundException, UMLModelErrorException {
+
+    if (translater == null) {
+      System.out.println("error log is available in error.log");
+      // write any errors to be in error file
+      try {
+        PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.log"));
+        System.setErr(o);
+      } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+
+      try {
+        translater =
+            new OBMXMI2Alloy(output_and_testfiles_dir);
+        translater.loadXmiFile(xmiFile);
+
+      } catch (FileNotFoundException | UMLModelErrorException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
     }
   }
 }

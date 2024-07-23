@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import edu.mit.csail.sdg.alloy4.A4Reporter;
-import edu.mit.csail.sdg.alloy4.ConstList;
 import edu.mit.csail.sdg.ast.Expr;
 import edu.mit.csail.sdg.ast.Func;
 import edu.mit.csail.sdg.ast.Module;
@@ -18,36 +17,26 @@ import edu.mit.csail.sdg.ast.Sig;
 import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.mit.csail.sdg.parser.CompUtil;
 
+/**
+ * A class to hold all signatures, fields, and facts to be translated to an alloy file
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
 public class Alloy {
 
   /**
-   * List of Signatures consist of created for the translation as well as the ignoredSigs from library
+   * The templateModule name string defined for the translator. Set using mainSig name. i.e.,) if the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
+   */
+  private String moduleName;
+  /**
+   * List of Signatures consist of created for the translation
    */
   protected List<Sig> allSigs;
   /**
-   * Expr of facts consist of facts created for the translation as well as the ignoredExpr from library
+   * Expr of facts consist of facts created for the translation
    */
   protected Expr allFacts;
-
-  /**
-   * Signatures not to be written out in the translated file. They are signatures in the library (from Translator.als and utilities/*.als files)
-   * 
-   * [this/Occurrence, o/TransferBefore, o/TransferBeforeSig, o/Transfer, o/TransferSig, o/BinaryLink, o/BinaryLinkSig, o/OccurrenceSig]
-   */
-  private static ConstList<Sig> ignoredSigs;
-  /**
-   * Facts not be written out in the translated file. Those facts are in the library (from Translator.als and utilities/*.als files)
-   * 
-   * AND[(all t | AND[o/isAfterSource[t], o/isBeforeTarget[t]] <=> t in o/TransferBefore), (all t | # t . o/items > 0), o/r/acyclic[o/items, o/Transfer], o/r/acyclic[o/sources, o/Transfer],
-   * o/r/acyclic[o/targets, o/Transfer], (all t | (all item | o/during[t, item])), (all t,t' | AND[t . o/items = t' . o/items, t . o/sources = t' . o/sources, t . o/targets = t' . o/targets] => t = t'),
-   * (all t | (all src | (all tgt | OR[t in src . o/stepsAndSubsteps, t in tgt . o/stepsAndSubsteps => t !in o/TransferBefore]))), (all x,y | ! OR[o/before[x, y], o/before[y, x], o/during[x, y],
-   * o/during[y, x]] <=> o/overlap[x, y]), (all o | (all input | o/during[o, input])), (all o | (all output | o/during[o, output])), (all x,y | y in x . o/steps => ! x in y . o/steps), (all x,y,z |
-   * AND[y in x . o/steps, z in y . ^ o/steps] => z !in x . o/steps), (all x | # x . ~ o/steps <= 1), (all x,y,z | AND[o/before[x, y], o/before[y, z]] => o/before[x, z]), (all x | ! o/before[x, x]),
-   * (all x | o/during[x, x]), (all x,y,z | AND[o/during[x, y], o/during[y, z]] => o/during[x, z]), (all x,y,z | AND[o/before[x, y], o/during[z, y]] => o/before[x, z]), (all x,y,z | AND[o/before[y, x],
-   * o/during[z, y]] => o/before[z, x]), (all x,y | y in x . o/steps => o/during[y, x])]
-   */
-  private static Expr ignoredExprs;
-
   /**
    * String used to load library into the templateModule that necessary for the translator.
    */
@@ -86,12 +75,6 @@ public class Alloy {
   protected static PrimSig occSig; // default parent/super type of Signature
 
   /**
-   * The templateModule name string defined for the translator. Set using mainSig name. i.e.,) if the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
-   */
-  private String moduleName;
-
-
-  /**
    * Create a new Alloy assuming the required alloy library files (*.als) are locating at the given working directory.
    * 
    * @param working_dir - The absolute filename
@@ -100,17 +83,6 @@ public class Alloy {
 
     System.setProperty(("java.io.tmpdir"), working_dir);
     templateModule = CompUtil.parseEverything_fromString(new A4Reporter(), templateString);
-
-    ignoredSigs = templateModule.getAllReachableUserDefinedSigs();
-
-    // initialize list of Signatures to be created by the translator
-    allSigs = new ArrayList<Sig>();
-    // add Signatures from Transfer.als
-    allSigs.addAll(ignoredSigs);
-
-    // For this templateModule, contains ExprList<ExprUnary>
-    ignoredExprs = templateModule.getAllReachableFacts();
-    allFacts = ignoredExprs;
 
     // abstract
     occSig = (PrimSig) AlloyUtils.getReachableSig(templateModule, "this/Occurrence");
@@ -140,9 +112,18 @@ public class Alloy {
 
     transferSig = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
     transferBeforeSig = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
+
   }
 
-  // Modules
+  public void initialize() {
+    // initialize a list of signatures.
+    allSigs = new ArrayList<Sig>();
+    // initialize allFacts as null
+    allFacts = null;
+
+  }
+
+  // Module
   protected String getModuleName() {
     return this.moduleName;
   }
@@ -165,18 +146,30 @@ public class Alloy {
     return this.allFacts;
   }
 
+  /**
+   * Add a expression to allFacts instance variable
+   * 
+   * @param expr - a expression to be added
+   */
   protected void addToFacts(Expr expr) {
-    allFacts = allFacts.and(expr);
-  }
-
-  protected void addToFacts(Set<Expr> exprs) {
-    for (Expr expr : exprs)
+    if (allFacts == null)
+      allFacts = expr;
+    else
       allFacts = allFacts.and(expr);
   }
 
-  // Ignored
-  protected Expr getIgnoredExprs() {
-    return ignoredExprs;
+  /**
+   * Add a set of expression to allFacts instance variable
+   * 
+   * @param exprs
+   */
+  protected void addToFacts(Set<Expr> exprs) {
+    for (Expr expr : exprs) {
+      if (allFacts == null)
+        allFacts = expr;
+      else
+        allFacts = allFacts.and(expr);
+    }
   }
 
 
@@ -190,7 +183,7 @@ public class Alloy {
   protected void toFile(String outputFileName, Set<Sig.Field> parameterFields)
       throws FileNotFoundException {
 
-    ExprVisitor exprVisitor = new ExprVisitor(this.getIgnoredExprs(), parameterFields);
+    ExprVisitor exprVisitor = new ExprVisitor(parameterFields);
 
     StringBuilder sb = new StringBuilder();
 
@@ -200,10 +193,8 @@ public class Alloy {
 
     Map<String, String> sigsByLabel = new HashMap<>();
     for (Sig sig : this.allSigs) {
-      if (!ignoredSigs.contains(sig)) {
-        exprVisitor.isRootSig = true;
-        sigsByLabel.put(sig.label, exprVisitor.visit(sig));
-      }
+      exprVisitor.isRootSig = true;
+      sigsByLabel.put(sig.label, exprVisitor.visit(sig));
     }
 
     String s = exprVisitor.visitThis(this.allFacts);

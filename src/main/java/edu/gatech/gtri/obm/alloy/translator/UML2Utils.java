@@ -17,8 +17,13 @@ import org.eclipse.uml2.uml.NamedElement;
 import org.eclipse.uml2.uml.Property;
 import org.eclipse.uml2.uml.Stereotype;
 
-
-public class MDUtils {
+/**
+ * Utility class for UML2 to extract informations
+ * 
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
+ *
+ */
+public class UML2Utils {
 
   /**
    * Return the rules(connectableElements) of connector end of the connector. The first in the array is for the given connector end. If the connector did not have two ends, the method return null.
@@ -27,7 +32,7 @@ public class MDUtils {
    * @param ce A connector end having the rule/connectableElement as the first element of the return list.
    * @return List of ConnectableElement. Its size should be two, otherwiser return null
    */
-  public static List<ConnectableElement> getEndRolesForCEFirst(Connector cn, ConnectorEnd ce) {
+  protected static List<ConnectableElement> getEndRolesForCEFirst(Connector cn, ConnectorEnd ce) {
     List<ConnectableElement> ces = new ArrayList<>();
     ces.add(ce.getRole());
     for (ConnectorEnd end : cn.getEnds()) {
@@ -45,7 +50,7 @@ public class MDUtils {
    * @param ps - a set of property
    * @return A map
    */
-  public static Map<String, String> toNameAndType(Set<Property> ps) {
+  protected static Map<String, String> toNameAndType(Set<Property> ps) {
     Map<String, String> map = new HashMap<>();
     for (Property p : ps) {
       map.put(p.getName(), p.getType().getName());
@@ -59,7 +64,7 @@ public class MDUtils {
    * @param allNEs - all NamedElements
    * @return a set of NamedElement that is leaf in hierarchy
    */
-  public static Set<NamedElement> findLeafClass(Set<NamedElement> allNEs) {
+  protected static Set<NamedElement> findLeafClass(Set<NamedElement> allNEs) {
     Set<NamedElement> leafClasses = new HashSet<>();
     Set<Classifier> parentClasses = new HashSet<>();
     for (NamedElement ne : allNEs) {
@@ -82,7 +87,7 @@ public class MDUtils {
    * @param aClass - Class that is the bottom/leaf of the hierarchy
    * @return A list of class in hierarchy
    */
-  public static List<Class> createListIncludeSelfAndParents(Class aClass) {
+  protected static List<Class> createListIncludeSelfAndParents(Class aClass) {
     List<Class> list = new ArrayList<Class>();
     list.add(aClass);
     while ((aClass = getParent(aClass)) != null) {
