@@ -18,7 +18,7 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.mit.csail.sdg.parser.CompUtil;
 
 /**
- * A class to hold all signatures, fields, and facts to be translated to an alloy file
+ * A class loads supporting libraries (Translator.als and utilities/*.als) and stores all signatures, fields, and facts to be translated to an alloy file.
  * 
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
@@ -75,73 +75,91 @@ public class Alloy {
   protected static PrimSig occSig; // default parent/super type of Signature
 
   /**
-   * Create a new Alloy assuming the required alloy library files (*.als) are locating at the given working directory.
+   * Create this object and load required alloy libraries (Translator.als and utilities/*.als) are locating at the given working directory.
    * 
-   * @param working_dir - The absolute filename
+   * @param _workingDirectory (String) - The absolute file path
    */
-  protected Alloy(String working_dir) {
+  protected Alloy(String _workingDirectory) {
 
-    System.setProperty(("java.io.tmpdir"), working_dir);
+    System.setProperty(("java.io.tmpdir"), _workingDirectory);
     templateModule = CompUtil.parseEverything_fromString(new A4Reporter(), templateString);
 
     // abstract
-    occSig = (PrimSig) AlloyUtils.getReachableSig(templateModule, "this/Occurrence");
-    transferModule = AlloyUtils.getAllReachableModuleByName(templateModule, "TransferModule");
+    occSig = (PrimSig) AlloyUtils.getReachableSig("this/Occurrence", templateModule);
+    transferModule = AlloyUtils.getAllReachableModuleByName("TransferModule", templateModule);
 
-    happensBefore = AlloyUtils.getFunction(transferModule, "o/happensBefore");
-    happensDuring = AlloyUtils.getFunction(transferModule, "o/happensDuring");
-    bijectionFiltered = AlloyUtils.getFunction(transferModule, "o/bijectionFiltered");
-    functionFiltered = AlloyUtils.getFunction(transferModule, "o/functionFiltered");
-    inverseFunctionFiltered = AlloyUtils.getFunction(transferModule, "o/inverseFunctionFiltered");
-
-    sources = AlloyUtils.getFunction(transferModule, "o/sources");
-    targets = AlloyUtils.getFunction(transferModule, "o/targets");
+    happensBefore = AlloyUtils.getFunction("o/happensBefore", transferModule);
+    happensDuring = AlloyUtils.getFunction("o/happensDuring", transferModule);
+    bijectionFiltered = AlloyUtils.getFunction("o/bijectionFiltered", transferModule);
+    functionFiltered = AlloyUtils.getFunction("o/functionFiltered", transferModule);
+    inverseFunctionFiltered = AlloyUtils.getFunction("o/inverseFunctionFiltered", transferModule);
+    sources = AlloyUtils.getFunction("o/sources", transferModule);
+    targets = AlloyUtils.getFunction("o/targets", transferModule);
     subsettingItemRuleForSources =
-        AlloyUtils.getFunction(transferModule, "o/subsettingItemRuleForSources");
+        AlloyUtils.getFunction("o/subsettingItemRuleForSources", transferModule);
     subsettingItemRuleForTargets =
-        AlloyUtils.getFunction(transferModule, "o/subsettingItemRuleForTargets");
-
-    isAfterSource = AlloyUtils.getFunction(transferModule, "o/isAfterSource");
-    isBeforeTarget = AlloyUtils.getFunction(transferModule, "o/isBeforeTarget");
-
-
-    osteps = AlloyUtils.getFunction(transferModule, "o/steps");
-    oinputs = AlloyUtils.getFunction(transferModule, "o/inputs");
-    ooutputs = AlloyUtils.getFunction(transferModule, "o/outputs");
-    oitems = AlloyUtils.getFunction(transferModule, "o/items");
-
-    transferSig = AlloyUtils.getReachableSig(transferModule, "o/Transfer");
-    transferBeforeSig = AlloyUtils.getReachableSig(transferModule, "o/TransferBefore");
-
+        AlloyUtils.getFunction("o/subsettingItemRuleForTargets", transferModule);
+    isAfterSource = AlloyUtils.getFunction("o/isAfterSource", transferModule);
+    isBeforeTarget = AlloyUtils.getFunction("o/isBeforeTarget", transferModule);
+    osteps = AlloyUtils.getFunction("o/steps", transferModule);
+    oinputs = AlloyUtils.getFunction("o/inputs", transferModule);
+    ooutputs = AlloyUtils.getFunction("o/outputs", transferModule);
+    oitems = AlloyUtils.getFunction("o/items", transferModule);
+    transferSig = AlloyUtils.getReachableSig("o/Transfer", transferModule);
+    transferBeforeSig = AlloyUtils.getReachableSig("o/TransferBefore", transferModule);
   }
 
+  /**
+   * initialize/reset instance variables when the library location not changed but a class translating is changed
+   */
   public void initialize() {
     // initialize a list of signatures.
     allSigs = new ArrayList<Sig>();
     // initialize allFacts as null
     allFacts = null;
-
   }
 
-  // Module
+  /**
+   * Get method for module
+   * 
+   * @return (String) - module name in string
+   */
   protected String getModuleName() {
     return this.moduleName;
   }
 
-  protected void setModuleName(String m) {
-    this.moduleName = m;
+  /**
+   * Set the module name that used to writing out this alloy object to a file.
+   * 
+   * @param _moduleName (String)
+   */
+  protected void setModuleName(String _moduleName) {
+    this.moduleName = _moduleName;
   }
 
-  // Signatures
+  /**
+   * Get method for all signatures
+   * 
+   * @return (List<Sig>) - all signatures
+   */
   protected List<Sig> getAllSigs() {
     return this.allSigs;
   }
 
-  protected void addToAllSigs(PrimSig sig) {
-    allSigs.add(sig);
+  /**
+   * Add a given sig to allSigs instance variable
+   * 
+   * @param _sig (PrimSig) - a sig to be added
+   */
+  protected void addToAllSigs(PrimSig _sig) {
+    allSigs.add(_sig);
   }
 
-  // Facts
+  /**
+   * Get method for facts
+   * 
+   * @return (Expr) - all facts
+   */
   protected Expr getFacts() {
     return this.allFacts;
   }
@@ -149,22 +167,22 @@ public class Alloy {
   /**
    * Add a expression to allFacts instance variable
    * 
-   * @param expr - a expression to be added
+   * @param _expr (Expr) - a expression to be added
    */
-  protected void addToFacts(Expr expr) {
+  protected void addToFacts(Expr _expr) {
     if (allFacts == null)
-      allFacts = expr;
+      allFacts = _expr;
     else
-      allFacts = allFacts.and(expr);
+      allFacts = allFacts.and(_expr);
   }
 
   /**
    * Add a set of expression to allFacts instance variable
    * 
-   * @param exprs
+   * @param _exprs (Set<Expr>) - a set of expression to be added
    */
-  protected void addToFacts(Set<Expr> exprs) {
-    for (Expr expr : exprs) {
+  protected void addToFacts(Set<Expr> _exprs) {
+    for (Expr expr : _exprs) {
       if (allFacts == null)
         allFacts = expr;
       else
@@ -174,16 +192,16 @@ public class Alloy {
 
 
   /**
-   * Write an alloy file from all Signatures and Facts.
+   * Write an alloy file from all Signatures and Facts as a file.
    * 
-   * @param outputFileName - an absolute file name for the alloy output file.
-   * @param parameterFields - used to determine fields to be disj constraint (parameter files are not disj)
+   * @param _outputFileName (String) - an absolute file name for the alloy output file to be written as
+   * @param _parameterFields (Set<Field>) - a set of Fields. used to determine fields to be disj constraint (parameter fields are not disj)
    * @throws FileNotFoundException - happens when the outputFileName is failed to be created (not exist, not writable etc...)
    */
-  protected void toFile(String outputFileName, Set<Sig.Field> parameterFields)
+  protected void toFile(String _outputFileName, Set<Sig.Field> _parameterFields)
       throws FileNotFoundException {
 
-    ExprVisitor exprVisitor = new ExprVisitor(parameterFields);
+    ExprVisitor exprVisitor = new ExprVisitor(_parameterFields);
 
     StringBuilder sb = new StringBuilder();
 
@@ -201,7 +219,7 @@ public class Alloy {
     String formats = format(s, sigsByLabel);
     sb.append(formats);
 
-    PrintWriter pw = new PrintWriter(outputFileName);
+    PrintWriter pw = new PrintWriter(_outputFileName);
     pw.println(sb.toString());
     pw.close();
   }
@@ -210,15 +228,15 @@ public class Alloy {
   /**
    * Format this alloy object (Signatures/Fields and Facts) to string by grouping Signature/Fields and Facts for the Signature together.
    * 
-   * @param factListInString
-   * @param signatureBlockBySignature - Map (key = Signature name string, value = Signature and fields as written in the alloy file).
-   * @return string of Signatures, Fields, and Facts grouped by Signature.
+   * @param _factListInString (String) - all facts in string
+   * @param _signatureBlockBySignature (Map: key = Signature name string, value: Signature and fields as written in the alloy file) - signature and its fields
+   * @return (String) - A Module, Signatures, Fields, and Facts grouped by Signature in string
    */
-  private static String format(String factListInString,
-      Map<String, String> signatureBlockBySignature) {
+  private static String format(String _factListInString,
+      Map<String, String> _signatureBlockBySignature) {
 
     Map<String, List<String>> facts = new HashMap<>();
-    String[] factlines = factListInString.split("\n");
+    String[] factlines = _factListInString.split("\n");
     for (int i = 0; i < factlines.length; i++) {
       String factline = factlines[i];
       // separate factline into [signature, fact]
@@ -237,44 +255,44 @@ public class Alloy {
       }
     }
     String newS = "";
-    List<String> sigNames = new ArrayList<>(signatureBlockBySignature.keySet());
+    List<String> sigNames = new ArrayList<>(_signatureBlockBySignature.keySet());
     Collections.sort(sigNames);
     for (String sigName : sigNames) {
-      newS += signatureBlockBySignature.get(sigName); // sig AllControl extends Occurrence { disj p1, p2, p3, p4, p5, p6, p7: set AtomicBehavior}
+      newS += _signatureBlockBySignature.get(sigName); // sig AllControl extends Occurrence { disj p1, p2, p3, p4, p5, p6, p7: set AtomicBehavior}
       newS += getFacts(sigName, facts); // fact {...}\n fact {...}\n
     }
     return newS;
   }
 
   /**
-   * Return fact body without the Signature portion from string array separated by "|". For example, String[] domainAndFacts for index = 1 or more of "fact {all x: MultipleControlFlow | no y: Transfer |
-   * y in x.steps}" is ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"], this methods return "no y: Transfer | y in x.steps".
+   * Return fact body without the Signature portion from string array separated by "|". For example, when String[] _domainAndFacts for a fact "fact {all x: MultipleControlFlow | no y: Transfer | y in
+   * x.steps}" is ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"], this methods return _domainAndFacts's index of 1 or more separated by "|": "no y: Transfer | y in x.steps".
    * 
-   * @param domainAndFacts - string array for a fact expression seperated by "|".
-   * @return the fact body in a string
+   * @param _domainAndFacts (String[]) - string array for a fact expression separate by "|".
+   * @return (String) - the fact body in string
    */
-  private static String getFactBody(String[] domainAndFacts) {
-    String s = domainAndFacts[1];
-    for (int i = 2; i < domainAndFacts.length; i++) {
-      s += "|" + domainAndFacts[i];
+  private static String getFactBody(String[] _domainAndFacts) {
+    String s = _domainAndFacts[1];
+    for (int i = 2; i < _domainAndFacts.length; i++) {
+      s += "|" + _domainAndFacts[i];
     }
     return s;
   }
 
   /**
-   * Return string facts (separated by "\n") for the given Signature name string
+   * Return string facts (separated by "\n") for the given Signature name string (i.e., "fact {all x: A | #(x.vout) = 1}\nfact {all x: A | no (items.x)}...")
    * 
-   * @param sigName - Signature name string
-   * @param facts - Map (key = Signature name string, value = facts for the signature)
-   * @return facts in string for the given Signature
+   * @param sigName (String) - Signature name string
+   * @param _facts (Map: key = Signature name string, value = facts for the signature) - facts per signature name
+   * @return (String) - facts in string for the given Signature
    */
-  private static String getFacts(String sigName, Map<String, List<String>> facts) {
+  private static String getFacts(String _sigName, Map<String, List<String>> _facts) {
     String newS = "";
     // ie., fact key = "fact {all x: AtomicBehavior" => key = "AutomaticBehavior"
-    Optional<String> key = facts.keySet().stream()
-        .filter(akey -> akey.split(":")[1].trim().equals(sigName)).findFirst();
+    Optional<String> key = _facts.keySet().stream()
+        .filter(akey -> akey.split(":")[1].trim().equals(_sigName)).findFirst();
     if (key.isPresent()) {
-      for (String fact : facts.get(key.get())) {
+      for (String fact : _facts.get(key.get())) {
         newS += key.get() + "|" + fact + "\n";
       }
     }
