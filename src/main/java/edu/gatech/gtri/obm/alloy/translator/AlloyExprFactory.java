@@ -149,28 +149,32 @@ public class AlloyExprFactory {
   }
 
   /**
-   * Create a expression and its reverse expression and return the two expression as a set
+   * Create a expression for transfer and its reverse expression and return the two expression as a set
    * 
    * <pre>
    *  for example
    * {all x: ownerSig| transferOrderPay.items in x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount}
    * {all x: ownerSig| x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount in x.transferOrderPay.items}
    * where ownerSig={ownerSig}, transfer ={transferOrderPay}, func={o/source}, and targetInputsSourceOutputsFields={orderedFoodItem, orderAmount}
+   * 
+   * fact {all x: TransferProduct | x.transferSupplierCustomer.items in x.transferSupplierCustomer.targets.receivedProduct}
+   * fact {all x: TransferProduct | x.transferSupplierCustomer.targets.receivedProduct in x.transferSupplierCustomer.items}
+   * where ownerSig={ownerSig}, transfer={transferSupplierCustomer}, func={o/target}, and targetInputsSourceOutputsFields={receivedProduct}
    * </pre>
    *
    * @param _ownerSig (Sig) - the owner sig
    * @param _transferExpr (Expr) - the transfer expression
-   * @param _func (Func) - a function
-   * @param _targetInputsSourceOutputsFields (Set<Field>) - fields
+   * @param _func (Func) - a function (o/sources or o/targets)
+   * @param _targetInputs_or_sourceOutputs fields (Set<Field>) - fields when _func is o/sources then sourceOutputProperties and when _func is o/target, then targetInputProperty
    * @return (Set<Expr>) - the two expressions to return
    */
   protected static Set<Expr> exprs_transferInItems(Sig _ownerSig, Expr _transferExpr, Func _func,
-      Set<Field> _targetInputsSourceOutputsFields) {
+      Set<Field> _targetInputs_or_sourceOutputsFields) {
     ExprVar varX = makeVarX(_ownerSig);
     Expr funcCall = _func.call();
 
     List<Field> sortedTargetInputsSourceOutputsFields =
-        AlloyUtils.sortFields(_targetInputsSourceOutputsFields);
+        AlloyUtils.sortFields(_targetInputs_or_sourceOutputsFields);
     Expr all = null, all_r = null;
     for (Field field : sortedTargetInputsSourceOutputsFields) {
       all = all == null ? varX.join(_transferExpr).join(funcCall).join(field)
@@ -531,7 +535,7 @@ public class AlloyExprFactory {
       for (String fieldName : sortedFieldLabel) {
         // sig.domain(field) or sig.parent.domain(sig.parent.field)
         Expr sigDomainField = AlloyUtils.getFieldAsExprFromSigOrItsParents(fieldName, _sig); // including inherited
-                                                                             // fields
+        // fields
         if (sigDomainField != null) {
           expr = expr == null ? varX.join(sigDomainField) : expr.plus(varX.join(sigDomainField));
           if (fieldName.startsWith("transfer")) {// only transfer fields

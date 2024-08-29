@@ -1,5 +1,6 @@
 package obmtest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -22,34 +23,32 @@ import edu.umd.omgutil.UMLModelErrorException;
 /**
  * JUnit Test for translation.
  * 
+ * The Xmi model is loaded in memory first. Then each test creates a translator generate file. After that the generated file and the expected file are loaded in memory as two alloy objects. Then
+ * module(model) name, signatures/fields, and facts are compared.
+ * 
+ * 
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  * @author Andrew H Shinjo, Graduate Student - Georgia Tech
  * 
  */
-class OBMXMI2AlloyTest {
+public class OBMXMI2AlloyTest {
 
   static OBMXMI2Alloy translater;
-  static final String ombmodel_dir = "src/test/resources";
-  static final String output_and_testfiles_dir = "src/test/resources";
-  static final File xmiFile = new File(ombmodel_dir, "OBMModel.xmi");
+
+  // ***Note*** : output_and_testfiles_directory and obmmodel_directory must be the same for comparing to pass.
+  // Because comparing expected and generated files is performed by loading each files into memory and then compared.
+
+  // where the translated files will written and where the expected files are locating
+  static final String output_and_testfiles_directory = "src/test/resources";
+  // where obm xmi file and alloy library (Translator.als and utils/*.als) are locating
+  static final String ombmodel_directory = "src/test/resources";
+
+  static final File xmiFile = new File(ombmodel_directory, "OBMModel.xmi");
 
 
+  // Testing list. Each string contains the qualifedName for class(String) and boolean (true if expected to pass the test, otherwise false) separated by commas.
   @ParameterizedTest
   @CsvSource({
-
-      // alloy file in name, qualifiedName of behavior model(class), boolean true if expected to pass, false if expected to fail
-      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
-      "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
-      "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
-      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
-
-
-      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
-      "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
-      "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
-
-      // expected to fail
-      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
 
       "4.1.1 Time Orderings - AllControl.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::AllControl, true",
       "4.1.1 Time Orderings - Decision.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Decision, true",
@@ -59,6 +58,14 @@ class OBMXMI2AlloyTest {
       "4.1.1 Time Orderings - SimpleSequence.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::SimpleSequence, true",
       "4.1.2 Loops - Loop.als, Model::4.1 Basic Examples::4.1.2 Loop::Loop ,true",
       "4.1.3 Behaviors with Steps - Composed.als, Model::4.1 Basic Examples::4.1.3 Behaviors with Steps::Composed, true",
+
+      // alloy file in name, qualifiedName of behavior model(class), boolean true if expected to pass, false if expected to fail
+      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::ParameterBehavior, true",
+      "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4 Transfers and Parameters::TransferProduct, true",
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
+      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
+      // expected to fail
+      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
 
       "4.1.6 Unsatisfiable - UnsatisfiableAsymmetry.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableAsymmetry, true",
       "4.1.6 Unsatisfiable - UnsatisfiableComposition1.als, Model::4.1 Basic Examples::4.1.6 Unsatisfiable::UnsatisfiableComposition1, true",
@@ -73,32 +80,37 @@ class OBMXMI2AlloyTest {
       "4.2.1 Food Service Control Flow - SingleFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::SingleFoodService, true",
       "4.2.1 Food Service Control Flow - UnsatisfiableFoodService.als, Model::4.2 Advanced Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",
 
+      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
+      "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFSingleFoodService, true",
+      "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
+
   })
-
-
   /**
-   * create an alloy file from a class named sysMLClassQualifiedName from Obm xmi file using Alloy API. The created alloy file is imported using Alloy API again to find AllReachableFacts and
-   * AllReachableUserDefinedSigs. Also, the manually created alloy file (manualFileName) is imported using Alloy API to find its AllReachableFacts and AllReachableUserDefinedSigs. Then, the Sigs and
-   * Expressions(Reachable facts) of manually created and generated by translator are compared.
+   * Compare manually created/expected alloy file and translator generated file.
    * 
-   * @param manualFileName
-   * @param sysMLClassQualifiedName
-   * @param expctedResult boolean - true if expected to pass the test, false if expected to fail the test
-   * @throws FileNotFoundException
-   * @throws UMLModelErrorException
+   * Initialize the translator by loading the xmiFile check if output_and_testfiles_directory exists. Then, the translator is reused for all the tests. First, create an alloy file from a class named
+   * sysMLClassQualifiedName from Obm xmi file using Alloy API. Next the created alloy file is imported using Alloy API again to find AllReachableFacts and AllReachableUserDefinedSigs. Also, the
+   * manually created alloy file (manualFileName) is imported using Alloy API to find its AllReachableFacts and AllReachableUserDefinedSigs. Finally, the Sigs(signatures) and Expressions(Reachable
+   * facts) of manually created/expected and generated by translator are compared.
+   * 
+   * @param _expectedAlloyFileName(String) - absolute path for expected file name
+   * @param _classQualifiedName(String) - class's qualifedName (i.e., Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork)
+   * @param expctedResult(boolean) - true if expected to pass the test, false if expected to fail the test
    */
-  void compare(String manualFileName, String sysMLClassQualifiedName,
-      boolean expectedResult)
-      throws FileNotFoundException, UMLModelErrorException {
+  public void compare(String _expectedAlloyFileName, String _classQualifiedName,
+      boolean _expectedResult) {
 
-    System.out.println("Manually created alloy file = " + manualFileName);
-    System.out.println("Comparing QualifiedName for a class = " + sysMLClassQualifiedName);
-    File apiFile = new File(output_and_testfiles_dir,
-        manualFileName + "_Generated" + ".als");
+    System.out.println("Manually created alloy file = " + _expectedAlloyFileName);
+    System.out.println("Comparing QualifiedName for a class = " + _classQualifiedName);
+    File apiFile = new File(output_and_testfiles_directory,
+        _expectedAlloyFileName + "_Generated" + ".als");
 
-
-    initializeOBMXMI2Alloy();
-    if (!translater.createAlloyFile(sysMLClassQualifiedName, apiFile)) {
+    // loading xmi file to create translator instance. This happens once with the first test.
+    if (!initializeOBMXMI2Alloy()) {
+      System.err.println("Failed to load xmiFile, so no testing performed.");
+      return;
+    }
+    if (!translater.createAlloyFile(_classQualifiedName, apiFile)) {
       System.out.println(translater.getErrorMessages());
       fail("failed to create generated file: " + apiFile.getName() + " "
           + translater.getErrorMessages());
@@ -112,9 +124,12 @@ class OBMXMI2AlloyTest {
     CompModule apiModule = AlloyUtils.importAlloyModule(apiFile);
     // TEST
     System.out.println("==== Loading test/manual file...");
-    File testFile = new File(output_and_testfiles_dir, manualFileName);
+    File testFile = new File(output_and_testfiles_directory, _expectedAlloyFileName);
     System.out.println("testFile: " + testFile.exists() + "? " + testFile.getAbsolutePath());
     CompModule testModule = AlloyUtils.importAlloyModule(testFile);
+
+    ///////////////////////// Compare Model name //////////////////////////////////////
+    assertEquals(apiModule.getModelName(), testModule.getModelName());
 
     //////////////////////// Comparing Reachable Facts ////////////////////////////////
     // API
@@ -126,7 +141,7 @@ class OBMXMI2AlloyTest {
     System.out.println(test_reachableFacts);
 
     // Compare
-    if (expectedResult)
+    if (_expectedResult)
       assertTrue(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
     else
       assertFalse(ec.compareTwoExpressionsFacts(api_reachableFacts, test_reachableFacts));
@@ -153,32 +168,42 @@ class OBMXMI2AlloyTest {
     for (String sigName : api_SigByName.keySet()) {
       Sig alloyFileSig = test_SigByName.get(sigName);
       Sig apiSig = api_SigByName.get(sigName);
-      assertTrue(ec.compareTwoExpressionsSigs(alloyFileSig, apiSig));
+      assertTrue(ec.compareTwoExpressionsSignatures(alloyFileSig, apiSig));
     }
   }
 
-  static void initializeOBMXMI2Alloy() {// throws FileNotFoundException, UMLModelErrorException {
+  /**
+   * initialize the translator by loading xmi file and specify which directory translator result files will be written.
+   */
+  private static boolean initializeOBMXMI2Alloy() {
 
+    // load only once
     if (translater == null) {
       System.out.println("error log is available in error.log");
       // write any errors to be in error file
       try {
-        PrintStream o = new PrintStream(new File(output_and_testfiles_dir, "error.log"));
+        PrintStream o = new PrintStream(new File(output_and_testfiles_directory, "error.log"));
         System.setErr(o);
       } catch (FileNotFoundException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
+        System.out.println("output_and_testfiles_directory you specified \""
+            + output_and_testfiles_directory + "\" is not valid");
+        return false;
       }
 
       try {
         translater =
-            new OBMXMI2Alloy(output_and_testfiles_dir);
+            new OBMXMI2Alloy(ombmodel_directory);
         translater.loadXmiFile(xmiFile);
 
       } catch (FileNotFoundException | UMLModelErrorException e) {
-        // TODO Auto-generated catch block
         e.printStackTrace();
+        System.out.println("xmiFile you specified \""
+            + xmiFile + "\" is not valid");
+        return false;
       }
     }
+    // already loaded
+    return true;
   }
 }

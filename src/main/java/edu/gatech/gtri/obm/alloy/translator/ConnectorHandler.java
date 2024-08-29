@@ -1,7 +1,6 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +59,6 @@ public class ConnectorHandler {
    */
   List<String> messages;
 
-
   /**
    * A dictionary contains signature name as key and a set of transfer field names as value.
    */
@@ -81,18 +79,18 @@ public class ConnectorHandler {
   SysMLUtil sysmlUtil;
 
   /** A transfer connecter handler if this connector is transfer connector **/
-  ConnectorHandler_Transfer tch;
+  ConnectorHandler_Transfer transfer_connectorHandler;
 
   /**
    * A constructor
    * 
-   * @param _redefinedConnectors
-   * @param _toAlloy
-   * @param _sigToFactsMap
-   * @param _parameterFields
-   * @param _sigToTransferFieldMap
-   * @param _sysmladapter
-   * @param _sysmlUtil
+   * @param _redefinedConnectors (Set<Connector>)
+   * @param _toAlloy (ToAlloy)
+   * @param _sigToFactsMap (Map<String, Set<Expr>)
+   * @param _parameterFields (Set<Field>)
+   * @param _sigToTransferFieldMap (Map<String, Set<String>>)
+   * @param _sysmladapter (SysMLAdapter)
+   * @param _sysmlUtil (SysMLUtil)
    */
   protected ConnectorHandler(Set<Connector> _redefinedConnectors,
       ToAlloy _toAlloy, Map<String, Set<Expr>> _sigToFactsMap,
@@ -116,49 +114,37 @@ public class ConnectorHandler {
 
     messages = new ArrayList<String>();
 
-    tch = new ConnectorHandler_Transfer(toAlloy, sigToFactsMap,
+    transfer_connectorHandler = new ConnectorHandler_Transfer(toAlloy, sigToFactsMap,
         sigToTransferFieldMap, redefinedConnectors,
         parameterFields, messages);
   }
 
   /**
-   * Add facts by analyzing connectors for a Signature(NamedElement/Class).
+   * Create facts for a signature by observing own connectors.
    * 
-   * @param ne - A NamedElement(Class) mapped to a signature.
-   * @param connectorInputPropertiesBySig
-   * @param connectorOutputPropertiesBySig
-   * @param sigWithTransferFields
-   * @param fieldsWithInputs
-   * @param fieldsWithOutputs
-   * @param connectorendsFieldTypeOwnerFieldTypeSig - connector's property having same owner sig (ie., BehaviorWithParameter in 4.1.5 MultiObjectFlow)
-   * 
-   * 
-   *        // For 4.1.5 MultipleObjectFlow // a connector sourceOutputProperty(i) and targetInputProperty (i)'s owner field is // p1:BehaviorWithParameter, p2:BehaviorParameter // the type
-   *        (BehaviorParameter) is the same so put in connectorendsFieldTypeOwnerFieldTypeSig
-   * 
-   * @return Set<String> The name of Signature that has at least one transfer or transferbefore connector having the same field type of sourceInputProperty and targetOutputProperty (i.e., 4.1.5.
-   *         MultipleObjectFlow's BehaviorWithParameter).
+   * @param _sigOgClass(PrimSig) - the owner of the connector
+   * @param _isSigLeaf(boolean) - true if this signature is leaf, otherwise false
    */
-  protected void processConnectorsForASig(Class _classOfSig, boolean isSigLeaf) {
+  protected void processConnectorsForASig(Class _sigOgClass, boolean _isSigLeaf) {
 
-    tch.reset(); // transferFieldNames requires to reset for each class. The transferFiledNames used to define stepProperties.
+    transfer_connectorHandler.reset(); // transferFieldNames requires to reset for each class. The transferFiledNames used to define stepProperties.
 
-    PrimSig sigOfClass = this.toAlloy.getSig(_classOfSig.getName());
-    Set<org.eclipse.uml2.uml.Connector> connectors = sysmlUtil.getOwnedConnectors(_classOfSig);
+    PrimSig sigOfClass = this.toAlloy.getSig(_sigOgClass.getName());
+    Set<org.eclipse.uml2.uml.Connector> connectors = sysmlUtil.getOwnedConnectors(_sigOgClass);
 
     // handle one of connectors
     ConnectorsHandler_OneOf och =
         new ConnectorsHandler_OneOf(sysmlUtil, sysmladapter, toAlloy, this.messages);
-    Set<Connector> oneOfConnectors = och.handleOneOfConnectors(sigOfClass, _classOfSig, connectors);
+    Set<Connector> oneOfConnectors = och.handleOneOfConnectors(sigOfClass, _sigOgClass, connectors);
 
     // process remaining of connectors
     for (org.eclipse.uml2.uml.Connector cn : connectors) {
       if (oneOfConnectors.contains(cn))
-        continue; // oneof connectors are already handled so skip here
-      if (_classOfSig.getInheritedMembers().contains(cn))
+        continue; // oneof connectors are already handled above so skip here
+      if (_sigOgClass.getInheritedMembers().contains(cn))
         continue;// ignore inherited
 
-      // while translating IFSingleFoolService and processing connectors for IFFoodService,
+      // for example) while translating IFSingleFoolService and processing connectors for IFFoodService,
       // connectors creating "transferPrepareServe" and "transferServeEat" should be ignored because
       // it they are redefined in IFSingleFoodService
       if (this.redefinedConnectors.contains(cn))
@@ -174,7 +160,7 @@ public class ConnectorHandler {
         String target = null;
 
         String sourceTypeName = null; // used in Transfer
-        String targetTypeName = null;// used in Transfer
+        String targetTypeName = null; // used in Transfer
         boolean isBindingConnector = false;
 
         for (ConnectorEnd ce : ((Connector) cn).getEnds()) {
@@ -234,14 +220,14 @@ public class ConnectorHandler {
             Field targetField = AlloyUtils.getFieldFromSigOrItsParents(target, sigOfClass);
 
             if (connector_type == CONNECTOR_TYPE.HAPPENS_BEFORE) {
-              this.toAlloy.createBijectionFilteredHappensBefore(sigOfClass, sourceField,
+              this.toAlloy.addBijectionFilteredHappensBeforeFact(sigOfClass, sourceField,
                   targetField);
             } else if (connector_type == CONNECTOR_TYPE.HAPPENS_DURING)
-              this.toAlloy.createBijectionFilteredHappensDuring(sigOfClass, sourceField,
+              this.toAlloy.addBijectionFilteredHappensDuringFact(sigOfClass, sourceField,
                   targetField);
 
             else if (connector_type == CONNECTOR_TYPE.TRANSFER) {
-              tch.handleTransferConnector(cn, sigOfClass, isSigLeaf,
+              transfer_connectorHandler.handleTransferConnector(cn, sigOfClass, _isSigLeaf,
                   sourceTypeName,
                   targetTypeName,
                   sourceField,
@@ -255,38 +241,83 @@ public class ConnectorHandler {
   }
 
   // Get methods to pass back to connectors handler
-  protected HashMap<String, Set<String>> getConnectorTargetInputPropertyNamesByClassName() {
-    return tch.getConnectorTargetInputPropertyNamesByClassName();
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's connectorTargetInputPropertyNamesByClassName instance variable
+   * 
+   * @return Map<String, Set<String>>
+   */
+  protected Map<String, Set<String>> getConnectorsTargetInputPropertyNamesByClassName() {
+    return transfer_connectorHandler.getConnectorsTargetInputPropertyNamesByClassName();
   }
 
-  protected HashMap<String, Set<String>> getConnectorSourceOutputPrpertyNamesByClassName() {
-    return tch.getConnectorSourceOutputPrpertyNamesByClassName();
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's connectorSourceOutputPrpertyNamesByClassName instance variable
+   * 
+   * @return Map<String, Set<String>>
+   */
+  protected Map<String, Set<String>> getConnectorsSourceOutputPrpertyNamesByClassName() {
+    return transfer_connectorHandler.getConnectorsSourceOutputPrpertyNamesByClassName();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's fieldWithInputs instance variable
+   * 
+   * @return Map<Field, Set<Field>>
+   */
   protected Map<Field, Set<Field>> getFieldWithInputs() {
-    return tch.getFieldWithInputs();
+    return transfer_connectorHandler.getFieldWithInputs();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's fieldWithOutputs instance variable
+   * 
+   * @return Map<Field, Set<Field>>
+   */
   protected Map<Field, Set<Field>> getFieldWithOutputs() {
-    return tch.getFieldWithOutputs();
+    return transfer_connectorHandler.getFieldWithOutputs();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's transferFieldNames instance variable
+   * 
+   * @return Set<String>
+   */
   protected Set<String> getTransferFieldNames() {
-    return tch.getTransferFieldNames();
+    return transfer_connectorHandler.getTransferFieldNames();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's sigNamesWithTransferConnectorWithSameInputOutputFieldType instance variable
+   * 
+   * @return Set<String>
+   */
   protected Set<String> getSigNameWithTransferConnectorWithSameInputOutputFieldType() {
-    return tch.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
+    return transfer_connectorHandler.getSigNameWithTransferConnectorWithSameInputOutputFieldType();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's sigNamesWithTransferConnectorWithSameInputOutputFieldType instance variable
+   * 
+   * @return Set<Sig>
+   */
   protected Set<Sig> getSigWithTransferField() {
-    return tch.getSigWithTransferField();
+    return transfer_connectorHandler.getSigWithTransferField();
   }
 
+  /**
+   * Get method for transfer_connectorHandler(ConnectorHandler_Transfer) instance variable's transferingTypeSig instance variable
+   * 
+   * @return Set<String>
+   */
   protected Set<String> getTransferingTypeSig() {
-    return tch.getTransferingTypeSig();
+    return transfer_connectorHandler.getTransferingTypeSig();
   }
 
+  /**
+   * Get method for messages collected while executing this processConnectorsForASig method
+   * 
+   * @return List<String>
+   */
   protected List<String> getMessages() {
     return this.messages;
   }

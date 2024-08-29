@@ -24,13 +24,10 @@ import edu.mit.csail.sdg.ast.Sig.Field;
 import edu.mit.csail.sdg.ast.VisitQuery;
 
 /**
- * Visitor transform the Alloy object to a file
+ * Visitor to transform the Alloy object(signatures and facts) to a file
  * 
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
- * 
  * @author Andrew H Shinjo, Graduate Student - Georgia Tech
- *
- * 
  */
 public class ExprVisitor extends VisitQuery<String> {
 
@@ -343,16 +340,16 @@ public class ExprVisitor extends VisitQuery<String> {
   /**
    * Add the given field to the given map as the value if the field's type is the key.
    * 
-   * @param x - A field to be added to the map's value
-   * @param map - a map key = signature type value = list of fields having the key
-   * @return the map after adding a field x
+   * @param _field(Field) - A field to be added to the map's value
+   * @param map(Map<String, List<Field>>) - a map key = signature type value = list of fields having the key
+   * @return (Map<String, List<Field>) - the map after adding the field
    */
-  protected Map<String, List<Field>> sortFields(Field x, Map<String, List<Field>> map) {
+  protected Map<String, List<Field>> sortFields(Field _field, Map<String, List<Field>> map) {
 
     isRootSig = false;
 
     if (fieldAfterSig) {
-      String type = x.decl().expr.accept(this);
+      String type = _field.decl().expr.accept(this);
       List<Field> fs = null;
       if (map.containsKey(type))
         fs = map.get(type);
@@ -360,7 +357,7 @@ public class ExprVisitor extends VisitQuery<String> {
         fs = new ArrayList<>();
         map.put(type, fs);
       }
-      fs.add(x);
+      fs.add(_field);
     }
     return map;
   }

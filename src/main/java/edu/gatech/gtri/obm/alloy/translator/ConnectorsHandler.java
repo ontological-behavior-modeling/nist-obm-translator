@@ -93,10 +93,10 @@ public class ConnectorsHandler {
    * Go processing all connectors in the correct order.
    * 
    * @param _classInHierarchy List of Class from oldest to youngest where the youngest is main class you tried to translate.
-   * @param _allClassesConnectedToMainSigByFields NamedElements to be converted to Signatures (Class and PrimitiveType(Real, Integer etc...)
+   * @param _allNamedElementsConnectedToMainSigByFields NamedElements to be converted to Signatures (Class and PrimitiveType(Real, Integer etc...)
    */
   protected void process(List<Class> _classInHierarchy,
-      Set<NamedElement> _allClassesConnectedToMainSigByFields) {
+      Set<NamedElement> _allNamedElementsConnectedToMainSigByFields) {
 
     // go through from child to parent so that facts generated from redefined connectors will not be created by parent.
     for (int i = _classInHierarchy.size() - 1; i >= 0; i--) {
@@ -106,7 +106,7 @@ public class ConnectorsHandler {
       // _allClassesConnectedToMainSigByFields.remove(classOfSig);
     }
     // after handling connectors for Signatures(hierarchy of main Signature), handle others classes.
-    for (NamedElement ne : _allClassesConnectedToMainSigByFields) {
+    for (NamedElement ne : _allNamedElementsConnectedToMainSigByFields) {
 
       if (!_classInHierarchy.contains(ne) && ne instanceof Class) {// no connector processing in PrimitiveType (Real, Integer)
         processConnectorsForAClass((Class) ne);
@@ -194,13 +194,13 @@ public class ConnectorsHandler {
   }
 
 
-  protected HashMap<String, Set<String>> getConnectorTargetInputPropertyNamesByClassName() {
-    return connectorHandler.getConnectorTargetInputPropertyNamesByClassName();
+  protected Map<String, Set<String>> getConnectorsTargetInputPropertyNamesByClassName() {
+    return connectorHandler.getConnectorsTargetInputPropertyNamesByClassName();
   }
 
 
-  protected HashMap<String, Set<String>> getConnectorSourceOutputPrpertyNamesByClassName() {
-    return connectorHandler.getConnectorSourceOutputPrpertyNamesByClassName();
+  protected Map<String, Set<String>> getConnectorsSourceOutputPrpertyNamesByClassName() {
+    return connectorHandler.getConnectorsSourceOutputPrpertyNamesByClassName();
   }
 
 

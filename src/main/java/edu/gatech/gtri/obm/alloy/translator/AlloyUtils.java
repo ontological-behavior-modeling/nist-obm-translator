@@ -312,9 +312,12 @@ public class AlloyUtils {
 
   /**
    * Modify each given expression by adding the given signature declaration and return.
-   * <p>
-   * For example, an expression <code>"bijectionFiltered[outputs, x.a, x.a.vout]"</code> is modified to <code>"{all x: ParameterBehavior | bijectionFiltered[outputs, x.a, x.a.vout]}<code>.
-   * </p>
+   * 
+   * <pre>
+   * For example, 
+   * an expression <code>"bijectionFiltered[outputs, x.a, x.a.vout]"</code> is modified to 
+   * <code>"{all x: ParameterBehavior | bijectionFiltered[outputs, x.a, x.a.vout]}<code>.
+   * </pre>
    * 
    * @param _ownerSig (Sig) - the signature for expressions
    * @param _exprs (Set<Expr>) - the expressions to be modified

@@ -18,7 +18,7 @@ import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import edu.mit.csail.sdg.parser.CompUtil;
 
 /**
- * A class loads supporting libraries (Translator.als and utilities/*.als) and stores all signatures, fields, and facts to be translated to an alloy file.
+ * A class loads supporting libraries (Translator.als and utilities/*.als) and stores all signatures, fields, and facts data to be translated to an alloy file.
  * 
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
