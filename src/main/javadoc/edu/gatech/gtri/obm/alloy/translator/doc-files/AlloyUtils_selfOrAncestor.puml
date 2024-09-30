@@ -1,0 +1,12 @@
+@startuml
+start
+if(//sig// == //lookingFor//) then (yes)
+	:Return true;
+	stop
+elseif(Parent of //sig// is null) then (yes)
+	:Return Self or Ancestor of Parent of //sig//;
+	stop
+endif
+:Return false;
+stop
+@enduml

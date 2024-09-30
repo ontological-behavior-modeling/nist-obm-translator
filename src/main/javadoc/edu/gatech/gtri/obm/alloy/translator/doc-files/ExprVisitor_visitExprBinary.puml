@@ -1,0 +1,20 @@
+@startuml
+start
+:Set //isRootSig// to false;
+:Construct StringBuilder //sb//;
+if (Expr Operator == JOIN) then (yes)
+	:Set //left// String to left side of Expr;
+	:Set //right// String to right side of Expr;
+	if(//left// String is "this" and //right// String is Sig.Field)
+		:Return //right//;
+		stop
+	endif
+	:Return //sb// appended with //left//, Expr operator, and //right//;
+endif
+:Set //op// String to Expr operator;
+if(Expr operator == NOT_IN) then (yes)
+	://op// = "not in";
+endif
+:Return //sb// appended with //left//, //op//, and //right//;
+stop
+@enduml

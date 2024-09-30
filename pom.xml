@@ -159,7 +159,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>edu.gatech.gtri.obm.translator.alloy.userinterface.UserInterface</mainClass>
+              <mainClass>edu.gatech.gtri.obm.alloy.translator.userinterface.UserInterface</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
@@ -220,7 +220,7 @@
               <include>src/test/java/**/*.java</include>
             </includes>
             <googleJavaFormat>
-              <version>1.8</version>
+              <version>1.10.0</version>
               <!-- optional, 1.8 is minimum supported version -->
               <style>GOOGLE</style>
               <!-- or AOSP (optional) -->

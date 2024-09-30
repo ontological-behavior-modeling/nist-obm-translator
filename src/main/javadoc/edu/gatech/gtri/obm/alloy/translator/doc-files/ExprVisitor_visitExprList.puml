@@ -1,0 +1,28 @@
+@startuml
+start
+:Set //isRootSig// to false;
+if(//isRootExprList// or
+	//isSigFact//) then (yes)
+	:Set //isRootExprList// to false;
+	:Create StringBuilder //sb//;
+	while(For Each Arg in ExprList)
+		:Set //fact// String to current ExprList arg;
+		if(!//isImplicitFact//)
+			:Append //fact// String to //sb//;
+		else(//isImplicitFact//)
+			:Append	tab, //fact// String, and newline;
+		endif
+	endwhile
+	:Return //sb//;
+	stop
+endif
+:Create //args// String array from ExprList args size;
+while(For each arg in ExprList)
+	:Add current arg to //args// String array;
+endwhile
+:Create StringBuilder //op//;
+:Append ExprList operator to //op//;
+:Filter //args// String array to include is not equal predicates;
+:Return //op// and //args// joined;
+stop
+@enduml
