@@ -1,5 +1,13 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.Field;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.umd.omgutil.EMFUtil;
+import edu.umd.omgutil.UMLModelErrorException;
+import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
+import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -14,22 +22,12 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.NamedElement;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Sig;
-import edu.mit.csail.sdg.ast.Sig.Field;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.umd.omgutil.EMFUtil;
-import edu.umd.omgutil.UMLModelErrorException;
-import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
-import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
-
 
 /**
- * <p>
  * A class to translate SysML Behavior Model in a xmi file into an alloy file.
- * 
- * Example:
- * 
+ *
+ * <p>Example:
+ *
  * <pre>
  * OBMXMI2Alloy translator = new OBMXMI2Alloy("C:\\alloylibs")
  * if (translator.loadXmiFile(new File("C:\\OBMModel.xmi"))){
@@ -41,45 +39,35 @@ import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
  *      System.out.println(translator.getErrorMessages());
  *  System.out.println(translator.getMessages());
  * </pre>
- * 
- * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  */
 public final class OBMXMI2Alloy {
-  /**
-   * A class to collect all signatures, fields, and facts to be translated to an alloy file
-   */
+  /** A class to collect all signatures, fields, and facts to be translated to an alloy file */
   private Alloy alloy;
-  /**
-   * A class connect this and Alloy class
-   */
+  /** A class connect this and Alloy class */
   private ToAlloy toAlloy;
-  /**
-   * omgutil SysMLUtil - Util method from omgutil
-   */
+  /** omgutil SysMLUtil - Util method from omgutil */
   private SysMLUtil sysMLUtil;
-  /**
-   * omgutil SysMLAdapter - Adapter for SysML from omgutil
-   */
+  /** omgutil SysMLAdapter - Adapter for SysML from omgutil */
   private SysMLAdapter sysMLAdapter;
   /**
-   * omgUtil Resource - Resource from omgutil - used to get Class object from the xmilFile using EMFUtil
+   * omgUtil Resource - Resource from omgutil - used to get Class object from the xmilFile using
+   * EMFUtil
    */
   private Resource resource;
-  /**
-   * errorMessages collected during the translation.
-   */
+  /** errorMessages collected during the translation. */
   List<String> errorMessages;
-  /**
-   * messages collected during the translation.
-   */
+  /** messages collected during the translation. */
   List<String> messages;
-
 
   /**
    * A constructor to set the given alloyLibPath as an instance variable.
-   * 
-   * @param alloyLibPath - An absolute path name string for the required library folder containing Transfer.als and utilities(folder) necessary for translation.
+   *
+   * <p><img src="doc-files/OBMXMI2Alloy.svg"/>
+   *
+   * @param alloyLibPath - An absolute path name string for the required library folder containing
+   *     Transfer.als and utilities(folder) necessary for translation.
    */
   public OBMXMI2Alloy(String _alloyLibPath) {
     this.alloy = new Alloy(_alloyLibPath);
@@ -87,7 +75,9 @@ public final class OBMXMI2Alloy {
 
   /**
    * loading xmiFile to preparing for translation
-   * 
+   *
+   * <p><img src="doc-files/OBMXMI2Alloy_loadXmiFile.svg"/>
+   *
    * @param _xmiFile(File) - xmiFile containing classes you like to translate to an alloy file.
    * @return (boolean) - true if successful, otherwise return false
    * @throws FileNotFoundException - the given xmiFile does not exist
@@ -97,32 +87,42 @@ public final class OBMXMI2Alloy {
 
     try {
       ResourceSet rs = EMFUtil.createResourceSet();
-      this.resource = EMFUtil.loadResourceWithDependencies(rs,
-          URI.createFileURI(_xmiFile.getAbsolutePath()), null);
+      this.resource =
+          EMFUtil.loadResourceWithDependencies(
+              rs, URI.createFileURI(_xmiFile.getAbsolutePath()), null);
       // omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation
       this.sysMLUtil = new SysMLUtil(rs);
       // omgutil's SysMLAdapter to be used in ConnectorHandler
       this.sysMLAdapter = new SysMLAdapter(_xmiFile, null);
     } catch (FileNotFoundException e) {
-      this.errorMessages
-          .add("Failed to initialize the translator. Make sure xmiFile exists in "
-              + _xmiFile.getAbsolutePath() + " and readable. " + e.getMessage());
+      this.errorMessages.add(
+          "Failed to initialize the translator. Make sure xmiFile exists in "
+              + _xmiFile.getAbsolutePath()
+              + " and readable. "
+              + e.getMessage());
       return false;
     } catch (UMLModelErrorException e) {
-      this.errorMessages
-          .add("Failed to initialize the translator. Make sure xmiFile exists in "
-              + _xmiFile.getAbsolutePath() + " and readable. " + e.getMessage());
+      this.errorMessages.add(
+          "Failed to initialize the translator. Make sure xmiFile exists in "
+              + _xmiFile.getAbsolutePath()
+              + " and readable. "
+              + e.getMessage());
       return false;
     }
     return true;
   }
 
   /**
-   * Create an alloy output file of the qualifideName class/behavior model in the xml file. If this method return false, you may use getErrorMessages() to know why cause failure.
-   * 
-   * @param _qualifiedName(String) - a qualifiedName of a UML:Class for translation (ie., Model::FoodService::OFSingleFoodService)
+   * Create an alloy output file of the qualifideName class/behavior model in the xml file. If this
+   * method return false, you may use getErrorMessages() to know why cause failure.
+   *
+   * <p><img src="doc-files/OBMXMI2Alloy_createAlloyFile.svg"/>
+   *
+   * @param _qualifiedName(String) - a qualifiedName of a UML:Class for translation (ie.,
+   *     Model::FoodService::OFSingleFoodService)
    * @param _outputFile(File) - the output alloy file
-   * @return (boolean) - true if the given outputFile is created from the given xmlFile and the qualifiedName; false if fails.
+   * @return (boolean) - true if the given outputFile is created from the given xmlFile and the
+   *     qualifiedName; false if fails.
    */
   public boolean createAlloyFile(String _qualifiedName, File _outputFile) {
 
@@ -134,11 +134,12 @@ public final class OBMXMI2Alloy {
     if ((parameterFields = CreateAlloy(_qualifiedName)) != null) {
       try {
         boolean success = toAlloy.createAlloyFile(_outputFile, parameterFields);
-        if (success)
-          this.messages.add(_outputFile.getAbsolutePath() + " is created");
+        if (success) this.messages.add(_outputFile.getAbsolutePath() + " is created");
         else
-          this.errorMessages.add("Failed to create the alloy file as "
-              + _outputFile.getAbsolutePath() + ". May not have write permission.");
+          this.errorMessages.add(
+              "Failed to create the alloy file as "
+                  + _outputFile.getAbsolutePath()
+                  + ". May not have write permission.");
         return success;
       } catch (IOException e) {
         this.errorMessages.add("Failed to translate the alloy file: " + e.getMessage());
@@ -147,12 +148,13 @@ public final class OBMXMI2Alloy {
     return false; // failed to translate
   }
 
-
   /**
    * find the given class and create alloy objects in memory.
-   * 
-   * @param _classQualifiedName(String) - the qualified name string of a class contained in the xml file (i.e., Model::4.1 Basic Examples::4.1.2 Loop::Loop)
-   * @return (Set<Field>) - parameterfields used by calling method to write out disj signature fields to an alloy file.
+   *
+   * @param _classQualifiedName(String) - the qualified name string of a class contained in the xml
+   *     file (i.e., Model::4.1 Basic Examples::4.1.2 Loop::Loop)
+   * @return (Set<Field>) - parameterfields used by calling method to write out disj signature
+   *     fields to an alloy file.
    */
   private Set<Field> CreateAlloy(String _classQualifiedName) {
     // using omgUtil get NamedElement to translate
@@ -162,31 +164,39 @@ public final class OBMXMI2Alloy {
       this.errorMessages.add(_classQualifiedName + " not found.");
       return null;
     } else if (!(mainNamedElement instanceof Class)) {
-      this.errorMessages
-          .add(_classQualifiedName + " is not Class. Not able to translate to Alloy.");
+      this.errorMessages.add(
+          _classQualifiedName + " is not Class. Not able to translate to Alloy.");
       return null;
     }
     // cast to Class
     Class mainClass = (Class) mainNamedElement;
 
     // ClasssesHandler - from main class creates Signatures and Fields for the Alloy object
-    ClassesHandler classesHandler =
-        new ClassesHandler(mainClass, this.toAlloy, sysMLUtil);
+    ClassesHandler classesHandler = new ClassesHandler(mainClass, this.toAlloy, sysMLUtil);
     if (!classesHandler.process()) {
       this.errorMessages.addAll(classesHandler.getErrorMessages());
       return null;
     }
     // get necessary information collected by ClassesHandler.process method
-    Set<Field> parameterFields = classesHandler.getParameterFields(); // fields map from property with STEREOTYPE_PAREMETER
-    Set<NamedElement> allNamedElements = classesHandler.getAllNamedElements(); // all NamedElements that map to signature connecting from main class.
-    List<Class> classInHierarchy = classesHandler.getClassInHierarchy(); // hierarchy of main class. The main class has the largest index value.
+    Set<Field> parameterFields =
+        classesHandler.getParameterFields(); // fields map from property with STEREOTYPE_PAREMETER
+    Set<NamedElement> allNamedElements =
+        classesHandler
+            .getAllNamedElements(); // all NamedElements that map to signature connecting from main
+    // class.
+    List<Class> classInHierarchy =
+        classesHandler
+            .getClassInHierarchy(); // hierarchy of main class. The main class has the largest index
+    // value.
     Set<PrimSig> leafSigs = classesHandler.getLeafSigs(); // leaf signatures
     Map<String, Set<String>> stepPropertiesBySig = classesHandler.getStepPropertiesBySig();
-    String mainSigLabel = classesHandler.getMainSigLabel(); // possible to obtained from classQualifiedName
+    String mainSigLabel =
+        classesHandler.getMainSigLabel(); // possible to obtained from classQualifiedName
 
     // ConnectorsHandler - analyzing connectors for classes to create facts for the Alloy object
-    ConnectorsHandler connectorsHandler = new ConnectorsHandler(sysMLAdapter, sysMLUtil, leafSigs,
-        this.toAlloy, parameterFields, stepPropertiesBySig);
+    ConnectorsHandler connectorsHandler =
+        new ConnectorsHandler(
+            sysMLAdapter, sysMLUtil, leafSigs, this.toAlloy, parameterFields, stepPropertiesBySig);
     connectorsHandler.process(classInHierarchy, allNamedElements);
     // add messages collected during the connectorshandler process to this.messages
     this.messages.addAll(connectorsHandler.getMessages());
@@ -209,9 +219,9 @@ public final class OBMXMI2Alloy {
     // a map - facts per signature name
     Map<String, Set<Expr>> sigToFactsMap = connectorsHandler.getSigToFactsMap();
 
-    // a set of signatures having transfer fields, signature names are the same as sigToTransferFieldMap.keySet()
+    // a set of signatures having transfer fields, signature names are the same as
+    // sigToTransferFieldMap.keySet()
     Set<Sig> sigWithTransferFieldsAndNoStepSigs = connectorsHandler.getSigWithTransferFields();
-
 
     // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
     // Note: Only supporting transferFields inherited to mainSig.
@@ -240,18 +250,23 @@ public final class OBMXMI2Alloy {
     Set<Sig> noStepsSigs = toAlloy.addStepsFacts(stepPropertiesBySig, leafSigs);
     // if {no x.steps} and signatures with transfer field
 
-    // combing noStepsSigs and sigWithTransferFields and pass to toAlloy.addNoTransferInXStepsFact method to add facts like "fact {all x: BuffetService | no y: Transfer | y in x.steps}"
+    // combing noStepsSigs and sigWithTransferFields and pass to toAlloy.addNoTransferInXStepsFact
+    // method to add facts like "fact {all x: BuffetService | no y: Transfer | y in x.steps}"
     sigWithTransferFieldsAndNoStepSigs.addAll(noStepsSigs);
     toAlloy.addNoTransferInXStepsFact(sigWithTransferFieldsAndNoStepSigs, leafSigs);
 
-    Set<String> allClassNames = allNamedElements.stream().map(c -> c.getName())
-        .collect(Collectors.toSet());
+    Set<String> allClassNames =
+        allNamedElements.stream().map(c -> c.getName()).collect(Collectors.toSet());
 
-    // if the name of signatures is in sigNameOfShardFieldType, then equal input/output facts (ie., {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}}
+    // if the name of signatures is in sigNameOfShardFieldType, then equal input/output facts (ie.,
+    // {all x: B1 | x.vin in x.inputs} and {all x: B1 | x.inputs in x.vin}}
     // are not be added
-    toAlloy.handleNoInputsOutputs(connectorsTargetInputPropertyNamesByClassName,
-        connectorsSourceOutputPrpertyNamesByClassName, allClassNames,
-        sigNameWithTransferConnectorWithSameInputOutputFieldType, leafSigs);
+    toAlloy.handleNoInputsOutputs(
+        connectorsTargetInputPropertyNamesByClassName,
+        connectorsSourceOutputPrpertyNamesByClassName,
+        allClassNames,
+        sigNameWithTransferConnectorWithSameInputOutputFieldType,
+        leafSigs);
 
     // adding no steps.x
     // fact {all x: Integer | no steps.x}, fact {all x: Real | no steps.x} or {all x: Product | no
@@ -261,10 +276,9 @@ public final class OBMXMI2Alloy {
     return parameterFields;
   }
 
-
   /**
    * Get messages collected while the translation a class.
-   * 
+   *
    * @return (List<String>) - a list of message strings
    */
   public List<String> getMessages() {
@@ -273,13 +287,10 @@ public final class OBMXMI2Alloy {
 
   /**
    * Get errorMessages collected while the translation a class.
-   * 
+   *
    * @return (List<String>) - a list of error message strings
    */
   public List<String> getErrorMessages() {
     return this.errorMessages;
   }
-
 }
-
-

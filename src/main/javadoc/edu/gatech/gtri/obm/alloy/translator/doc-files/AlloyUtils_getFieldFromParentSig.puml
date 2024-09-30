@@ -1,0 +1,14 @@
+@startuml
+start
+while(//_sig// has a parent)
+	:Get Field from Sig;
+	if(field != null) then (yes)
+		:Return field;
+		stop
+	else(no)
+		:Change //_sig// to parent;
+	endif
+endwhile
+:Return null;
+stop
+@enduml

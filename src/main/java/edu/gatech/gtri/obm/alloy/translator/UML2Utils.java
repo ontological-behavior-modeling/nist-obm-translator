@@ -19,21 +19,24 @@ import org.eclipse.uml2.uml.Stereotype;
 
 /**
  * Utility class for UML2 to extract informations
- * 
- * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  *
+ * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  */
 public class UML2Utils {
 
   /**
-   * Return the two rules(ConnectableElements) of connector end of the connector. The first in the array is for the given connector end. If the connector did not have two ends, the method return null.
-   * 
+   * Return the two rules(ConnectableElements) of connector end of the connector. The first in the
+   * array is for the given connector end. If the connector did not have two ends, the method return
+   * null.
+   *
    * @param _connector(Connector) A connector having rules/connectableElements
-   * @param _connectorEnd(ConnectorEnd) A connector end having the rule/connectableElement as the first element of the return list.
-   * @return (List<ConnectableElement>)- A list of ConnectableElements of the given connector. Its size should be two, otherwise return null
+   * @param _connectorEnd(ConnectorEnd) A connector end having the rule/connectableElement as the
+   *     first element of the return list.
+   * @return (List<ConnectableElement>)- A list of ConnectableElements of the given connector. Its
+   *     size should be two, otherwise return null
    */
-  protected static List<ConnectableElement> getEndRolesForCEFirst(Connector _connector,
-      ConnectorEnd _connectorEnd) {
+  protected static List<ConnectableElement> getEndRolesForCEFirst(
+      Connector _connector, ConnectorEnd _connectorEnd) {
     List<ConnectableElement> ces = new ArrayList<>();
     ces.add(_connectorEnd.getRole());
     for (ConnectorEnd end : _connector.getEnds()) {
@@ -46,10 +49,12 @@ public class UML2Utils {
   }
 
   /**
-   * Convert A set of Property to a map having the property name as a key and the property's type name as a value.
-   * 
+   * Convert A set of Property to a map having the property name as a key and the property's type
+   * name as a value.
+   *
    * @param _properties(Set<Property>) - a set of property
-   * @return (Map<String, String>) - a dictionary where key is a property name and value is a property type name.
+   * @return (Map<String, String>) - a dictionary where key is a property name and value is a
+   *     property type name.
    */
   protected static Map<String, String> toNameAndType(Set<Property> _properties) {
     Map<String, String> map = new HashMap<>();
@@ -61,7 +66,7 @@ public class UML2Utils {
 
   /**
    * Find NamedElements where they are leaf in hierarchy for the given NamedElements.
-   * 
+   *
    * @param _namedElements(Set<NamedElement>) - a set of NamedElement to be filtered.
    * @return (Set<NamedElement>) - NamedElements where they are leaf in hierarchy.
    */
@@ -79,12 +84,13 @@ public class UML2Utils {
     return leafClasses;
   }
 
-
-
   /**
-   * Get class in hierarchy (list) but not include "BehaviorOccurence" or "Occurrence". The top of hierarchy has an index of 0. The given class is the leaf/bottom of hierarchy class and has the largest
-   * index. For example, for 4.2.1 FoodService Control Flow - BuffetService.als, [0] = Food Service, [1] = SingleFoodService, and [2] = BuffetService when the given class is BuffetService.
-   * 
+   * Get class in hierarchy (list) but not include "BehaviorOccurence" or "Occurrence". The top of
+   * hierarchy has an index of 0. The given class is the leaf/bottom of hierarchy class and has the
+   * largest index. For example, for 4.2.1 FoodService Control Flow - BuffetService.als, [0] = Food
+   * Service, [1] = SingleFoodService, and [2] = BuffetService when the given class is
+   * BuffetService.
+   *
    * @param _aClass(Class) - A class is the bottom/leaf in the hierarchy
    * @return (List<Class>) - A list of class in hierarchy.
    */
@@ -98,8 +104,9 @@ public class UML2Utils {
   }
 
   /**
-   * Return a parent of the given class. Assume only one parent (Alloy allows only one parent to be defined).
-   * 
+   * Return a parent of the given class. Assume only one parent (Alloy allows only one parent to be
+   * defined).
+   *
    * @param _aClass(Class) - a class to find its parent
    * @return (Class) - a parent class
    */
@@ -109,28 +116,36 @@ public class UML2Utils {
       if (parents.size() != 1) {
         // Only one parent is allowed in Alloy
         String parentName = parents.get(0).getName();
-        System.err.println("Only one parent is allowed. One parent \"" + parentName
-            + "\" is included as sig \"" + _aClass.getName() + "\"'s parent");
+        System.err.println(
+            "Only one parent is allowed. One parent \""
+                + parentName
+                + "\" is included as sig \""
+                + _aClass.getName()
+                + "\"'s parent");
       }
       // parentName == null , "BehaviorOccurrence", "Occurrence" or "Anything"
-      if (!AlloyUtils.isValidUserDefineParent(((Class) parents.get(0)).getName()))
-        return null;
+      if (!AlloyUtils.isValidUserDefineParent(((Class) parents.get(0)).getName())) return null;
       return (Class) parents.get(0);
-    } else
-      return null;
+    } else return null;
   }
 
   /**
-   * Find a stereotype of the given element's based on the given streotypeName and return the sterotype's properties as a map where key is the property name and values are its properties.
+   * Find a stereotype of the given element's based on the given streotypeName and return the
+   * sterotype's properties as a map where key is the property name and values are its properties.
    *
    * @param _element(Element) - an element whose stereotype properties to be found
    * @param _streotypeName(String) - stereotype name in string
    * @param _streotypePropertyNames(String[]) -stereotype property(tag) names
-   * @param _allMessages(List<String>) - all messages where message(s_ may be added while executing this method.
-   * @return (Map<String, List<Property>) - a map (key = tag/property name, value = properties) or null if the element does not have stereotype applied.
+   * @param _allMessages(List<String>) - all messages where message(s_ may be added while executing
+   *     this method.
+   * @return (Map<String, List<Property>) - a map (key = tag/property name, value = properties) or
+   *     null if the element does not have stereotype applied.
    */
-  protected static Map<String, List<Property>> getStreotypePropertyValues(Element _element,
-      String _streotypeName, String[] _streotypePropertyNames, List<String> _allMessages) {
+  protected static Map<String, List<Property>> getStreotypePropertyValues(
+      Element _element,
+      String _streotypeName,
+      String[] _streotypePropertyNames,
+      List<String> _allMessages) {
 
     Map<String, List<Property>> propertysByTagNames = new HashMap<>();
     Stereotype st = null;
@@ -146,8 +161,10 @@ public class UML2Utils {
               results.add((Property) property);
             } else {
               _allMessages.add(
-                  propertyName + " is not an instance of Property but "
-                      + property.getClass().getSimpleName() + ". so ignored.");
+                  propertyName
+                      + " is not an instance of Property but "
+                      + property.getClass().getSimpleName()
+                      + ". so ignored.");
             }
           }
           propertysByTagNames.put(propertyName, results);

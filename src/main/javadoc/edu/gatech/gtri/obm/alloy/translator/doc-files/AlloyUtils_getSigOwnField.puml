@@ -1,0 +1,11 @@
+@startuml
+start
+while (For All Signature Fields)
+	if(current field == fieldName?) then (yes)
+		:Return Field;
+		stop
+	endif
+endwhile
+:Return null;
+stop
+@enduml

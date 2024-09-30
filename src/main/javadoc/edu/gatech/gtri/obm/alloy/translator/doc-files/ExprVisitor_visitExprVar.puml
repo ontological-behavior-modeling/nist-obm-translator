@@ -1,0 +1,6 @@
+@startuml
+start
+:Set //isRootSig// to false;
+:Return ExprVar Label;
+stop
+@enduml

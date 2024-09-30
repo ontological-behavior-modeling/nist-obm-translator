@@ -1,0 +1,7 @@
+@startuml
+start
+:Create ArrayList //sortedFields//;
+:Sort fields;
+:Return //sortedFields//; 
+stop
+@enduml

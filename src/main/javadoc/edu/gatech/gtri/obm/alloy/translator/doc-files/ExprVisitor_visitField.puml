@@ -1,0 +1,14 @@
+@startuml
+start
+:Set //isRootSig// to false;
+if(//fieldAfterSig//)
+	:Create StringBuilder //sb//;
+	:Append Field Label With Slash Removed
+	and Field Declaration Expression
+	to //sb//;
+	:Return sb;
+	stop
+endif
+:Return Field Label;
+stop
+@enduml
