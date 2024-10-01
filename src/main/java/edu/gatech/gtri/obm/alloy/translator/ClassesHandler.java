@@ -67,7 +67,7 @@ public class ClassesHandler {
   /**
    * A list of classes in hierarchy where a class with highest index is the main class translating to Alloy. A lowest index class is oldest in the hierarchy.
    */
-  List<Class> classInHierarchy;
+  List<Class> classInHierarchyForMain;
 
   /**
    * errorMessages collected during the translation. Resetting by each createAlloyFile method call.
@@ -98,12 +98,11 @@ public class ClassesHandler {
     parameterFields = new HashSet<>(); // Set<Field>
     propertiesByClass = new HashMap<>();// Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>
 
-    // The main class will be the last in this list
-    List<org.eclipse.uml2.uml.Class> classInHierarchyForMain =
-        UML2Utils.createListIncludeSelfAndParents(mainClass);
+    // The hierarchy for main class of list is [0]=grand parent [1]=parent [2]=child(mainClass)
+    this.classInHierarchyForMain = UML2Utils.createListIncludeSelfAndParents(mainClass);
     PrimSig parentSig = Alloy.occSig; // oldest's parent is always Occurrence
     for (Class aClass : classInHierarchyForMain) { // loop through oldest to youngest(main
-                                                   // is the youngest)
+      // is the youngest)
       boolean isMainSig = (aClass == mainClass) ? true : false;
       // create Signature - returned parentSig will be the next aClass(Signature)'s parent
       parentSig = toAlloy.createSig(aClass.getName(), parentSig, isMainSig);
@@ -116,13 +115,12 @@ public class ClassesHandler {
       processClassToSig(aClass); // update this.propertiesByClass
     }
 
-    // The order of list is [0]=grand parent [1]=parent [2]=child(mainClass)
-    this.classInHierarchy = UML2Utils.createListIncludeSelfAndParents(mainClass);
+
 
     Map<PrimSig, Set<Property>> redefinedPropertiesBySig = new HashMap<>(); // updated in addFieldsToSig method
     stepPropertiesBySig = new HashMap<>();
     // go throw signatures in classInHierarchy first then the remaining in allClassesConnectedToMainSigByFields
-    for (Class aClass : classInHierarchy) {
+    for (Class aClass : classInHierarchyForMain) {
       PrimSig sigOfNamedElement = toAlloy.getSig(aClass.getName());
       redefinedPropertiesBySig.put(sigOfNamedElement,
           addFieldsToSig(propertiesByClass.get(aClass), sigOfNamedElement));
@@ -131,7 +129,7 @@ public class ClassesHandler {
 
     // go through the remaining classes
     for (NamedElement ne : propertiesByClass.keySet()) {
-      if (!classInHierarchy.contains(ne)) {
+      if (!classInHierarchyForMain.contains(ne)) {
         PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
         redefinedPropertiesBySig.put(sigOfNamedElement,
             addFieldsToSig(propertiesByClass.get(ne), sigOfNamedElement));
@@ -347,8 +345,8 @@ public class ClassesHandler {
    * 
    * @return (List<Class>)
    */
-  protected List<Class> getClassInHierarchy() {
-    return this.classInHierarchy;
+  protected List<Class> getClassInHierarchyForMain() {
+    return this.classInHierarchyForMain;
   }
 
   /**

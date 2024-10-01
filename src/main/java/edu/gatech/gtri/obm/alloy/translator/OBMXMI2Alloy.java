@@ -179,7 +179,7 @@ public final class OBMXMI2Alloy {
     // get necessary information collected by ClassesHandler.process method
     Set<Field> parameterFields = classesHandler.getParameterFields(); // fields map from property with STEREOTYPE_PAREMETER
     Set<NamedElement> allNamedElements = classesHandler.getAllNamedElements(); // all NamedElements that map to signature connecting from main class.
-    List<Class> classInHierarchy = classesHandler.getClassInHierarchy(); // hierarchy of main class. The main class has the largest index value.
+    List<Class> classInHierarchyForMain = classesHandler.getClassInHierarchyForMain(); // hierarchy of main class. The main class has the largest index value.
     Set<PrimSig> leafSigs = classesHandler.getLeafSigs(); // leaf signatures
     Map<String, Set<String>> stepPropertiesBySig = classesHandler.getStepPropertiesBySig();
     String mainSigLabel = classesHandler.getMainSigLabel(); // possible to obtained from classQualifiedName
@@ -187,7 +187,7 @@ public final class OBMXMI2Alloy {
     // ConnectorsHandler - analyzing connectors for classes to create facts for the Alloy object
     ConnectorsHandler connectorsHandler = new ConnectorsHandler(sysMLAdapter, sysMLUtil, leafSigs,
         this.toAlloy, parameterFields, stepPropertiesBySig);
-    connectorsHandler.process(classInHierarchy, allNamedElements);
+    connectorsHandler.process(classInHierarchyForMain, allNamedElements);
     // add messages collected during the connectorshandler process to this.messages
     this.messages.addAll(connectorsHandler.getMessages());
 
@@ -220,14 +220,14 @@ public final class OBMXMI2Alloy {
     Set<String> mainSigInheritingTransferFields = new HashSet<>();
     Set<Expr> mainSigInheritingTransferRelatedFacts = new HashSet<>();
     // classInHiearchy = [0]=grand parent [1]=parent [2]=child(mainClass)
-    for (int i = 0; i < classInHierarchy.size() - 1; i++) {
+    for (int i = 0; i < classInHierarchyForMain.size() - 1; i++) {
       Set<String> possibleMainSigInheritingTransferFields =
-          sigToTransferFieldMap.get(classInHierarchy.get(i).getName());
+          sigToTransferFieldMap.get(classInHierarchyForMain.get(i).getName());
       if (possibleMainSigInheritingTransferFields != null) {
         mainSigInheritingTransferFields.addAll(possibleMainSigInheritingTransferFields);
       }
       Set<Expr> possibleMainSigInheritingTransferRelatedFacts =
-          sigToFactsMap.get(classInHierarchy.get(i).getName());
+          sigToFactsMap.get(classInHierarchyForMain.get(i).getName());
       if (possibleMainSigInheritingTransferRelatedFacts != null)
         mainSigInheritingTransferRelatedFacts.addAll(possibleMainSigInheritingTransferRelatedFacts);
     }

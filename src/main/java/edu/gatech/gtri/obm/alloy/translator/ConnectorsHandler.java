@@ -102,8 +102,6 @@ public class ConnectorsHandler {
     for (int i = _classInHierarchy.size() - 1; i >= 0; i--) {
       Class classOfSig = _classInHierarchy.get(i);
       processConnectorsForAClass(classOfSig);
-      // removing ne
-      // _allClassesConnectedToMainSigByFields.remove(classOfSig);
     }
     // after handling connectors for Signatures(hierarchy of main Signature), handle others classes.
     for (NamedElement ne : _allNamedElementsConnectedToMainSigByFields) {

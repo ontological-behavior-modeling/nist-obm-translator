@@ -220,7 +220,7 @@ public class ConnectorsHandler_OneOf {
       // fact {all x: OFControlLoopFoodService | inverseFunctionFiltered[happensBefore, x.a + x.b, x.c]}
       this.toAlloy.addInverseFunctionFilteredHappensBeforeFact(
           _sigOfClass,
-          beforeExpr, // a + b
+          beforeExpr, // start + eat
           afterExpr);// order
     }
   }
