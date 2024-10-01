@@ -21,7 +21,7 @@ import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 /**
  * Create signature and fields by tracing from main class to its properties to their property type classes and so on. This class's instance variables, parameterFields, leafSigs, stepPropertiesBySig,
  * classHiearchy, mainClass, and propertiesByClass are collected during the process and passed back to OBMXMI2Alloy to complete the translation.
- * 
+ *
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  */
 public class ClassesHandler {
@@ -33,9 +33,7 @@ public class ClassesHandler {
   /** Stereotype qualified names for paticipant property */
   private static String STEREOTYPE_PATICIPANT = "SysML::ParticipantProperty";
 
-  /**
-   * A class that connects XMI model and the Alloy data model
-   */
+  /** A class that connects XMI model and the Alloy data model */
   ToAlloy toAlloy;
   /**
    * a map where key = NamedElement(Class or org.eclipse.uml2.uml.PrimitiveType(Integer, Real etc.)) value = property. Used to create disjoint fields
@@ -46,23 +44,15 @@ public class ClassesHandler {
    */
   Map<String, Set<String>> stepPropertiesBySig;
 
-  /**
-   * A set of leaf signatures
-   */
+  /** A set of leaf signatures */
   Set<PrimSig> leafSigs;
-  /**
-   * A set of Alloy fields created for Properties with <<Parameter>> stereotype
-   */
+  /** A set of Alloy fields created for Properties with <<Parameter>> stereotype */
   Set<Field> parameterFields;
 
-  /**
-   * omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation
-   */
+  /** omgutil SysMLUtil - used to create the omgutil ResourceSet used during the translation */
   SysMLUtil sysMLUtil;
 
-  /**
-   * A main Class translating to Alloy.
-   */
+  /** A main Class translating to Alloy. */
   Class mainClass;
   /**
    * A list of classes in hierarchy where a class with highest index is the main class translating to Alloy. A lowest index class is oldest in the hierarchy.
@@ -76,7 +66,7 @@ public class ClassesHandler {
 
   /**
    * A constructor
-   * 
+   *
    * @param _mainClass (Class) - a starting class to be translated to alloy.
    * @param _toAlloy (ToAlloy) - the helper class to connect this to alloy.
    * @param _sysMLUtil (SysMLUtil) - the helper class from OBMUtil3
@@ -87,16 +77,16 @@ public class ClassesHandler {
     this.sysMLUtil = _sysMLUtil;
   }
 
-
   /**
    * A method to perform class to alloy translation and return true if successful and false if not successful.
-   * 
+   *
    * @return (boolean) - if success return true, otherwise false.
    */
   protected boolean process() {
 
     parameterFields = new HashSet<>(); // Set<Field>
-    propertiesByClass = new HashMap<>();// Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>
+    propertiesByClass =
+        new HashMap<>(); // Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>
 
     // The hierarchy for main class of list is [0]=grand parent [1]=parent [2]=child(mainClass)
     this.classInHierarchyForMain = UML2Utils.createListIncludeSelfAndParents(mainClass);
@@ -108,8 +98,10 @@ public class ClassesHandler {
       parentSig = toAlloy.createSig(aClass.getName(), parentSig, isMainSig);
       if (parentSig == null) {
         this.errorMessages.add(
-            "Signature named \"" + aClass.getName()
-                + "\" already existed (possibly in the required library).  The name must be unique.");
+            "Signature named \""
+                + aClass.getName()
+                + "\" already existed (possibly in the required library).  The name must be"
+                + " unique.");
         return false;
       }
       processClassToSig(aClass); // update this.propertiesByClass
@@ -117,13 +109,15 @@ public class ClassesHandler {
 
 
 
-    Map<PrimSig, Set<Property>> redefinedPropertiesBySig = new HashMap<>(); // updated in addFieldsToSig method
+    Map<PrimSig, Set<Property>> redefinedPropertiesBySig =
+        new HashMap<>(); // updated in addFieldsToSig method
     stepPropertiesBySig = new HashMap<>();
     // go throw signatures in classInHierarchy first then the remaining in allClassesConnectedToMainSigByFields
     for (Class aClass : classInHierarchyForMain) {
+
       PrimSig sigOfNamedElement = toAlloy.getSig(aClass.getName());
-      redefinedPropertiesBySig.put(sigOfNamedElement,
-          addFieldsToSig(propertiesByClass.get(aClass), sigOfNamedElement));
+      redefinedPropertiesBySig.put(
+          sigOfNamedElement, addFieldsToSig(propertiesByClass.get(aClass), sigOfNamedElement));
       stepPropertiesBySig.put(aClass.getName(), collectAllStepProperties(aClass));
     }
 
@@ -131,8 +125,8 @@ public class ClassesHandler {
     for (NamedElement ne : propertiesByClass.keySet()) {
       if (!classInHierarchyForMain.contains(ne)) {
         PrimSig sigOfNamedElement = toAlloy.getSig(ne.getName());
-        redefinedPropertiesBySig.put(sigOfNamedElement,
-            addFieldsToSig(propertiesByClass.get(ne), sigOfNamedElement));
+        redefinedPropertiesBySig.put(
+            sigOfNamedElement, addFieldsToSig(propertiesByClass.get(ne), sigOfNamedElement));
         stepPropertiesBySig.put(ne.getName(), collectAllStepProperties(ne));
       }
     }
@@ -140,29 +134,28 @@ public class ClassesHandler {
     for (PrimSig sig : redefinedPropertiesBySig.keySet()) {
       // fact {all x: OFFoodService | x.eat in OFEat }
       // fact {all x: IFSingleFoodService | x.order in IFCustomerOrder}
-      toAlloy.addRedefinedSubsettingAsFacts(sig,
-          UML2Utils.toNameAndType(redefinedPropertiesBySig.get(sig)));
+      toAlloy.addRedefinedSubsettingAsFacts(
+          sig, UML2Utils.toNameAndType(redefinedPropertiesBySig.get(sig)));
     }
 
-    Set<NamedElement> leafClasses = UML2Utils.findLeafClass(propertiesByClass.keySet()); // class and PrimitiveType
+    Set<NamedElement> leafClasses =
+        UML2Utils.findLeafClass(propertiesByClass.keySet()); // class and PrimitiveType
     leafSigs =
         leafClasses.stream().map(ne -> toAlloy.getSig(ne.getName())).collect(Collectors.toSet());
 
     return true;
-
   }
 
   /**
    * Add fields in the given signature (non redefined attributes only), add cardinality facts (ie., abc = 1), and return redefined properties of the given signature. The parameterFields instance
    * variable is updated.
-   * 
+   *
    * @param _propertiesByType (Map<Type, List<Property>>) - The map of properties by type (key = property/field type(signature), value = properties/fields)
    * @param _ownerSig (PrimSig) - Signature of a class
    * @return redefinedProperties (Set<Property>) - redefined properties of the _sigOfNamedElement
    */
   private Set<Property> addFieldsToSig(
-      Map<org.eclipse.uml2.uml.Type, List<Property>> _propertiesByType,
-      PrimSig _ownerSig) {
+      Map<org.eclipse.uml2.uml.Type, List<Property>> _propertiesByType, PrimSig _ownerSig) {
 
     Set<Property> redefinedProperties = new HashSet<>();
     if (_propertiesByType != null) {
@@ -186,8 +179,9 @@ public class ClassesHandler {
               parameterProperties.add(p.getName());
 
           } else {
-            this.errorMessages.add(p.getQualifiedName()
-                + "has no name, so ignored.  Please defined the name to be included");
+            this.errorMessages.add(
+                p.getQualifiedName()
+                    + "has no name, so ignored.  Please defined the name to be included");
           }
         }
 
@@ -195,12 +189,16 @@ public class ClassesHandler {
 
         if (nonRedefinedPropertyInAlphabeticalOrderPerType.size() > 0) {
           Sig.Field[] fields =
-              toAlloy.addDisjAlloyFields(nonRedefinedPropertyInAlphabeticalOrderPerType,
-                  propertyType.getName(), _ownerSig);
+              toAlloy.addDisjAlloyFields(
+                  nonRedefinedPropertyInAlphabeticalOrderPerType,
+                  propertyType.getName(),
+                  _ownerSig);
           // server, Serve, SinglFooeService
           if (fields != null) { // this should not happens
             for (int j = 0; j < propertiesSortedByType.size(); j++) {
-              toAlloy.addCardinalityFact(_ownerSig, fields[j],
+              toAlloy.addCardinalityFact(
+                  _ownerSig,
+                  fields[j],
                   propertiesSortedByType.get(j).getLower(),
                   propertiesSortedByType.get(j).getUpper());
               if (parameterProperties.contains(fields[j].label)) // {
@@ -210,11 +208,14 @@ public class ClassesHandler {
         } else { // cardinality only when no redefined properties
           for (Property p : propertiesSortedByType) {
             boolean added =
-                toAlloy.addCardinalityFact(_ownerSig, p.getName(), p.getLower(),
-                    p.getUpper());
+                toAlloy.addCardinalityFact(_ownerSig, p.getName(), p.getLower(), p.getUpper());
             if (!added)
-              this.errorMessages.add("A field \"" + p.getName() + " not found in Sig "
-                  + _ownerSig.label + ".  Failed to add cadinality constraint.");
+              this.errorMessages.add(
+                  "A field \""
+                      + p.getName()
+                      + " not found in Sig "
+                      + _ownerSig.label
+                      + ".  Failed to add cadinality constraint.");
           }
         }
       }
@@ -222,20 +223,20 @@ public class ClassesHandler {
     return redefinedProperties;
   }
 
-
   /**
    * go through a class, its properties, a property, and its type (class) recursively to complete propertiesByClass (Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>>) and create
    * signatures of the property types(Class or PrimitiveType).
-   * 
+   *
+   * <p>
    * For example, this processClassToSig method is called from outside of this method : with umlElement = FoodService, then called recursively(internally) umlElement as Prepare -> Order -> Serve -> Eat
    * -> Pay. The propertiesByClass is Map<NamedElement, Map<org.eclipse.uml2.uml.Type, List<Property>>> where the key NamedElement to be mapped to Sig (class or PrimitiveType like Integer and Real) and
    * value is Map<org.eclipse.uml2.uml.Type, List<Property>. The map's key type is property/field's type and List<Property> is property/fields having the same type.
-   * 
+   *
+   * <p>
    * For example, sig SimpleSequence extends Occurrence { disj p1,p2: set AtomicBehavior } propertiesByClass's key = SimpleSequence and value = (key = AtomicBehavior, value =[p1,p2])
-   * 
+   *
    * @param _namedElement (NamedElement) - a namedElement either org.eclipse.uml2.uml.Class or org.eclipse.uml2.uml.PrimitiveType to be analyzed to complete propertiesByClass
    */
-
   private void processClassToSig(NamedElement _namedElement) {
     if (_namedElement instanceof org.eclipse.uml2.uml.Class) {
       Set<Property> atts = sysMLUtil.getOwnedAttributes((org.eclipse.uml2.uml.Class) _namedElement);
@@ -252,11 +253,12 @@ public class ClassesHandler {
       Map<org.eclipse.uml2.uml.Type, List<Property>> propertiesByTheirType = new HashMap<>();
       for (Property p : atts) {
         org.eclipse.uml2.uml.Type eType = p.getType();
-        List<Property> ps = propertiesByTheirType.get(eType) == null ? new ArrayList<>()
-            : propertiesByTheirType.get(eType);
+        List<Property> ps =
+            propertiesByTheirType.get(eType) == null
+                ? new ArrayList<>()
+                : propertiesByTheirType.get(eType);
         ps.add(p);
         propertiesByTheirType.put(eType, ps);
-
 
         if (eType instanceof org.eclipse.uml2.uml.Class
             || eType instanceof org.eclipse.uml2.uml.PrimitiveType) {
@@ -268,7 +270,8 @@ public class ClassesHandler {
           // alloy allows only one parent
           // create Sig of property type with or without parent
           // parent should already exists
-          toAlloy.createSigOrReturnSig(eType.getName(),
+          toAlloy.createSigOrReturnSig(
+              eType.getName(),
               parents == null || parents.size() == 0 ? null : parents.get(0).getName());
           // process both eType(Class or PrimitiveType) recursively
           processClassToSig(eType);
@@ -284,7 +287,7 @@ public class ClassesHandler {
 
   /**
    * get property (including inherited ones) string names of the given namedElement if the namedElement is class and the property has STEROTYPE_STEP or STREOTYPE_PATICIPANT stereotype.
-   * 
+   *
    * @param _namedElement (NamedElement) - A NamedElement that can be Class or PrimitiveType to get properties.
    * @return (Set<String>) - the property names or null if the given namedElement is PrimitiveType(i.e., Real, Integer)
    */
@@ -306,7 +309,7 @@ public class ClassesHandler {
 
   /**
    * Get method for parameter fields collected during the translation.
-   * 
+   *
    * @return (Set<Field>)
    */
   protected Set<Field> getParameterFields() {
@@ -315,7 +318,7 @@ public class ClassesHandler {
 
   /**
    * Get method for signatures collected during the translation.
-   * 
+   *
    * @return (Set<PrimSig>)
    */
   protected Set<PrimSig> getLeafSigs() {
@@ -324,7 +327,7 @@ public class ClassesHandler {
 
   /**
    * Get method for a map where key is signature name and value is a set of step property names.
-   * 
+   *
    * @return (Map<String, Set<String>>)
    */
   protected Map<String, Set<String>> getStepPropertiesBySig() {
@@ -333,7 +336,7 @@ public class ClassesHandler {
 
   /**
    * Get method for the main class name.
-   * 
+   *
    * @return (String)
    */
   protected String getMainSigLabel() {
@@ -342,7 +345,7 @@ public class ClassesHandler {
 
   /**
    * Get method for a class hierarchy list. The main class has the largest index and its parent is one less and so forth. The oldest in the hierarchy has 0 index.
-   * 
+   *
    * @return (List<Class>)
    */
   protected List<Class> getClassInHierarchyForMain() {
@@ -351,7 +354,7 @@ public class ClassesHandler {
 
   /**
    * get all namedElements (Class and PrimitiveType) included in the translation. All classes traced from the main class.
-   * 
+   *
    * @return (Set<NamedElement>)
    */
   protected Set<NamedElement> getAllNamedElements() {
@@ -360,7 +363,7 @@ public class ClassesHandler {
 
   /**
    * Get errorMessages collected during the translation.
-   * 
+   *
    * @return errorMessage (List<String>)
    */
   protected List<String> getErrorMessages() {

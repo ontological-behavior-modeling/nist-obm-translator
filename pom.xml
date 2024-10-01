@@ -3,20 +3,20 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.gatech.gtri.obm</groupId>
-  <artifactId>nist-obm-translator</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <artifactId>tester</artifactId>
+  <version>0.1.36-SNAPSHOT</version>
 
   <scm>
-    <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
-    <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</developerConnection>
-    <tag>HEAD</tag>
-    <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
+    <connection>scm:git:https://github.com/ontological-behavior-modeling/tester.git</connection>
+    <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/tester.git</developerConnection>
+    <tag>v0.1.35</tag>
+    <url>https://github.com/ontological-behavior-modeling/tester</url>
   </scm>
 
   <distributionManagement>
     <repository>
       <id>github</id>
-      <url>https://maven.pkg.github.com/ontological-behavior-modeling/nist-obm-translator</url>
+      <url>https://maven.pkg.github.com/ontological-behavior-modeling/tester</url>
     </repository>
   </distributionManagement>
 
@@ -159,7 +159,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>edu.gatech.gtri.obm.translator.alloy.userinterface.UserInterface</mainClass>
+              <mainClass>edu.gatech.gtri.obm.alloy.translator.userinterface.UserInterface</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
@@ -191,6 +191,11 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-help-plugin</artifactId>
+        <version>3.2.0</version>
+      </plugin>
+      <plugin>
         <!-- see for documentation and configuration information: https://github.com/Ekryd/sortpom -->
         <groupId>com.github.ekryd.sortpom</groupId>
         <artifactId>sortpom-maven-plugin</artifactId>
@@ -220,7 +225,7 @@
               <include>src/test/java/**/*.java</include>
             </includes>
             <googleJavaFormat>
-              <version>1.8</version>
+              <version>1.10.0</version>
               <!-- optional, 1.8 is minimum supported version -->
               <style>GOOGLE</style>
               <!-- or AOSP (optional) -->

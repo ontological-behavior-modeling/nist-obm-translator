@@ -9,8 +9,11 @@ import javax.swing.JDialog;
 import lombok.Getter;
 import lombok.Setter;
 
-// TODO: Auto-generated Javadoc
-/** The Class Popup. */
+/**
+ * The class creating the popup dialog box for the graphical user interface
+ *
+ * @author Joseph Napolitano, Research Engineer - Georgia Tech Research Institute
+ */
 @Getter
 @Setter
 public class Popup {
@@ -42,24 +45,28 @@ public class Popup {
     ImageIcon img = new ImageIcon("images/OBM.png");
     dialog = new JDialog(UserInterface.frmObmAlloyTranslator, phrase);
     dialog.setIconImage(img.getImage());
-    dialog.setModalityType(JDialog.ModalityType.MODELESS);;
+    dialog.setModalityType(JDialog.ModalityType.MODELESS);
+    ;
     dialog.setSize(new Dimension(250, 15));
     dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
     dialog.toFront();
     dialog.setLocationRelativeTo(UserInterface.frmObmAlloyTranslator);
     dialog.setVisible(true);
     t = new Timer();
-    t.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        if (dialog.getTitle().chars().filter(ch -> ch == '.').count() < 3)
-          dialog.setTitle(dialog.getTitle() + ".");
-        else {
-          int length = dialog.getTitle().length();
-          dialog.setTitle(dialog.getTitle().substring(0, length - 3));
-        }
-      }
-    }, new Date(), 1000);
+    t.scheduleAtFixedRate(
+        new TimerTask() {
+          @Override
+          public void run() {
+            if (dialog.getTitle().chars().filter(ch -> ch == '.').count() < 3)
+              dialog.setTitle(dialog.getTitle() + ".");
+            else {
+              int length = dialog.getTitle().length();
+              dialog.setTitle(dialog.getTitle().substring(0, length - 3));
+            }
+          }
+        },
+        new Date(),
+        1000);
   }
 
   public JDialog getDialog() {
@@ -69,7 +76,4 @@ public class Popup {
   public Timer getT() {
     return t;
   }
-
-
-
 }

@@ -1,0 +1,22 @@
+@startuml
+start
+:Set //isRootSig// to false;
+:Create String //op// of ExprQt
+Operation;
+:Set //names// String to "";
+:Set //sigType// String to "";
+:Create String //sub// of ExprQt Body;
+while(For Each Declaration in ExprQt)
+:Set //names// to Declaration Names;
+:Create //text// String of Declaration Expression;
+if(//text// Contains a Space) then (yes)
+:Set sigType to //text// with space removed;
+else (no)
+:Set //sigType// to //text//;
+endif
+endwhile
+:Create StringBuilder //sb//;
+:Return //sb// appended with 
+//op, names, sigType, sub//;
+stop
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+start
+:Set //isRootSig// to false;
+:Set //funcName// String to ExprCall Function Label;
+:Create //args// String array from size of ExprCall args;
+while(for size of ExprCall args)
+	:Add ExprCall arg to //args// String array;
+endwhile
+:Construct StringBuilder //sb//;
+:Append //funcName// with //sb//;
+if(ExprCall has args) then (yes)
+	:Append //args// to //sb//;
+endif
+:Return //sb//;
+stop
+@enduml
