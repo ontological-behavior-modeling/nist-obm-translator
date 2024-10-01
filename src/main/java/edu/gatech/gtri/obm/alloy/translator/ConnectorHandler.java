@@ -122,26 +122,26 @@ public class ConnectorHandler {
   /**
    * Create facts for a signature by observing own connectors.
    * 
-   * @param _sigOgClass(PrimSig) - the owner of the connector
+   * @param _classOfSig(Class) - the owner of the connector
    * @param _isSigLeaf(boolean) - true if this signature is leaf, otherwise false
    */
-  protected void processConnectorsForASig(Class _sigOgClass, boolean _isSigLeaf) {
+  protected void processConnectorsForASig(Class _classOfSig, boolean _isSigLeaf) {
 
     transfer_connectorHandler.reset(); // transferFieldNames requires to reset for each class. The transferFiledNames used to define stepProperties.
 
-    PrimSig sigOfClass = this.toAlloy.getSig(_sigOgClass.getName());
-    Set<org.eclipse.uml2.uml.Connector> connectors = sysmlUtil.getOwnedConnectors(_sigOgClass);
+    PrimSig sigOfClass = this.toAlloy.getSig(_classOfSig.getName());
+    Set<org.eclipse.uml2.uml.Connector> connectors = sysmlUtil.getOwnedConnectors(_classOfSig);
 
     // handle one of connectors
     ConnectorsHandler_OneOf och =
         new ConnectorsHandler_OneOf(sysmlUtil, sysmladapter, toAlloy, this.messages);
-    Set<Connector> oneOfConnectors = och.handleOneOfConnectors(sigOfClass, _sigOgClass, connectors);
+    Set<Connector> oneOfConnectors = och.handleOneOfConnectors(sigOfClass, _classOfSig, connectors);
 
     // process remaining of connectors
     for (org.eclipse.uml2.uml.Connector cn : connectors) {
       if (oneOfConnectors.contains(cn))
         continue; // oneof connectors are already handled above so skip here
-      if (_sigOgClass.getInheritedMembers().contains(cn))
+      if (_classOfSig.getInheritedMembers().contains(cn))
         continue;// ignore inherited
 
       // for example) while translating IFSingleFoolService and processing connectors for IFFoodService,
