@@ -130,7 +130,7 @@ public final class OBMXMI2Alloy {
     this.messages = new ArrayList<>();
 
     Set<Field> parameterFields = null;
-    if ((parameterFields = CreateAlloy(_qualifiedName)) != null) {
+    if ((parameterFields = createAlloy(_qualifiedName)) != null) {
       try {
         boolean success = toAlloy.createAlloyFile(_outputFile, parameterFields);
         if (success)
@@ -154,7 +154,7 @@ public final class OBMXMI2Alloy {
    * @param _classQualifiedName(String) - the qualified name string of a class contained in the xml file (i.e., Model::4.1 Basic Examples::4.1.2 Loop::Loop)
    * @return (Set<Field>) - parameterfields used by calling method to write out disj signature fields to an alloy file.
    */
-  private Set<Field> CreateAlloy(String _classQualifiedName) {
+  private Set<Field> createAlloy(String _classQualifiedName) {
     // using omgUtil get NamedElement to translate
     NamedElement mainNamedElement = EMFUtil.getNamedElement(resource, _classQualifiedName);
     // the NamedElement must be Class to able to translate
