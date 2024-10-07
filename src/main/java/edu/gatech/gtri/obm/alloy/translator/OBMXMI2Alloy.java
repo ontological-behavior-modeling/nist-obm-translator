@@ -209,7 +209,7 @@ public final class OBMXMI2Alloy {
     Map<String, Set<String>> sigToTransferFieldMap = connectorsHandler.getSigToTransferFieldMap();
 
     // a map - facts per signature name
-    Map<String, Set<Expr>> sigToFactsMap = connectorsHandler.getSigToFactsMap();
+    Map<String, Set<Expr>> sigToTransferFactsMap = connectorsHandler.getSigToFactsMap();
 
     // a set of signatures having transfer fields, signature names are the same as
     // sigToTransferFieldMap.keySet()
@@ -229,7 +229,7 @@ public final class OBMXMI2Alloy {
         mainSigInheritingTransferFields.addAll(possibleMainSigInheritingTransferFields);
       }
       Set<Expr> possibleMainSigInheritingTransferRelatedFacts =
-          sigToFactsMap.get(classInHierarchyForMain.get(i).getName());
+          sigToTransferFactsMap.get(classInHierarchyForMain.get(i).getName());
       if (possibleMainSigInheritingTransferRelatedFacts != null)
         mainSigInheritingTransferRelatedFacts.addAll(possibleMainSigInheritingTransferRelatedFacts);
     }
