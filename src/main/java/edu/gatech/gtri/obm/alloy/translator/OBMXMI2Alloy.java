@@ -213,8 +213,8 @@ public final class OBMXMI2Alloy {
 
     // a set of signatures having transfer fields, signature names are the same as
     // sigToTransferFieldMap.keySet()
-    Set<Sig> sigWithTransferFieldsAndNoStepSigs = connectorsHandler.getSigWithTransferFields();
-
+    // Set<Sig> sigWithTransferFieldsAndNoStepSigs = connectorsHandler.getSigWithTransferFields();
+    Set<Sig> sigsWithTransferFields = connectorsHandler.getSigWithTransferFields();
     // loop through mainSig's parent to collect transferSigs and added to mainSig as its fields
     // Note: Only supporting transferFields inherited to mainSig.
     // If maingSig has a parent who inherited tranferFields, currently the translator is not
@@ -244,8 +244,9 @@ public final class OBMXMI2Alloy {
 
     // combing noStepsSigs and sigWithTransferFields and pass to toAlloy.addNoTransferInXStepsFact
     // method to add facts like "fact {all x: BuffetService | no y: Transfer | y in x.steps}"
-    sigWithTransferFieldsAndNoStepSigs.addAll(noStepsSigs);
-    toAlloy.addNoTransferInXStepsFact(sigWithTransferFieldsAndNoStepSigs, leafSigs);
+    Set<Sig> sigsWithTransferFieldsAndNoStepSigs = sigsWithTransferFields;
+    sigsWithTransferFieldsAndNoStepSigs.addAll(noStepsSigs);
+    toAlloy.addNoTransferInXStepsFact(sigsWithTransferFieldsAndNoStepSigs, leafSigs);
 
     Set<String> allClassNames =
         allNamedElements.stream().map(c -> c.getName()).collect(Collectors.toSet());

@@ -1,12 +1,5 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
-import edu.mit.csail.sdg.alloy4.A4Reporter;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Func;
-import edu.mit.csail.sdg.ast.Module;
-import edu.mit.csail.sdg.ast.Sig;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.mit.csail.sdg.parser.CompUtil;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -16,18 +9,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import edu.mit.csail.sdg.alloy4.A4Reporter;
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Func;
+import edu.mit.csail.sdg.ast.Module;
+import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.mit.csail.sdg.parser.CompUtil;
 
 /**
- * A class loads supporting libraries (Translator.als and utilities/*.als) and stores all
- * signatures, fields, and facts data to be translated to an alloy file.
+ * A class loads supporting libraries (Translator.als and utilities/*.als) and stores all signatures, fields, and facts data to be translated to an alloy file.
  *
  * @author Miyako Wilson, AE(ASDL) - Georgia Tech
  */
 public class Alloy {
 
   /**
-   * The templateModule name string defined for the translator. Set using mainSig name. i.e.,) if
-   * the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
+   * The templateModule name string defined for the translator. Set using mainSig name. i.e.,) if the mainSig name is "SimpleSequence", the module name will be "SimpleSequenceModule".
    */
   private String moduleName;
   /** List of Signatures consist of created for the translation */
@@ -68,8 +66,7 @@ public class Alloy {
   protected static PrimSig occSig; // default parent/super type of Signature
 
   /**
-   * Create this object and load required alloy libraries (Translator.als and utilities/*.als) are
-   * locating at the given working directory.
+   * Create this object and load required alloy libraries (Translator.als and utilities/*.als) are locating at the given working directory.
    *
    * @param _workingDirectory (String) - The absolute file path
    */
@@ -104,8 +101,7 @@ public class Alloy {
   }
 
   /**
-   * initialize/reset instance variables when the library location not changed but a class
-   * translating is changed
+   * initialize/reset instance variables when the library location not changed but a class translating is changed
    */
   public void initialize() {
     // initialize a list of signatures.
@@ -160,13 +156,15 @@ public class Alloy {
   }
 
   /**
-   * Add a expression to allFacts instance variable
+   * Add an expression to allFacts instance variable
    *
    * @param _expr (Expr) - a expression to be added
    */
-  protected void addToFacts(Expr _expr) {
-    if (allFacts == null) allFacts = _expr;
-    else allFacts = allFacts.and(_expr);
+  protected void addToFact(Expr _expr) {
+    if (allFacts == null)
+      allFacts = _expr;
+    else
+      allFacts = allFacts.and(_expr);
   }
 
   /**
@@ -176,20 +174,19 @@ public class Alloy {
    */
   protected void addToFacts(Set<Expr> _exprs) {
     for (Expr expr : _exprs) {
-      if (allFacts == null) allFacts = expr;
-      else allFacts = allFacts.and(expr);
+      if (allFacts == null)
+        allFacts = expr;
+      else
+        allFacts = allFacts.and(expr);
     }
   }
 
   /**
    * Write an alloy file from all Signatures and Facts as a file.
    *
-   * @param _outputFileName (String) - an absolute file name for the alloy output file to be written
-   *     as
-   * @param _parameterFields (Set<Field>) - a set of Fields. used to determine fields to be disj
-   *     constraint (parameter fields are not disj)
-   * @throws FileNotFoundException - happens when the outputFileName is failed to be created (not
-   *     exist, not writable etc...)
+   * @param _outputFileName (String) - an absolute file name for the alloy output file to be written as
+   * @param _parameterFields (Set<Field>) - a set of Fields. used to determine fields to be disj constraint (parameter fields are not disj)
+   * @throws FileNotFoundException - happens when the outputFileName is failed to be created (not exist, not writable etc...)
    */
   protected void toFile(String _outputFileName, Set<Sig.Field> _parameterFields)
       throws FileNotFoundException {
@@ -222,12 +219,10 @@ public class Alloy {
   }
 
   /**
-   * Format this alloy object (Signatures/Fields and Facts) to string by grouping Signature/Fields
-   * and Facts for the Signature together.
+   * Format this alloy object (Signatures/Fields and Facts) to string by grouping Signature/Fields and Facts for the Signature together.
    *
    * @param _factListInString (String) - all facts in string
-   * @param _signatureBlockBySignature (Map: key = Signature name string, value: Signature and
-   *     fields as written in the alloy file) - signature and its fields
+   * @param _signatureBlockBySignature (Map: key = Signature name string, value: Signature and fields as written in the alloy file) - signature and its fields
    * @return (String) - A Module, Signatures, Fields, and Facts grouped by Signature in string
    */
   private static String format(
@@ -268,11 +263,8 @@ public class Alloy {
   }
 
   /**
-   * Return fact body without the Signature portion from string array separated by "|". For example,
-   * when String[] _domainAndFacts for a fact "fact {all x: MultipleControlFlow | no y: Transfer | y
-   * in x.steps}" is ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"], this
-   * methods return _domainAndFacts's index of 1 or more separated by "|": "no y: Transfer | y in
-   * x.steps".
+   * Return fact body without the Signature portion from string array separated by "|". For example, when String[] _domainAndFacts for a fact "fact {all x: MultipleControlFlow | no y: Transfer | y in
+   * x.steps}" is ["fact {all x: MultipleControlFlow", "no y: Transfer", "y in x.steps"], this methods return _domainAndFacts's index of 1 or more separated by "|": "no y: Transfer | y in x.steps".
    *
    * @param _domainAndFacts (String[]) - string array for a fact expression separate by "|".
    * @return (String) - the fact body in string
@@ -286,12 +278,10 @@ public class Alloy {
   }
 
   /**
-   * Return string facts (separated by "\n") for the given Signature name string (i.e., "fact {all
-   * x: A | #(x.vout) = 1}\nfact {all x: A | no (items.x)}...")
+   * Return string facts (separated by "\n") for the given Signature name string (i.e., "fact {all x: A | #(x.vout) = 1}\nfact {all x: A | no (items.x)}...")
    *
    * @param sigName (String) - Signature name string
-   * @param _facts (Map: key = Signature name string, value = facts for the signature) - facts per
-   *     signature name
+   * @param _facts (Map: key = Signature name string, value = facts for the signature) - facts per signature name
    * @return (String) - facts in string for the given Signature
    */
   private static String getFacts(String _sigName, Map<String, List<String>> _facts) {

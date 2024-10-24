@@ -1,11 +1,5 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Sig;
-import edu.mit.csail.sdg.ast.Sig.Field;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
-import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +9,12 @@ import java.util.stream.Collectors;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.NamedElement;
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.Field;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
+import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 /**
  * Connectors handler
@@ -27,9 +27,8 @@ public class ConnectorsHandler {
   SysMLUtil sysmlUtil;
 
   /**
-   * A set of connectors redefined by children so that the connectors are ignored by the parent.
-   * This variable is initialized in this class and updated and used while analyzing all the
-   * connectors by ConnectorHandler.
+   * A set of connectors redefined by children so that the connectors are ignored by the parent. This variable is initialized in this class and updated and used while analyzing all the connectors by
+   * ConnectorHandler.
    */
   Set<Connector> redefinedConnectors;
   /**
@@ -41,8 +40,7 @@ public class ConnectorsHandler {
   /** A dictionary contains signature name as key and a set of transfer field names as value. */
   Map<String, Set<String>> sigToTransferFieldMap;
   /**
-   * A map where key is signature name string and value is a set of field name strings. This
-   * includes inherited fields/properties and used in closure facts.
+   * A map where key is signature name string and value is a set of field name strings. This includes inherited fields/properties and used in closure facts.
    */
   Map<String, Set<String>> stepPropertiesBySig;
 
@@ -93,10 +91,8 @@ public class ConnectorsHandler {
   /**
    * Go processing all connectors in the correct order.
    *
-   * @param _classInHierarchy List of Class from oldest to youngest where the youngest is main class
-   *     you tried to translate.
-   * @param _allNamedElementsConnectedToMainSigByFields NamedElements to be converted to Signatures
-   *     (Class and PrimitiveType(Real, Integer etc...)
+   * @param _classInHierarchy List of Class from oldest to youngest where the youngest is main class you tried to translate.
+   * @param _allNamedElementsConnectedToMainSigByFields NamedElements to be converted to Signatures (Class and PrimitiveType(Real, Integer etc...)
    */
   protected void process(
       List<Class> _classInHierarchy,
@@ -120,15 +116,10 @@ public class ConnectorsHandler {
 
   /**
    * @param ne - a namedElement transfer to a signature.
-   * @param outConnectorInputPropertiesBySig - a map data to be collected where values are
-   *     connectors' targetInputProperty tag values (property names) and key the property owner
-   *     (namedElement) name
-   * @param outconnectorOutputPropertiesBySig - a map data to be collected where values are
-   *     connectors' sourceOutputProperty tag values (property names) and key of the property owner
-   *     (namedElement) name
+   * @param outConnectorInputPropertiesBySig - a map data to be collected where values are connectors' targetInputProperty tag values (property names) and key the property owner (namedElement) name
+   * @param outconnectorOutputPropertiesBySig - a map data to be collected where values are connectors' sourceOutputProperty tag values (property names) and key of the property owner (namedElement) name
    * @param outSigWithTransferFields - a set of signatures having transfer fields collected
-   * @return a set of signature string names having transfer field(s) of the same input and output
-   *     types
+   * @return a set of signature string names having transfer field(s) of the same input and output types
    */
   private void processConnectorsForAClass(Class ne) {
 
@@ -165,11 +156,13 @@ public class ConnectorsHandler {
       // The following fact is NOT included because x.p1.vout is <<Parmeter>> field
       // fact {all x: MultipleObjectFlowAlt | x.p1.outputs in x.p1.vout}
       Set<Field> fields = removeParameterFields(fieldWithInputs.get(field));
-      if (fields.size() > 0) toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.oinputs);
+      if (fields.size() > 0)
+        toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.oinputs);
     }
     for (Field field : fieldWithOutputs.keySet()) {
       Set<Field> fields = removeParameterFields(fieldWithOutputs.get(field));
-      if (fields.size() > 0) toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.ooutputs);
+      if (fields.size() > 0)
+        toAlloy.addInOutClosureFact(ownerSig, field, fields, Alloy.ooutputs);
     }
     // add transferFieldNames for this Class(ne), now stepPorpertiedBySig has transfer fields later
     // used in OBMXMI1Alloy
