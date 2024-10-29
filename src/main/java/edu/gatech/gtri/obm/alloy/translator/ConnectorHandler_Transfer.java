@@ -32,9 +32,9 @@ public class ConnectorHandler_Transfer {
   /** A class that connects XMI model and the Alloy data model */
   ToAlloy toAlloy;
   /** A set of signatures with transfer fields */
-  Set<Sig> sigWithTransferField;
+  Set<Sig> sigsWithTransferField;
   /** A dictionary contains signature name as a key and a set of transfer field names as a value. */
-  Map<String, Set<String>> sigToTransferFieldMap;
+  Map<String, Set<String>> sigToTransferFieldsMap;
   /**
    * A set of connectors redefined by children so that the connectors are ignored by the parent. This variable is initialized in ConnectorsHandler and updated and used by a ConnectorHandler while
    * handling each connector at a time.
@@ -106,7 +106,7 @@ public class ConnectorHandler_Transfer {
       List<String> _messages) {
     toAlloy = _toAlloy;
     sigToFactsMap = _sigToFactsMap;
-    sigToTransferFieldMap = _sigToTransferFieldMap;
+    sigToTransferFieldsMap = _sigToTransferFieldMap;
     redefinedConnectors = _redefinedConnectors;
     parameterFields = _parameterFields;
     messages = _messages;
@@ -114,7 +114,7 @@ public class ConnectorHandler_Transfer {
     // initialize
     connectorsTargetInputPropertyNamesByClassName = new HashMap<>();
     connectorsSourceOutputPrpertyNamesByClassName = new HashMap<>();
-    sigWithTransferField = new HashSet<>();
+    sigsWithTransferField = new HashSet<>();
     sigNamesWithTransferConnectorWithSameInputOutputFieldType = new HashSet<>();
     transferingTypeSigNames = new HashSet<String>();
   }
@@ -150,7 +150,7 @@ public class ConnectorHandler_Transfer {
       String _sourceFieldName,
       String _targetFieldName) {
 
-    this.sigWithTransferField.add(_sigOfClass);
+    this.sigsWithTransferField.add(_sigOfClass);
     for (Connector redefinedConnector : _connector.getRedefinedConnectors()) {
       for (ConnectorEnd cce : ((Connector) redefinedConnector).getEnds()) {
 
@@ -166,7 +166,7 @@ public class ConnectorHandler_Transfer {
     List<Set<String>> sourceOutputAndTargetInputPropertyNames =
         handleTransferAndTransferBeforeInputsAndOutputs(_connector);
 
-    // add to inputs map where key = tragetTypeName and values = targetInputProperty names
+    // add to inputs map where key = targetTypeName and values = targetInputProperty names
     if (sourceOutputAndTargetInputPropertyNames.get(1) != null) {
       this.connectorsTargetInputPropertyNamesByClassName
           .computeIfAbsent(_targetTypeName, v -> new HashSet<String>())
@@ -240,7 +240,7 @@ public class ConnectorHandler_Transfer {
       PrimSig _sigOfClass, String _source, String _target) {
     String fieldName = "transfer" + firstCharUpper(_source) + firstCharUpper(_target);
     this.transferFieldNames.add(fieldName);
-    sigToTransferFieldMap.computeIfAbsent(_sigOfClass.label, v -> new HashSet<>()).add(fieldName);
+    sigToTransferFieldsMap.computeIfAbsent(_sigOfClass.label, v -> new HashSet<>()).add(fieldName);
     Sig.Field transferField = AlloyUtils.addTransferField(fieldName, _sigOfClass);
     return transferField;
   }
@@ -429,7 +429,7 @@ public class ConnectorHandler_Transfer {
    * @return Set<Sig>
    */
   protected Set<Sig> getSigWithTransferField() {
-    return sigWithTransferField;
+    return sigsWithTransferField;
   }
 
   /**
