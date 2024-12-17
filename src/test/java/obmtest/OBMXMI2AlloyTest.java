@@ -50,60 +50,57 @@ public class OBMXMI2AlloyTest {
   @ParameterizedTest
   @CsvSource({
       "4.1.1 Time Orderings - AllControl.als, Model::4.1 Basic Examples::4.1.1 Time"
-          + " Orderings::AllControl, true",
+          + " Orderings::AllControl, true",//1
       "4.1.1 Time Orderings - Decision.als, Model::4.1 Basic Examples::4.1.1 Time"
-          + " Orderings::Decision, true",
-      "4.1.1 Time Orderings - Fork.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork, true",
-      "4.1.1 Time Orderings - Join.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Join, true",
+          + " Orderings::Decision, true",//2
+      "4.1.1 Time Orderings - Fork.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Fork, true",//3
+      "4.1.1 Time Orderings - Join.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Join, true",//4
       "4.1.1 Time Orderings - Merge.als, Model::4.1 Basic Examples::4.1.1 Time Orderings::Merge,"
-          + " true",
+          + " true",//5
       "4.1.1 Time Orderings - SimpleSequence.als, Model::4.1 Basic Examples::4.1.1 Time"
-          + " Orderings::SimpleSequence, true",
-      "4.1.2 Loops - Loop.als, Model::4.1 Basic Examples::4.1.2 Loops::Loop ,true",
+          + " Orderings::SimpleSequence, true",//6
+      "4.1.2 Loops - Loop.als, Model::4.1 Basic Examples::4.1.2 Loops::Loop ,true",//7
       "4.1.3 Behaviors with Steps - Composed.als, Model::4.1 Basic Examples::4.1.3 Behaviors with"
-          + " Steps::Composed, true",
+          + " Steps::Composed, true",//8
 
       // alloy file in name, qualifiedName of behavior model(class), boolean true if expected to pass,
       // false if expected to fail
-      "4.1.4 Transfers and Parameters - ParameterBehavior_mw.als, Model::4.1 Basic Examples::4.1.4"
-          + " Transfers and Parameters::ParameterBehavior, true",
+      "4.1.4 Transfers and Parameters - ParameterBehavior.als, Model::4.1 Basic Examples::4.1.4"
+          + " Transfers and Parameters::ParameterBehavior, true",//9
       "4.1.4 Transfers and Parameters - TransferProduct.als, Model::4.1 Basic Examples::4.1.4"
-          + " Transfers and Parameters::TransferProduct, true",
+          + " Transfers and Parameters::TransferProduct, true",//10
       "4.1.5 Steps with Multiple Executions - MultipleControlFlow.als, Model::4.1 Basic"
-          + " Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",
-      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow_mw.als, Model::4.1 Basic"
-          + " Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",
-      // expected to fail
-      "4.1.5 Steps with Multiple Executions - MultipleControlFlow - Fail.als, Model::4.1 Basic"
-          + " Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, false",
+          + " Examples::4.1.5 Steps with Multiple Executions::MultipleControlFlow, true",//11
+      "4.1.5 Steps with Multiple Executions - MultipleObjectFlow.als, Model::4.1 Basic"
+          + " Examples::4.1.5 Steps with Multiple Executions::MultipleObjectFlow, true",//12
       "4.1.6 Unsatisfiable - UnsatisfiableAsymmetry.als, Model::4.1 Basic Examples::4.1.6"
-          + " Unsatisfiable::UnsatisfiableAsymmetry, true",
+          + " Unsatisfiable::UnsatisfiableAsymmetry, true",//13
       "4.1.6 Unsatisfiable - UnsatisfiableComposition1.als, Model::4.1 Basic Examples::4.1.6"
-          + " Unsatisfiable::UnsatisfiableComposition1, true",
+          + " Unsatisfiable::UnsatisfiableComposition1, true",//14
       "4.1.6 Unsatisfiable - UnsatisfiableComposition2.als, Model::4.1 Basic Examples::4.1.6"
-          + " Unsatisfiable::UnsatisfiableComposition2, true",
+          + " Unsatisfiable::UnsatisfiableComposition2, true",//15
       "4.1.6 Unsatisfiable - UnsatisfiableMultiplicity.als, Model::4.1 Basic Examples::4.1.6"
-          + " Unsatisfiable::UnsatisfiableMultiplicity, true",
+          + " Unsatisfiable::UnsatisfiableMultiplicity, true",//16
       "4.1.6 Unsatisfiable - UnsatisfiableTransitivity.als, Model::4.1 Basic Examples::4.1.6"
-          + " Unsatisfiable::UnsatisfiableTransitivity, true",
+          + " Unsatisfiable::UnsatisfiableTransitivity, true",//17
       "4.2.1 Food Service Control Flow - BuffetService.als, Model::4.2 Advanced Examples::4.2.1 Food"
-          + " Service Control Flow::BuffetService, true",
+          + " Service Control Flow::BuffetService, true",//18
       "4.2.1 Food Service Control Flow - FastFoodService.als, Model::4.2 Advanced Examples::4.2.1"
-          + " Food Service Control Flow::FastFoodService, true",
+          + " Food Service Control Flow::FastFoodService, true",//19
       "4.2.1 Food Service Control Flow - ChurchSupper.als, Model::4.2 Advanced Examples::4.2.1 Food"
-          + " Service Control Flow::ChurchSupper, true",
+          + " Service Control Flow::ChurchSupper, true",//20
       "4.2.1 Food Service Control Flow - RestaurantService.als, Model::4.2 Advanced Examples::4.2.1"
-          + " Food Service Control Flow::RestaurantService, true",
+          + " Food Service Control Flow::RestaurantService, true",//21
       "4.2.1 Food Service Control Flow - SingleFoodService.als, Model::4.2 Advanced Examples::4.2.1"
-          + " Food Service Control Flow::SingleFoodService, true",
+          + " Food Service Control Flow::SingleFoodService, true",//22
       "4.2.1 Food Service Control Flow - UnsatisfiableFoodService.als, Model::4.2 Advanced"
-          + " Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",
-      "4.2.2 Food Service Object Flow - OFControlLoopFoodService_mw.als, Model::4.2 Advanced"
-          + " Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",
+          + " Examples::4.2.1 Food Service Control Flow::UnsatisfiableFoodService, true",//23
+      "4.2.2 Food Service Object Flow - OFControlLoopFoodService.als, Model::4.2 Advanced"
+          + " Examples::4.2.2 Food Service Object Flow::OFControlLoopFoodService, true",//24
       "4.2.2 Food Service Object Flow - OFSingleFoodService.als, Model::4.2 Advanced Examples::4.2.2"
-          + " Food Service Object Flow::OFSingleFoodService, true",
+          + " Food Service Object Flow::OFSingleFoodService, true",//25
       "4.2.2 Food Service Object Flow - OFParallelFoodService.als, Model::4.2 Advanced"
-          + " Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",
+          + " Examples::4.2.2 Food Service Object Flow::OFParallelFoodService, true",//26
   })
   /**
    * Compare manually created/expected alloy file and translator generated file.

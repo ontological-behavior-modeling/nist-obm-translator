@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>edu.gatech.gtri.obm</groupId>
-  <artifactId>tester</artifactId>
+  <artifactId>NIST-OBM-Translator</artifactId>
   <version>0.1.36-SNAPSHOT</version>
 
   <scm>
