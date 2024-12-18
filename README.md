@@ -21,19 +21,11 @@
   <p align="center">
     This project extends the state of the art in systems model analysis with a focus on behavior models in the open standard Systems Modeling Language (SysML), a systems engineering extension of the Unified Modeling Language (UML) for software specification. The software ingests SysML models in the Object Management Group's (OMG's) open standard for for SysML file formats, XMI, and translates them into logical models in Alloy Analyzer, enabling static semantic analysis of the model.
 
-NOTE: This README is under construction 
     <br />
-    <a href="https://github.com/ontological-behavior-modeling/NIST-OBM-Translator/wiki"><strong>Explore the docs »</strong></a>
+    <a href="https://ontological-behavior-modeling.github.io/nist-obm-translator/"><strong> Explore the docs »</strong></a>
     <br />
-    <br />
-    <a href="https://github.com/jdoerr3/NIST-OBM-Translator">View Demo</a>
-    ·
-    <a href="https://github.com/jdoerr3/NIST-OBM-Translator/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/jdoerr3/NIST-OBM-Translator/issues">Request Feature</a>
   </p>
 </div>
-
 
 
 <!-- TABLE OF CONTENTS -->
@@ -53,7 +45,13 @@ NOTE: This README is under construction
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li>
+      <a href="#usage">Usage</a>
+      <ul>
+        <li><a href="#graphical-user-interface-usage">GUI Usage</a></li>
+        <li><a href="#test-usage">Test Usage</a></li>
+      </ul>
+    </li>	
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
@@ -73,7 +71,7 @@ The proposed effort will extend beyond the simpler activity examples in earlier 
 
 The proposed effort will continue the analysis and development of representing all UML behavior modeling techniques (activities, states, and interactions) in the same underlying behavior assembly model. Current research efforts focus on capturing simple activity examples to use in developing and verifying the appropriate semantics in reusable model libraries. GTRI is currently exploring these semantics and verifying them using the Alloy Analyzer tool (Alloy). Alloy includes an accessible logical language for expressing complex structural constraints in an object-oriented way, based on first-order logic. Alloy includes access to logical solvers to determine if the constraints are consistent by attempting to produce a solution meeting them. For behavior specifications, this determines whether they are executable by attempting to produce a complete trace of an execution that satisfies all the constraints.
 
-The project repository includes 
+The project repository includes source code, test code, and additional code resources. Code resources include images for the GUI and utility files for the translator. The test resources folder contains the XMI files for running the tests as well as the manually translated Alloy files. The main code resources include Alloy utility files and the OBM library Alloy file.
 
 This material is based in part on work supported by U.S. National Institute of Standards grant awards 70NANB19H066, 70NANB20H177, and 70NANB22H093 to Georgia Tech Applied Research Corporation, and 70NANB18H200 to Engisis, LLC.
 
@@ -97,10 +95,6 @@ This material is based in part on work supported by U.S. National Institute of S
 
 This section details the pre-requisites for running the code as well as the installation instructions to run and package the code
 
-[comment]: <> (This is an example of how you may give instructions on setting up your project locally.)
-
-[comment]: <> (To get a local copy up and running follow these simple example steps.)
-
 ### Prerequisites
 
 In order to build the project, maven needs to be installed and added to environment variables (instructions here https://maven.apache.org/).
@@ -108,15 +102,6 @@ You need access to the private repository for omgutil (https://github.com/ontolo
 A github token needs to be added to your local maven settings.xml file. A sample settings.xml file is included in the repository with information about creating a github token and adding it to the file.
 Additionally to properly create project javadocs, you need dot.exe from graphviz added to your environment path variables
 
-[comment]: <> (This is an example of how to list things you need to use the software and how to install them.)
-
-[comment]: <> (* npm)
-
-[comment]: <> (  ```sh)
-
-[comment]: <> (  npm install npm@latest -g)
-
-[comment]: <> (  ```)
 
 ### Installation
 1. Clone the repository onto local machine (https://github.com/ontological-behavior-modeling/NIST-OBM-Translator.git).
@@ -125,31 +110,6 @@ Additionally to properly create project javadocs, you need dot.exe from graphviz
 4. Jar file is created in the target folder of the repository. The correct file is appened with "-with-dependencies.jar".
 5. Double-click jar file to open.
 
-[comment]: <> (1. Get a free API Key at [https://example.com]&#40;https://example.com&#41;)
-
-[comment]: <> (2. Clone the repo)
-
-[comment]: <> (   ```sh)
-
-[comment]: <> (   git clone https://github.com/jdoerr3/NIST-OBM-Translator.git)
-
-[comment]: <> (   ```)
-
-[comment]: <> (3. Install NPM packages)
-
-[comment]: <> (   ```sh)
-
-[comment]: <> (   npm install)
-
-[comment]: <> (   ```)
-
-[comment]: <> (4. Enter your API in `config.js`)
-
-[comment]: <> (   ```js)
-
-[comment]: <> (   const API_KEY = 'ENTER YOUR API';)
-
-[comment]: <> (   ```)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
