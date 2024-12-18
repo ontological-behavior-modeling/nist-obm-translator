@@ -26,24 +26,18 @@ fact {all x: FoodItem | no x.inputs}
 fact {all x: FoodItem | no x.outputs}
 fact {all x: FoodItem | no x.steps}
 fact {all x: FoodItem | no steps.x}
-fact {all x: FoodItem | no x.happensBefore}
-fact {all x: FoodItem | no happensBefore.x}
 
 sig Location extends Occurrence {}
 fact {all x: Location | no x.inputs}
 fact {all x: Location | no x.outputs}
 fact {all x: Location | no x.steps}
 fact {all x: Location | no steps.x}
-fact {all x: Location | no x.happensBefore}
-fact {all x: Location | no happensBefore.x}
 
 sig Real extends Occurrence {}
 fact {all x: Real | no x.inputs}
 fact {all x: Real | no x.outputs}
 fact {all x: Real | no x.steps}
 fact {all x: Real | no steps.x}
-fact {all x: Real | no x.happensBefore}
-fact {all x: Real | no happensBefore.x}
 //***********************************************************************************************************
 /** 				OFOrder */
 //***********************************************************************************************************

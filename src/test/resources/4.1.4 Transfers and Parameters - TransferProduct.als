@@ -16,8 +16,6 @@ fact {all x: Product | no x.inputs}
 fact {all x: Product | no x.outputs}
 fact {all x: Product | no x.steps}
 fact {all x: Product | no steps.x}
-fact {all x: Product | no x.happensBefore}
-fact {all x: Product | no happensBefore.x}
 //*****************************************************************
 /** 					Supplier */
 //*****************************************************************

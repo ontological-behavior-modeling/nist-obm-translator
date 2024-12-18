@@ -15,8 +15,6 @@ fact {all x: Real | no x.inputs}
 fact {all x: Real | no x.outputs}
 fact {all x: Real | no x.steps}
 fact {all x: Real | no steps.x}
-fact {all x: Real | no x.happensBefore}
-fact {all x: Real | no happensBefore.x}
 
 //*****************************************************************
 /** 					A */
@@ -110,6 +108,7 @@ fact {all x: B | no inputs.x}
 fact {all x: B | x.outputs in x.vout}
 fact {all x: B | no outputs.x}
 fact {all x: B | no items.x}
+fact {all x: B | no (x.transferB1B2 & x.transferB2B & x.transferBB1)}
 //*****************************************************************
 /** 					C */
 //*****************************************************************
@@ -159,7 +158,7 @@ fact {all x: ParameterBehavior | no x.outputs}
 fact {all x: ParameterBehavior | no inputs.x}
 fact {all x: ParameterBehavior | no outputs.x}
 fact {all x: ParameterBehavior | no items.x}
-fact {all x: ParameterBehavior | no (x.transferAB & x.transferBC & x.b.transferB1B2 & x.b.transferB2B & x.b.transferBB1)}
+fact {all x: ParameterBehavior | no (x.transferAB & x.transferBC)}
 //*****************************************************************
 /** 			General Functions and Predicates */
 //*****************************************************************

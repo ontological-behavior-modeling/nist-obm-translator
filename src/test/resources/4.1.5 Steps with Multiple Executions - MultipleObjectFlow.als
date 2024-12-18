@@ -15,8 +15,6 @@ fact {all x: Integer | no x.inputs}
 fact {all x: Integer | no x.outputs}
 fact {all x: Integer | no x.steps}
 fact {all x: Integer | no steps.x}
-fact {all x: Integer | no x.happensBefore}
-fact {all x: Integer | no happensBefore.x}
 //*****************************************************************
 /** 					BehaviorWithParameter */
 //*****************************************************************
@@ -45,6 +43,7 @@ fact {all x: MultipleObjectFlow | x.p2.outputs in x.p2.i}
 fact {all x: MultipleObjectFlow | x.p3.inputs in x.p3.i}
 fact {all x: MultipleObjectFlow | x.p3.outputs in x.p3.i}
 fact {all x: MultipleObjectFlow | x.p4.inputs in x.p4.i}
+fact {all x: MultipleObjectFlow | no (x.transferP1P2 & x.transferP1P3 & x.transferP2P4 & x.transferP3P4)}
 
 /** Constraints on p1: P1 */
 fact {all x: MultipleObjectFlow | #(x.p1) = 2}
