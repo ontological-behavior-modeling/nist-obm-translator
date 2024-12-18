@@ -23,7 +23,6 @@
 
     <br />
     <a href="https://ontological-behavior-modeling.github.io/nist-obm-translator/"><strong> Explore the docs »</strong></a>
-    <br />
   </p>
 </div>
 
