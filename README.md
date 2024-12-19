@@ -20,6 +20,8 @@
 
   <p align="center">
     This project extends the state of the art in systems model analysis with a focus on behavior models in the open standard Systems Modeling Language (SysML), a systems engineering extension of the Unified Modeling Language (UML) for software specification. The software ingests SysML models in the Object Management Group's (OMG's) open standard for for SysML file formats, XMI, and translates them into logical models in Alloy Analyzer, enabling static semantic analysis of the model.
+
+    <br />
     <a href="https://ontological-behavior-modeling.github.io/nist-obm-translator/"><strong>Explore the docs »</strong></a>
     <br />
   </p>
@@ -69,7 +71,7 @@ The proposed effort will extend beyond the simpler activity examples in earlier 
 
 The proposed effort will continue the analysis and development of representing all UML behavior modeling techniques (activities, states, and interactions) in the same underlying behavior assembly model. Current research efforts focus on capturing simple activity examples to use in developing and verifying the appropriate semantics in reusable model libraries. GTRI is currently exploring these semantics and verifying them using the Alloy Analyzer tool (Alloy). Alloy includes an accessible logical language for expressing complex structural constraints in an object-oriented way, based on first-order logic. Alloy includes access to logical solvers to determine if the constraints are consistent by attempting to produce a solution meeting them. For behavior specifications, this determines whether they are executable by attempting to produce a complete trace of an execution that satisfies all the constraints.
 
-The project repository includes source code, test code, and additional code resources. Code resources include images for the GUI and utility files for the translator. The test resources folder contains the XMI files for running the tests as well as the manually translated Alloy files. The main code resources include Alloy utility files and the OBM library Alloy file.
+The project repository includes source code, test code, and additional code resources. Code resources include images for the GUI and utility files for the translator. The test resources folder contains the XMI files for running the tests as well as the manually translated Alloy files. The main code resources include Alloy utility files and the OBM library Alloy file Transfer.als. The release files include the source code as well as a jar file for the final code product.
 
 This material is based in part on work supported by U.S. National Institute of Standards grant awards 70NANB19H066, 70NANB20H177, and 70NANB22H093 to Georgia Tech Applied Research Corporation, and 70NANB18H200 to Engisis, LLC.
 
@@ -151,7 +153,7 @@ As of January 2025, this project is no longer actively being developed. To contr
 <!-- LICENSE -->
 ## License
 
-Distributed under the BSD-3 License. See `LICENSE.txt` for more information.
+Distributed under the BSD-3 License. See `LICENSE.md` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
