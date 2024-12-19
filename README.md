@@ -20,7 +20,6 @@
 
   <p align="center">
     This project extends the state of the art in systems model analysis with a focus on behavior models in the open standard Systems Modeling Language (SysML), a systems engineering extension of the Unified Modeling Language (UML) for software specification. The software ingests SysML models in the Object Management Group's (OMG's) open standard for for SysML file formats, XMI, and translates them into logical models in Alloy Analyzer, enabling static semantic analysis of the model.
-
     <br />
     <a href="https://ontological-behavior-modeling.github.io/nist-obm-translator/"><strong>Explore the docs »</strong></a>
     <br />
