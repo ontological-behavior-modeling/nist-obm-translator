@@ -5,7 +5,6 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
 
 
 
@@ -180,8 +179,6 @@ Project Link: [https://github.com/jdoerr3/NIST-OBM-Translator](https://github.co
 [issues-url]: https://github.com/jdoerr3/NIST-OBM-Translator/issues
 [license-shield]: https://img.shields.io/github/license/jdoerr3/NIST-OBM-Translator.svg?style=for-the-badge
 [license-url]: https://github.com/jdoerr3/NIST-OBM-Translator/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/linkedin_username
 [eclipse-url]: https://eclipseide.org/
 [eclipse-ide]: https://img.shields.io/badge/eclipse_modeling_framework-2C2255?style=for-the-badge&logo=eclipseide
 [JUnit-shield]: https://img.shields.io/badge/junit5-25A162?style=for-the-badge&logo=junit5&logoColor=white

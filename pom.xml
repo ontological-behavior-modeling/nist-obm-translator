@@ -9,7 +9,7 @@
   <scm>
     <connection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</connection>
     <developerConnection>scm:git:https://github.com/ontological-behavior-modeling/nist-obm-translator.git</developerConnection>
-    <tag>v0.1.0</tag>
+    <tag>v1.0.0</tag>
     <url>https://github.com/ontological-behavior-modeling/nist-obm-translator</url>
   </scm>
 
