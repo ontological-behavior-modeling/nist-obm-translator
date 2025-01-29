@@ -1,8 +1,0 @@
-@startuml
-start
-:Get Node by Source Name;
-:Get Node by Target Name;
-:Add Edge
-(API GraphStream);
-stop
-@enduml

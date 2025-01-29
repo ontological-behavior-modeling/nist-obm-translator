@@ -1,7 +1,0 @@
-@startuml
-start
- :Construct ExprVisitor;
- :Set ignoredFuncs Parameter;
- :Set ignoredSigs Parameter;
-stop
-@enduml

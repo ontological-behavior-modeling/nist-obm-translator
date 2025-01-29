@@ -1,9 +1,0 @@
-@startuml
-start
-if(//graph// == null) then (yes)
-:Create Graph;
-:Set //graph// Attribute to Graph;
-endif
-:Return //graph//;
-stop
-@enduml

@@ -1,9 +1,0 @@
-@startuml
-start
-:Get Source Field Type;
-:Get Target Field Type;
-:Create Source Bijection Filtered;
-:Create Target Bijection Filtered;
-:Create Sub Setting Item Rule;
-stop
-@enduml

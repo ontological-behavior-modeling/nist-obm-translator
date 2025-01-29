@@ -1,6 +1,0 @@
-@startuml
-start
-:Get Name;
-:Return Name;
-stop
-@enduml

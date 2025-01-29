@@ -1,5 +1,0 @@
-@startuml
-start
-:Return //list// Turned into String;
-stop
-@enduml

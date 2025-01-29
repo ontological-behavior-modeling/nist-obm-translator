@@ -1,9 +1,0 @@
-@startuml
-start
-:Create new CommandScope;
-:Create Iterable from CommandScope;
-:Create new Command;
-:Construct VisualizerHelper;
-:Generate Visualizer;
-stop
-@enduml

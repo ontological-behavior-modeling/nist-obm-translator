@@ -1,7 +1,0 @@
-@startuml
-start
-:Create new Function;
-:Call Expression;
-:Return Expression;
-stop
-@enduml

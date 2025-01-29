@@ -1,8 +1,0 @@
-@startuml
-start
-:Add Expression to be in ExprVar;
-:Add New Expression to Overall Fact;
-:Add ExprVar to be in Expression;
-:Add New Expression to Overall Fact;
-stop
-@enduml

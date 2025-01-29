@@ -1,6 +1,0 @@
-@startuml
-start
-:Construct VisualizerHelper;
-:Generate Visualizer;
-stop
-@enduml

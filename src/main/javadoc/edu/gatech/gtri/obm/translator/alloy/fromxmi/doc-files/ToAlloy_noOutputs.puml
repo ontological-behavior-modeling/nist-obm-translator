@@ -1,7 +1,0 @@
-@startuml
-start
-->sigName:String;
-:Get Signature;
-:Add Fact for No Outputs;
-stop
-@enduml

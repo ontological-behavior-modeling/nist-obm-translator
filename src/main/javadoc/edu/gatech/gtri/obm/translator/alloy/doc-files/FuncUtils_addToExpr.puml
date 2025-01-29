@@ -1,7 +1,0 @@
-@startuml
-start
-:Add original and toAdd 
-using AND Operator;
-:Return Expression;
-stop
-@enduml

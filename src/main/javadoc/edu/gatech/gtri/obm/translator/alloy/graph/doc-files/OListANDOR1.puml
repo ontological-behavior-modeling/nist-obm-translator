@@ -1,6 +1,0 @@
-@startuml
-start
-:Construct 0-Arg OListANDOR;
-:Add IObject //o// to //list//;
-stop
-@enduml

@@ -1,9 +1,0 @@
-@startuml
-start
-:Create Node ID;
-:Add Node to //graph//;
-:Set Node Name to //name//;
-:Set Node Type to Upper Case //name//;
-:Return Node;
-stop
-@enduml

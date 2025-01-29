@@ -1,0 +1,17 @@
+@startuml
+start
+if(//sig// has > 0 fields) then (yes)
+	:Return true;
+	stop
+endif
+while(//sig// has a parent)
+	if(//sig// parent has fields)
+		:Return true;
+		stop
+	else(no)
+		:Change //sig// to parent;
+	endif
+endwhile
+:Return false;
+stop
+@enduml

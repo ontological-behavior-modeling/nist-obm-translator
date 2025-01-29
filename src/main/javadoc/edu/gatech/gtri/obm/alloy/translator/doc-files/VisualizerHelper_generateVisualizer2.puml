@@ -1,0 +1,31 @@
+@startuml
+start
+:Set //viz// to null;
+:Construct A4Options;
+:Set A4Options Parameters;
+:Construct A4Reporter;
+:Set A4Options Solver to SAT4J;
+:Execute Command from A4Solution;
+:Print Answer Title;
+:Print Answer;
+:Update //previousAns//;
+if(A4Solution Answer is Satisfiable)
+:Print Solution Number;
+:Print All Answer Atoms;
+:Print Answer;
+:Write XML;
+if(viz == null) then (yes)
+:Construct New VizGUI;
+else(no)
+:Load //viz// XML;
+endif
+:Create AlloyInstance;
+:Print Answer;
+:Print AlloyInstance;
+:Print AlloyModel;
+:Write AlloyInstance to File;
+else(no)
+:Print No Satisfied Solution;
+endif
+stop
+@enduml

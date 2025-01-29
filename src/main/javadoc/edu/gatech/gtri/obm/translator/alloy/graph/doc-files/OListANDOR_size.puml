@@ -1,5 +1,0 @@
-@startuml
-start
-:Return Size of //list//;
-stop
-@enduml

@@ -1,6 +1,0 @@
-@startuml
-start
-:Create New Declaration;
-:Add Constraints to Overall Fact;
-stop
-@enduml

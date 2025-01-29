@@ -1,7 +1,0 @@
-@startuml
-start
-:Create setOf sigType;
-:Add Field to Signature
-(API to AlloyAnalyzer) ;
-stop
-@enduml

@@ -1,9 +1,0 @@
-@startuml
-start
-:Print title Module.AllCommands;
-while(for all Module Commands)
-:Print Command Name;
-:Print Command Details;
-endwhile
-stop
-@enduml

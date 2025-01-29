@@ -1,7 +1,0 @@
-@startuml
-start
-:Add Tricky Field in format
-(API to AlloyAnalyzer);
-:Return Field;
-stop
-@enduml

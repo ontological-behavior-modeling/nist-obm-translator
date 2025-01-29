@@ -1,7 +1,0 @@
-@startuml
-start
-:Create Expr Equal to Number;
-:Create new Function;
-:Return Function;
-stop
-@enduml

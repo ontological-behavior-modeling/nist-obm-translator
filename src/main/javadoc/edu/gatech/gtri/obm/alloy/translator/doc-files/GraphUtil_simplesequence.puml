@@ -1,0 +1,12 @@
+@startuml
+start
+:Print simplesequence Title;
+:Create Node, //p0Node//;
+:Get //p0Node// ID;
+:Create Node, //p1Node//;
+:Get //p1Node// ID;
+:Add Edge to //graph// between
+Both Nodes;
+:Return //p0Node//;
+stop
+@enduml

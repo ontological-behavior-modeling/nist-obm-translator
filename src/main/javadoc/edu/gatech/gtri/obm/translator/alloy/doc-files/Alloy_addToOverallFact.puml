@@ -1,9 +1,0 @@
-@startuml
-start
-if(overallFact == null) then (yes)
-:overallFact = expr;
-else(no)
-:Add expression to Overall Fact;
-endif
-stop
-@enduml

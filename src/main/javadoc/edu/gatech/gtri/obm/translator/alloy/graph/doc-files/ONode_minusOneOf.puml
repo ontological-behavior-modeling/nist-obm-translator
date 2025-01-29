@@ -1,6 +1,0 @@
-@startuml
-start
-:Subtract 1 from //numOneOf//;
-:Return //numOneOf//;
-stop
-@enduml

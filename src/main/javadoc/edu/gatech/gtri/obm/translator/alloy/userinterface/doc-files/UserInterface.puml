@@ -1,5 +1,0 @@
-@startuml
-start
-:Initialize Interface;
-stop
-@enduml

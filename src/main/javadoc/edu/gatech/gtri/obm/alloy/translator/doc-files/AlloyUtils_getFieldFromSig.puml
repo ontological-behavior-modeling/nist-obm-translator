@@ -1,0 +1,11 @@
+@startuml
+start
+while(For each //_sig// Field)
+	if(Current field is the field looking for) then (yes)
+		:Return field;
+		stop
+	endif
+endwhile
+:Return null;
+stop
+@enduml

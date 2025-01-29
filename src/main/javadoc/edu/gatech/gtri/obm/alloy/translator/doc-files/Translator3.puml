@@ -1,0 +1,6 @@
+@startuml
+start
+:Construct Translator with
+new HashSet<Sig.Field>;
+stop
+@enduml

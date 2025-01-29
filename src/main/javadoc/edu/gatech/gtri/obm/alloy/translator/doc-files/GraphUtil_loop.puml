@@ -1,0 +1,22 @@
+@startuml
+start
+:Print loop Title;
+:Create Node, //p0Node//;
+:Get //p0Node// ID;
+:Create Node, //p1Node//;
+:Get //p1Node// ID;
+:Create Node, //p2Node//;
+:Get //p2Node// ID;
+:Create Node, //p3Node//;
+:Get //p3Node// ID;
+:Add Edge to //graph// between
+p1 and p2 Nodes;
+:Add Edge to //graph// between
+p2 and p3 Nodes;
+:Add Edge to //graph// between
+p2 and p2 Nodes;
+:Set oneof Attribute to true
+For All Edges;
+:Return p1Node;
+stop
+@enduml

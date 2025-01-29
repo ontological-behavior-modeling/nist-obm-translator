@@ -1,9 +1,0 @@
-@startuml
-start
-:Make ExprVar;
-:Call funcFilteredExpr;
-:Create new ArrayList;
-:Create new Declaration;
-:Add FunctionFiltered to Overall Fact;
-stop
-@enduml

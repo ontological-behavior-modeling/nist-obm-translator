@@ -1,7 +1,0 @@
-@startuml
-start
-:Create New ArrayList //l//;
-:Add Node Name to //l//;
-:Return //l//;
-stop
-@enduml

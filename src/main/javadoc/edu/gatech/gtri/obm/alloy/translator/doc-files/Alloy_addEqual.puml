@@ -1,0 +1,9 @@
+@startuml
+start
+:Make ExprVar from Sig;
+:Create ArrayList from ExprVar;
+:Create new Declaration;
+:Add Equals to Overal Facts;
+
+stop
+@enduml

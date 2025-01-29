@@ -1,7 +1,0 @@
-@startuml
-start
-while(for all Signatures in the Module)
-:Add Signature to allSigs List;
-endwhile
-stop
-@enduml

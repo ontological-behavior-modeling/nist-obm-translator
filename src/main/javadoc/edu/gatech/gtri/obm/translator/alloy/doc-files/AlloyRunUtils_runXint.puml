@@ -1,8 +1,0 @@
-@startuml
-start
-:Create new CommandScope;
-:Create Iterable from CommandScope;
-:Create New Command;
-:RunX;
-stop
-@enduml

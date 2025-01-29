@@ -1,0 +1,10 @@
+@startuml
+start
+:Get Field from Sig;
+if (field != null) then (yes)
+:Add Cardinality Constraint;
+else(no)
+:Print Error;
+endif
+stop
+@enduml

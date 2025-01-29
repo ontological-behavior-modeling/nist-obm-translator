@@ -1,9 +1,0 @@
-@startuml
-start
-:Create new Declaration;
-:Join Signature to ExprVar;
-if (Expr != null)
-:Add Both to Overall Fact;
-endif
-stop
-@enduml

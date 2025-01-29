@@ -1,8 +1,0 @@
-@startuml
-start
-:Get HappensBefore Function;
-:Get InverseFunctionFiltered;
-:Call InverseFunctionFiltered Expression;
-:Return Expression;
-stop
-@enduml

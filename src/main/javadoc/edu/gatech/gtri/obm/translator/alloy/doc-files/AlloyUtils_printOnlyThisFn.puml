@@ -1,7 +1,0 @@
-@startuml
-start
-:Print title All Fn - common functions;
-:Print Function;
-:Print line break;
-stop
-@enduml

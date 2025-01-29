@@ -1,5 +1,0 @@
-@startuml
-start
-:Parse Everything from File;
-stop
-@enduml

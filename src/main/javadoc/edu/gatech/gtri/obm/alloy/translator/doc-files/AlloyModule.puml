@@ -1,0 +1,10 @@
+@startuml
+title Construct AlloyModule
+start
+->Module Name: String
+Signatures: List<Sig>
+Facts: Expr
+Commands: Command[];
+:Set Class Parameters;
+stop
+@enduml

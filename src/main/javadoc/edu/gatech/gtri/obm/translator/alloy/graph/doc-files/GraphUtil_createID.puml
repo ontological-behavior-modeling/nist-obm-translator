@@ -1,6 +1,0 @@
-@startuml
-start
-:Increment //idCounter//;
-:Return //idCounter//;
-stop
-@enduml

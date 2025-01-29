@@ -1,6 +1,0 @@
-@startuml
-start
-:Create Graph;
-:Set //graph// Attribute;
-stop
-@enduml

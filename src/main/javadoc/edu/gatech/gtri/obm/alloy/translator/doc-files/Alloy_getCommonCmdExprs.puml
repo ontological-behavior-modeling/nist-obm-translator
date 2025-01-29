@@ -1,0 +1,13 @@
+@startuml
+start
+:Get nonZeroDurationOnlyFunction;
+:Call nonZeroDurationOnlyFunction;
+:Get Transfer Function;
+:Create suppressTransferFunction;
+:Call suppressTransfers;
+:Get Inputs/Outputs Functions;
+:Call suppressI/O Functions;
+:Return nonZero, suppressTransfers,
+and suppressIO Expressions;
+stop
+@enduml

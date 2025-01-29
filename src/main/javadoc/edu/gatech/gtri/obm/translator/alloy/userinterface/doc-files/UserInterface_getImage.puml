@@ -1,6 +1,0 @@
-@startuml
-start
-:Get Resource/Image URL;
-:Return Image;
-stop
-@enduml

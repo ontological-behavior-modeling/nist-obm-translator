@@ -1,9 +1,0 @@
-@startuml
-start
-:Get First Field from Sig;
-:Get Second Field from Sig;
-if (field 1 and field 2 != null) then (yes)
-:Add Equals;
-endif
-stop
-@enduml

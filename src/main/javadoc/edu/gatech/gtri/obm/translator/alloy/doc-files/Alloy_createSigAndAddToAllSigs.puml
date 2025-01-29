@@ -1,7 +1,0 @@
-@startuml
-start
-:Create Signature;
-:Add to List of Signatures;
-:Return Signature;
-stop
-@enduml

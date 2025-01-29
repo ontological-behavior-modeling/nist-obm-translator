@@ -1,8 +1,0 @@
-@startuml
-start
-:Make Number;
-:Create Expression Cardinality;
-:Set Expression Cardinality Greater Than Number;
-:Return Expression;
-stop
-@enduml

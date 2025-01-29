@@ -2,19 +2,10 @@
 *.bak
 /target/
 .classpath
+*_Generated.als
 
 error.log
 src/test/resources/alloy_heredoc*.als
-src/test/resources/before_092623/*
-src/test/resources/obm-alloy-code_2023-09-25/*
-settings2.xml
-src/text/*.zip
-src/test/resources_10/*
-src/test/resources_11/*
-mw_note.txt
-/src/test/resources_0103
-/src/test/resources_10
-/src/test/resources_11
 /src/test/resources/utilities
 /src/test/resources/software-abstractions-book
 /src/test/resources/simple-models
@@ -31,4 +22,3 @@ src/test/resources/LICENSE.txt
 src/test/resources/README.md
 src/test/obmsmttrans_2024-03-27.zip
 src/test/resources.zip
-/src/test/resources

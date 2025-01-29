@@ -1,6 +1,0 @@
-@startuml
-start
-:Display //graph//
-(API to GraphStream);
-stop
-@enduml

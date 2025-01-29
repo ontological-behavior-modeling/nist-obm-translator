@@ -1,5 +1,0 @@
-@startuml
-start
-:Add Cardinality Greater Than Constraint;
-stop
-@enduml
