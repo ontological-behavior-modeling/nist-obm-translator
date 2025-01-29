@@ -1,0 +1,22 @@
+@startuml
+start
+fork
+	:Create Resource Set;
+	:Load Resource with Dependencies;
+	:Create File URI;
+	:Construct SysMLUtil;
+	:Construct SysMLAdapter;
+fork again
+	:Catch File Not Found Exception;
+	:Add Error Message;
+	:Return False;
+	stop
+fork again
+	:Catch UML Model Error Exception;
+	:Add Error Message;
+	:Return False;
+	stop
+end merge
+:Return True;
+stop
+@enduml

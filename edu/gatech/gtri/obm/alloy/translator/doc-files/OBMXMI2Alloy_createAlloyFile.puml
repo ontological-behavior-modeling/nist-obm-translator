@@ -1,0 +1,23 @@
+@startuml
+start
+	:Construct ToAlloy;
+	:Create errorMessages ArrayList;
+	:Create messages ArrayList;
+	:Set parameterFields to null;
+	fork
+	if(CreateAlloy != null)
+		:ToAlloy createAlloyFile;
+		if(Alloy File created successfully)
+			:Add message File is created;
+		else(no)
+			:Add message Failed to create file;
+		endif
+	endif
+	:Return success;
+	stop
+	fork again
+		:Catch IOException;
+		:Add error message;
+		:Return false;
+	stop
+@enduml

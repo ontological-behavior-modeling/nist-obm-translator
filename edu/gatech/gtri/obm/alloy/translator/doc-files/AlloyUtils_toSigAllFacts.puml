@@ -1,0 +1,10 @@
+@startuml
+start
+:Make Decl from //ownerSig//;
+:Create HashSet //rAll//;
+while(For All //exprs//)
+	:Add Expr for All decl to //rAll//;
+endwhile
+:Return //rAll//;
+stop
+@enduml

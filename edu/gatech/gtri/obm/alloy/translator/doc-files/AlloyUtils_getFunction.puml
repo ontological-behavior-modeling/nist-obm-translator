@@ -1,0 +1,11 @@
+@startuml
+start
+while(For all Functions in Module)
+	if (Current Field Label == Looking for Field Label) then (yes)
+		:Return Field;
+		stop
+	endif
+endwhile
+:Return null;
+stop
+@enduml

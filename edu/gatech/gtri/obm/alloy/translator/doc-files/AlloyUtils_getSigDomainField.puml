@@ -1,0 +1,18 @@
+@startuml
+start
+while (For All Signature Fields)
+	if(current field == fieldName?) then (yes)
+		:Return Field;
+		stop
+	endif
+endwhile
+while(Sig has a parent)
+	:Get Field from Sig or Its Parents;
+	if( field != null) then (yes)
+		:Return field;
+		stop
+	endif
+endwhile
+:Return null;
+stop
+@enduml

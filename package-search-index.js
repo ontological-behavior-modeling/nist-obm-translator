@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"edu.gatech.gtri.obm"},{"l":"edu.gatech.gtri.obm.translator.alloy"},{"l":"edu.gatech.gtri.obm.translator.alloy.fromxmi"},{"l":"edu.gatech.gtri.obm.translator.alloy.tofile"},{"l":"edu.gatech.gtri.obm.translator.alloy.userinterface"}]
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"edu.gatech.gtri.obm.alloy.translator"},{"l":"edu.gatech.gtri.obm.alloy.translator.userinterface"}]

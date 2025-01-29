@@ -1,0 +1,10 @@
+@startuml
+start
+:Create ArrayList //sortedStrings//;
+while(For All strings in the Set<String>)
+	:Add Strings to //sortedStrings//;
+endwhile
+:Sort //sortedStrings//;
+:Return //sortedStrings//;
+stop
+@enduml

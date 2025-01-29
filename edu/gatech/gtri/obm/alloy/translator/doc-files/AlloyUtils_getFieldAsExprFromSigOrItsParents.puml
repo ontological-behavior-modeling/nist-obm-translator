@@ -1,0 +1,12 @@
+@startuml
+start
+:Get Field from Sig;
+if(field is not null) then (yes)
+	:Return //field//;
+	stop
+else
+	:Get Field from Parent Sig;
+	:Return Parent Sig Field;
+	stop
+endif
+@enduml
