@@ -1,5 +1,9 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Sig;
+import edu.mit.csail.sdg.ast.Sig.Field;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,10 +16,6 @@ import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
 import org.eclipse.uml2.uml.Property;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Sig;
-import edu.mit.csail.sdg.ast.Sig.Field;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
 
 /**
  * A handler for a transfer connector
@@ -36,8 +36,9 @@ public class ConnectorHandler_Transfer {
   /** A dictionary contains signature name as a key and a set of transfer field names as a value. */
   Map<String, Set<String>> sigToTransferFieldsMap;
   /**
-   * A set of connectors redefined by children so that the connectors are ignored by the parent. This variable is initialized in ConnectorsHandler and updated and used by a ConnectorHandler while
-   * handling each connector at a time.
+   * A set of connectors redefined by children so that the connectors are ignored by the parent.
+   * This variable is initialized in ConnectorsHandler and updated and used by a ConnectorHandler
+   * while handling each connector at a time.
    */
   Set<Connector> redefinedConnectors;
 
@@ -45,35 +46,40 @@ public class ConnectorHandler_Transfer {
   Set<Field> parameterFields;
 
   /**
-   * A dictionary where a key is a field and a value is a set of fields. The dictionary value is targetInputProperty (fields) of connectors. The dictionary key is a field each connector is connected to
-   * as input.
+   * A dictionary where a key is a field and a value is a set of fields. The dictionary value is
+   * targetInputProperty (fields) of connectors. The dictionary key is a field each connector is
+   * connected to as input.
    *
-   * <p>
-   * (i.e., 4.2.2 FoodService ObjectFlow::SingleFoodService (key = prepare, value = [preparedFoodItem,prepareDestination])
+   * <p>(i.e., 4.2.2 FoodService ObjectFlow::SingleFoodService (key = prepare, value =
+   * [preparedFoodItem,prepareDestination])
    */
   Map<Field, Set<Field>> fieldWithInputs;
   /**
-   * A dictionary where key is a field and a value is a set of fields. The dictionary value is sourceOutputProperty (fields) of connectors. The dictionary key is a a field each connector is connected as
-   * output.
+   * A dictionary where key is a field and a value is a set of fields. The dictionary value is
+   * sourceOutputProperty (fields) of connectors. The dictionary key is a a field each connector is
+   * connected as output.
    *
-   * <p>
-   * (i.e., 4.2.2 FoodService ObjectFlow::SingleFoodService (key = order, value = [orderAmount, orderDestination, orderedFoodItem])
+   * <p>(i.e., 4.2.2 FoodService ObjectFlow::SingleFoodService (key = order, value = [orderAmount,
+   * orderDestination, orderedFoodItem])
    */
   Map<Field, Set<Field>> fieldWithOutputs;
   /**
-   * A dictionary where a key is a class/signature name and a value is a set of property/field names for connectors of targetInputProperty.
+   * A dictionary where a key is a class/signature name and a value is a set of property/field names
+   * for connectors of targetInputProperty.
    */
   Map<String, Set<String>> connectorsTargetInputPropertyNamesByClassName;
   /**
-   * A dictionary where a key is a class/signature name and a value is a set of property/field names for connectors of sourceOutputProperty.
+   * A dictionary where a key is a class/signature name and a value is a set of property/field names
+   * for connectors of sourceOutputProperty.
    */
   Map<String, Set<String>> connectorsSourceOutputPrpertyNamesByClassName;
 
   /**
-   * A set of class/signature names which are types(class/signature) of a connector having the both ends (property/field) having the same type(class/signature).
+   * A set of class/signature names which are types(class/signature) of a connector having the both
+   * ends (property/field) having the same type(class/signature).
    *
-   * <p>
-   * For example 4.1.5 Steps With Multiple Executions::MultipleObjectFlow, a connector's two ends p1 and p2 having the same type(class/signature) "BehaviorWithParameter".
+   * <p>For example 4.1.5 Steps With Multiple Executions::MultipleObjectFlow, a connector's two ends
+   * p1 and p2 having the same type(class/signature) "BehaviorWithParameter".
    */
   Set<String> sigNamesWithTransferConnectorWithSameInputOutputFieldType;
   /** A dictionary contains signature name as a key and a set of fact expression as a value. */
@@ -216,7 +222,7 @@ public class ConnectorHandler_Transfer {
                 sourceOutputPropertyAndtargetInputPropertyFields,
                 !_isSigLeaf);
       else // TransferBefore
-        exprs =
+      exprs =
             this.toAlloy.addTransferBeforeFacts(
                 _sigOfClass,
                 transferField,
@@ -246,10 +252,12 @@ public class ConnectorHandler_Transfer {
   }
 
   /**
-   * Find sourceOutputProperty and targetInputProperty of the given connector with the <<ItemFlow>> or <<ObjectFlow>> Stereotype
+   * Find sourceOutputProperty and targetInputProperty of the given connector with the <<ItemFlow>>
+   * or <<ObjectFlow>> Stereotype
    *
    * @param _connector (Connector) - a connector having the properties
-   * @return List<Set<String>> - the 1st in the list is a set of sourceOutputProperty names and the 2nd in the list is a set of the targetInputProperty names
+   * @return List<Set<String>> - the 1st in the list is a set of sourceOutputProperty names and the
+   *     2nd in the list is a set of the targetInputProperty names
    */
   private List<Set<String>> handleTransferAndTransferBeforeInputsAndOutputs(
       org.eclipse.uml2.uml.Connector _connector) {
@@ -301,7 +309,7 @@ public class ConnectorHandler_Transfer {
       // but having fact {all x: B1| x.vin = x.inputs} is ok
       EList<Property> atts = sosOwner.getAttributes();
       for (Property att : atts) // b1
-        if (att.getType() == tisOwner) { // b1.getType() == B1 and tisOwner == B1
+      if (att.getType() == tisOwner) { // b1.getType() == B1 and tisOwner == B1
           sourceOutputPropertyNames = null;
           break;
         }
@@ -310,7 +318,7 @@ public class ConnectorHandler_Transfer {
       // but having fact {all x: B2|x.vout = x.outputs} is ok
       atts = tisOwner.getAttributes(); // tisOwner is B
       for (Property att : atts) // b2
-        if (att.getType() == sosOwner) { // b2.getType() == B2 and sosOwner == B2
+      if (att.getType() == sosOwner) { // b2.getType() == B2 and sosOwner == B2
           targetInputPropertyNames = null;
           break;
         }
@@ -321,9 +329,12 @@ public class ConnectorHandler_Transfer {
   }
 
   /**
-   * With the given information of a transfer connector adding facts inputs and outputs for bijection like below for leaf sig 1) if addequal is true - fact {all x: MultipleObjectFlow | all p: x.p1 | p.i
-   * = p.outputs} 2) - fact {all x: IFSingleFoodService | bijectionFiltered[outputs, x.order, x.order.orderedFoodItem]} and return a list of sourceOUtputProperty field set and targetInputProperty field
-   * set to be used to create fact like below.
+   * With the given information of a transfer connector adding facts inputs and outputs for
+   * bijection like below for leaf sig 1) if addequal is true - fact {all x: MultipleObjectFlow |
+   * all p: x.p1 | p.i = p.outputs} 2) - fact {all x: IFSingleFoodService |
+   * bijectionFiltered[outputs, x.order, x.order.orderedFoodItem]} and return a list of
+   * sourceOUtputProperty field set and targetInputProperty field set to be used to create fact like
+   * below.
    *
    * <pre>
    * {all x: ownerSig| transferOrderPay.items in x.transferOrderPay.sources.orderedFoodItem + x.transferOrderPay.sources.orderAmount}
@@ -334,15 +345,18 @@ public class ConnectorHandler_Transfer {
    * </pre>
    *
    * @param _sigOfClass (PrimSig) - the connector owner to have the transfer field
-   * @param _sourceField (Field) - A source field of the connector. When this field is null, _sourceOutputAndTargetInputProperties.get(0) is also null
-   * @param _targetField (Field) - A target field of the connector. When this field is null, _sourceOutputAndTargetInputProperties.get(1) is also null
+   * @param _sourceField (Field) - A source field of the connector. When this field is null,
+   *     _sourceOutputAndTargetInputProperties.get(0) is also null
+   * @param _targetField (Field) - A target field of the connector. When this field is null,
+   *     _sourceOutputAndTargetInputProperties.get(1) is also null
    * @param _sourceTypeName (String) - A source field type (signature) name of the connector
    * @param _targetTypeName (String) - A target field type (signature) name of the connector
    * @param _sourceOutputAndTargetInputProperties
    * @param fieldsWithInputs null or non-leaf sig
    * @param fieldsWithOutputs null or non-leaf sig
-   * @return List<Set<Field>> - a list with 0 index for a set of fields for sourceOutputProperty of the transfer connector and 1st index for a sef of field for targetInputProperty of the transfer
-   *         connector
+   * @return List<Set<Field>> - a list with 0 index for a set of fields for sourceOutputProperty of
+   *     the transfer connector and 1st index for a sef of field for targetInputProperty of the
+   *     transfer connector
    */
   private List<Set<Field>> processConnectorInputsOutputs(
       PrimSig _sigOfClass,
@@ -365,8 +379,7 @@ public class ConnectorHandler_Transfer {
         // orderedFoodItem
         Field outputTo = AlloyUtils.getFieldFromSigOrItsParents(sourceOutput, typeSig); // i
         // fact {all x: MultipleObjectFlow | bijectionFiltered[outputs, x.p1, x.p1.i]}
-        if (!parameterFields.contains(outputTo))
-          sourceOutputPropertyFields.add(outputTo);
+        if (!parameterFields.contains(outputTo)) sourceOutputPropertyFields.add(outputTo);
 
         // only for leaf-sig
         if (_isLeaf
@@ -392,8 +405,7 @@ public class ConnectorHandler_Transfer {
             AlloyUtils.getFieldFromSigOrItsParents(
                 targetInputProperties, // i
                 typeSig);
-        if (!parameterFields.contains(inputTo))
-          targetInputPropertyFields.add(inputTo);
+        if (!parameterFields.contains(inputTo)) targetInputPropertyFields.add(inputTo);
         // fact {all x: MultipleObjectFlow | bijectionFiltered[inputs, x.p2, x.p2.i]}
         // fact {all x: IFSingleFoodService | bijectionFiltered[inputs, x.prepare,
         // x.prepare.preparedFoodItem]}

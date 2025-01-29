@@ -1,5 +1,9 @@
 package edu.gatech.gtri.obm.alloy.translator;
 
+import edu.mit.csail.sdg.ast.Expr;
+import edu.mit.csail.sdg.ast.Sig.PrimSig;
+import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
+import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,10 +19,6 @@ import org.eclipse.uml2.uml.Connector;
 import org.eclipse.uml2.uml.ConnectorEnd;
 import org.eclipse.uml2.uml.Constraint;
 import org.eclipse.uml2.uml.Element;
-import edu.mit.csail.sdg.ast.Expr;
-import edu.mit.csail.sdg.ast.Sig.PrimSig;
-import edu.umd.omgutil.sysml.sysml1.SysMLAdapter;
-import edu.umd.omgutil.sysml.sysml1.SysMLUtil;
 
 /**
  * A class to handle "Oneof" connector
@@ -53,7 +53,8 @@ public class ConnectorsHandler_OneOf {
   }
 
   /**
-   * Find "OneOf" connectors from the given connectors and facts: bijectionFiltered, functionFiltered, or inverseFunctionFiltered.
+   * Find "OneOf" connectors from the given connectors and facts: bijectionFiltered,
+   * functionFiltered, or inverseFunctionFiltered.
    *
    * @param _sigOfClass(PrimSig) - the owner signature of "OneOf" connector to be processed
    * @param _classOfSig(Class) - the class created the owner signature
@@ -120,16 +121,20 @@ public class ConnectorsHandler_OneOf {
   /**
    * Add bijection happensBefore or function and inverseFunction happensBefore facts.
    *
-   * <p>
-   * For example, oneOfSet is [order, end], with 3 one of connectors [c1 [eat,order],c2 [eat, end], c3[start, order]], c1 and c2 are the connector to be get information from. Then sources = [eat, eat]
-   * and targets = [order, end]. Since end is in the given oneTargetProperties and target-side has oneOf constraint, two facts: functionFiltered[happensBefore, eat, end+order} and
-   * inverseFunctionFiltered[happensBefore, eat, end] are added (order <-- eat --> end).
+   * <p>For example, oneOfSet is [order, end], with 3 one of connectors [c1 [eat,order],c2 [eat,
+   * end], c3[start, order]], c1 and c2 are the connector to be get information from. Then sources =
+   * [eat, eat] and targets = [order, end]. Since end is in the given oneTargetProperties and
+   * target-side has oneOf constraint, two facts: functionFiltered[happensBefore, eat, end+order}
+   * and inverseFunctionFiltered[happensBefore, eat, end] are added (order <-- eat --> end).
    *
    * @param _sigOfClass the owner sig of one of connectors
-   * @param _oneOfSet List of ConnectableElement both having oneOf constraint. Both should be source-side or target-side.
+   * @param _oneOfSet List of ConnectableElement both having oneOf constraint. Both should be
+   *     source-side or target-side.
    * @param _oneOfConnectors the one of connectors if the signature.
-   * @param _oneSourceProperties (Set<ConnectableElement>) - a set of connectableElements of the sig's one of connectors which has only one outgoing.
-   * @param _oneTargetProperties (Set<ConnectableElement>) - a set of connectableElements of the sig's one of connectors which has only one incoming.
+   * @param _oneSourceProperties (Set<ConnectableElement>) - a set of connectableElements of the
+   *     sig's one of connectors which has only one outgoing.
+   * @param _oneTargetProperties (Set<ConnectableElement>) - a set of connectableElements of the
+   *     sig's one of connectors which has only one incoming.
    */
   private void addFacts(
       PrimSig _sigOfClass,
@@ -169,13 +174,13 @@ public class ConnectorsHandler_OneOf {
     }
 
     if (isSourceSideOneOf) // sourceSide has One Of - all targets have the same name
-      handleSourceSideOneOf(
+    handleSourceSideOneOf(
           _sigOfClass,
           sourcesForAllOneOfConnectors,
           targetsForAllOneOfConnectors.get(0).getName(),
           _oneSourceProperties);
     else // targetSide has OneOf - all sources have the same name
-      handleTargetSideOneOf(
+    handleTargetSideOneOf(
           _sigOfClass,
           targetsForAllOneOfConnectors,
           sourcesForAllOneOfConnectors.get(0).getName(),
@@ -183,12 +188,15 @@ public class ConnectorsHandler_OneOf {
   }
 
   /**
-   * A method to handle a connector when source-side connector is "OneOf" by add bijection, functionFiltered, inverseFunctionFiltered HappensBefore facts.
+   * A method to handle a connector when source-side connector is "OneOf" by add bijection,
+   * functionFiltered, inverseFunctionFiltered HappensBefore facts.
    *
    * @param _sigOfClass(PrimSig) - a signature having this connector
-   * @param _sources(List<ConnectableElement>) - the source side connectableElements/properties for all one of connectors in the _sigOfClass signature
+   * @param _sources(List<ConnectableElement>) - the source side connectableElements/properties for
+   *     all one of connectors in the _sigOfClass signature
    * @param _targetName(String) - a name of target connectableElement/property element
-   * @param _oneSourceProperties(Set<ConnectableElement)) - the oneof source-side connector connectableElements/properties(connector.rules[0]) having only one outgoing connector
+   * @param _oneSourceProperties(Set<ConnectableElement)) - the oneof source-side connector
+   *     connectableElements/properties(connector.rules[0]) having only one outgoing connector
    */
   private void handleSourceSideOneOf(
       PrimSig _sigOfClass,
@@ -219,8 +227,7 @@ public class ConnectorsHandler_OneOf {
           break;
         }
       }
-    } else
-      allSourceOneOf = false;
+    } else allSourceOneOf = false;
 
     // if both are one sourceProperties
     if (allSourceOneOf) { // merge a + b -> c
@@ -238,19 +245,21 @@ public class ConnectorsHandler_OneOf {
       // x.c]}
       this.toAlloy.addInverseFunctionFilteredHappensBeforeFact(
           _sigOfClass,
-
           beforeExpr, // start + eat
-          afterExpr);// order
+          afterExpr); // order
     }
   }
 
   /**
-   * A method to handle a connector when target-side connector is "OneOf" by add bijection, functionFiltered, inverseFunctionFiltered HappensBefore facts.
+   * A method to handle a connector when target-side connector is "OneOf" by add bijection,
+   * functionFiltered, inverseFunctionFiltered HappensBefore facts.
    *
    * @param _sigOfClass(PrimSig) - a signature having having this connector
-   * @param _targetsForAllOneOfConnectors(List<ConnectableElement>) - the target side connectableElement/property elements for all one of connectors in the _sigOfClass signature
+   * @param _targetsForAllOneOfConnectors(List<ConnectableElement>) - the target side
+   *     connectableElement/property elements for all one of connectors in the _sigOfClass signature
    * @param _sourceName(String) - a name of source connectableElement/property element
-   * @param _oneTargetProperties(Set<ConnectableElement>) - the oneof target-side connector connectableElements/properties (connector.rules[1]) having only one incoming connector
+   * @param _oneTargetProperties(Set<ConnectableElement>) - the oneof target-side connector
+   *     connectableElements/properties (connector.rules[1]) having only one incoming connector
    */
   private void handleTargetSideOneOf(
       PrimSig _sigOfClass,
@@ -281,8 +290,7 @@ public class ConnectorsHandler_OneOf {
           break;
         }
       }
-    } else
-      allTargetOneOf = false;
+    } else allTargetOneOf = false;
 
     // if both are one targetProperties
     if (allTargetOneOf) { // decision a -> b + c
