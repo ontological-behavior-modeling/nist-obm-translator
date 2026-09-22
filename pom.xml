@@ -21,7 +21,7 @@
   </distributionManagement>
 
   <properties>
-    <alloy.version>5.1.0-SNAPSHOT</alloy.version>
+    <alloy.version>v5.1.0</alloy.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <pomsort.version>3.2.1</pomsort.version>
@@ -140,6 +140,20 @@
       <url>https://maven.pkg.github.com/ontological-behavior-modeling/omgutil</url>
       <layout>default</layout>
     </repository>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>ignore</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>omgutil</id>
+      <name>GitHub Packages for alloy analyzer</name>
+      <url>https://github.com/AlloyTools/org.alloytools.alloy/releases/download/{alloy.version}/org.alloytools.alloy.dist.jar</url>
+      <layout>default</layout>
+    </repository>
+  </repositories>
   </repositories>
 
   <build>
